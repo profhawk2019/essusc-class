@@ -113,7 +113,7 @@ BSCpE III - 1
             <form id="scheduleForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">College Division</label>
-                    <select id="collegeSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="populateEncoderPrograms()" required>
+                    <select id="collegeSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="handleEncoderCollegeChange()" required>
                         <option value="">Select College</option>
                         <option value="COE">College of Engineering (COE)</option>
                         <option value="CCS">College of Computer Studies (CCS)</option>
@@ -125,14 +125,14 @@ BSCpE III - 1
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Degree Course/Program</label>
-                    <select id="programSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <select id="programSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="handleEncoderProgramChange()" required disabled>
                         <option value="">Select a Course</option>
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Year Level & Section</label>
-                    <select id="classSectionSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <select id="classSectionSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required disabled>
                         <option value="">Select Section</option>
                     </select>
                 </div>
@@ -368,50 +368,159 @@ BSCpE III - 1
     </main>
 
     <script>
-        // Data Registries Storage Models
-        let registeredPrograms = {
-            "COE": ["Bachelor of Science in Agricultural and Biosystems Engineering", "Bachelor of Science in Computer Engineering"],
-            "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
-            "COEd": ["Bachelor of Elementary Education", "Bachelor of Secondary Education - English", "Bachelor of Secondary Education - Mathematics", "Bachelor of Secondary Education - Science", "Bachelor of Technology and Livelihood Education - HE", "Bachelor of Technology and Livelihood Education - ICT", "Bachelor of Early Childhood Education"],
-            "CCS": ["Bachelor of Science in Computer Science", "Bachelor of Science in Information Technology"],
-            "Graduate Studies": ["PhD", "MAED-EM", "MAED-Math", "MAM", "MATVE"]
-        };
+        // ==========================================
+        // INDEXEDDB CORE INITIALIZATION SERVICE
+        // ==========================================
+        let db = null;
 
-        let registeredSections = ["BSCpE I", "BSCpE II", "BSCpE III - 1", "BSCpE IV-1", "BSIT II - A", "BSCS I - B"].sort();
+        function initDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open("UniversitySchedulingDB", 1);
 
-        let registeredFaculty = [
-            "Abad, Loren Rose A.", "Abalorio, Rhea Joyce L.", "Abrajano, Marcia D.", "Abrera, Fedeliza O.",
-            "Abrian, April Rose M.", "Abrugar, Absalon O.", "Abrugar, Eva D.", "Abud, Ma. Rosario P.",
-            "Abulencia, Arthur III B.", "Acebo, Joseph G.", "Aguedan, Rizza Isabelle S.", "Alburo, Hershey R.",
-            "Alvarez, Ma. Elena O.", "Anire, Marcel G.", "Araneta, Arvin Anthony S.", "Arma, Leonilo A.",
-            "Badar, Eva T.", "Bajado, Ruselle Vence A.", "Bandalan, Melogen B.", "Bautista, Mark Anthony L.",
-            "Berongoy, Kenan Dominic C.", "Berongoy, Marco C.", "Boco, Cristelita E.", "Boco, Lita E.",
-            "Bolito, Cherlowen A.", "Cabahug, Jose Mari C.", "Caballegan, Palmera Joyce B.", "Cabos, John Francis M.",
-            "Cabugawan, Eliza C.", "Cabusora, Ivy Joy O.", "Calinaya, Jarwin B.", "Calvo, Aira Flor D.",
-            "Campanero, Roneil A.", "Cielo, Rashayne G.", "Daria, Primitiva R.", "Dialogo, Gil G.",
-            "Discar, Rey N.", "Discar, Rheo C.", "Disimulacion, Stephanie B.", "Doguiles, Rizza Josefina T.",
-            "Duran, Archibald M.", "Duran, Christopher A.", "Ecle, Cornelio Jeremy G.", "Elacion, Rica C.",
-            "Elardo, Cristina A.", "Gaganao, Rovinson D.", "Garcia, Albino E. Jr.", "Garcia, Maricel A.",
-            "Gonzaga, Jenalyn M.", "Guial, Tessie A.", "Gulfre, Jelinda M.", "Hermocilla, Emily O.",
-            "Hilvano, Noba F.", "Kuizon, Alma P.", "Lacaba, Lito D.", "Lacasa, Charito B.",
-            "Lacasa, Maria Cristina C.", "Lagramada, Alyssa Faye Y.", "Lombrio, Lorna S.", "Lumagbas, Niño Laureano C.",
-            "Macasil, Marina S.", "Manaba, Deurolanel A.", "Mandapat, Arciel V.", "Mirador, Maria Grace I.",
-            "Montallana, Joy F.", "Morbos, Clarita E.", "Obias, Gavino T.", "Odon, Ma. Gracelda B.",
-            "Odullo, Maria Jonah Mae C.", "Ogana, Juliet C.", "Ogario, Lynhard G.", "Padit, Rogelio L.",
-            "Padullo, Renato A.", "Padullo, Wenifreda O.", "Pelicano, Trixie Hyacinth L.", "Pelobello, Judith T.",
-            "Quirante, Franfel A.", "Quirante, Maria Nilda P.", "Ranas, Jumar A.", "Ranido, Arvin Melson D.",
-            "Roca, Mae Richell L.", "Sabadlab, Mary Ann B.", "Servano, Rosalinda", "Tomada, Rafael Y.",
-            "Villarazo, April Mae R.", "Virrey, Enrico C.", "Waniwan, Antonieta O.", "Yañez, Ara Lynne V.",
-            "Yañez, Yanze Makarius T.", "Yanga, Noel A."
-        ].sort();
+                request.onupgradeneeded = function(e) {
+                    const database = e.target.result;
+                    
+                    if (!database.objectStoreNames.contains("registries")) {
+                        database.createObjectStore("registries");
+                    }
+                    if (!database.objectStoreNames.contains("schedules")) {
+                        database.createObjectStore("schedules", { keyPath: "id" });
+                    }
+                };
 
-        let registeredRooms = ["COE Lab 1", "CCS IT-Lab", "COE Room 201", "COE Room 202", "CANS Lecture Hall", "Dormitory 2nd Floor"].sort();
+                request.onsuccess = async function(e) {
+                    db = e.target.result;
+                    await seedDatabaseIfEmpty();
+                    resolve();
+                };
 
-        let sharedSchedules = [
-            { id: 1, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III - 1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE Lab 1" },
-            { id: 2, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE I", subjectTitle: "CpE 111 (Computer Engineering as a Discipline)", unifiedUnits: 1, instructorName: "Lagramada, Alyssa Faye Y.", dayAssignment: "Tuesday and Thursday", startTime: "08:00", endTime: "09:00", roomNumber: "COE Room 201" },
-            { id: 3, college: "CCS", program: "Bachelor of Science in Information Technology", classSection: "BSIT II - A", subjectTitle: "IT 214 (Data Structures and Algorithms)", unifiedUnits: 3, instructorName: "Dialogo, Gil G.", dayAssignment: "Tuesday and Thursday", startTime: "13:00", endTime: "16:00", roomNumber: "CCS IT-Lab" }
-        ];
+                request.onerror = function(e) {
+                    console.error("Database layer failed to open:", e.target.error);
+                    reject(e.target.error);
+                };
+            });
+        }
+
+        async function seedDatabaseIfEmpty() {
+            const schedules = await getAllSchedulesFromDB();
+            const hasPrograms = await getRegistryFromDB("registeredPrograms");
+            
+            if (schedules.length === 0 && !hasPrograms) {
+                const defaultPrograms = {
+                    "COE": ["Bachelor of Science in Agricultural and Biosystems Engineering", "Bachelor of Science in Computer Engineering"],
+                    "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
+                    "COEd": ["Bachelor of Elementary Education", "Bachelor of Secondary Education - English", "Bachelor of Secondary Education - Mathematics", "Bachelor of Secondary Education - Science", "Bachelor of Technology and Livelihood Education - HE", "Bachelor of Technology and Livelihood Education - ICT", "Bachelor of Early Childhood Education"],
+                    "CCS": ["Bachelor of Science in Computer Science", "Bachelor of Science in Information Technology"],
+                    "Graduate Studies": ["PhD", "MAED-EM", "MAED-Math", "MAM", "MATVE"]
+                };
+                const defaultSections = ["BSCpE I", "BSCpE II", "BSCpE III - 1", "BSCpE IV-1", "BSIT II - A", "BSCS I - B"].sort();
+                const defaultFaculty = [
+                    "Abad, Loren Rose A.", "Abalorio, Rhea Joyce L.", "Abrajano, Marcia D.", "Abrera, Fedeliza O.",
+                    "Abrian, April Rose M.", "Abrugar, Absalon O.", "Abrugar, Eva D.", "Abud, Ma. Rosario P.",
+                    "Abulencia, Arthur III B.", "Acebo, Joseph G.", "Aguedan, Rizza Isabelle S.", "Alburo, Hershey R.",
+                    "Alvarez, Ma. Elena O.", "Anire, Marcel G.", "Araneta, Arvin Anthony S.", "Arma, Leonilo A.",
+                    "Badar, Eva T.", "Bajado, Ruselle Vence A.", "Bandalan, Melogen B.", "Bautista, Mark Anthony L.",
+                    "Berongoy, Kenan Dominic C.", "Berongoy, Marco C.", "Boco, Cristelita E.", "Boco, Lita E.",
+                    "Bolito, Cherlowen A.", "Cabahug, Jose Mari C.", "Caballegan, Palmera Joyce B.", "Cabos, John Francis M.",
+                    "Cabugawan, Eliza C.", "Cabusora, Ivy Joy O.", "Calinaya, Jarwin B.", "Calvo, Aira Flor D.",
+                    "Campanero, Roneil A.", "Cielo, Rashayne G.", "Daria, Primitiva R.", "Dialogo, Gil G.",
+                    "Discar, Rey N.", "Discar, Rheo C.", "Disimulacion, Stephanie B.", "Doguiles, Rizza Josefina T.",
+                    "Duran, Archibald M.", "Duran, Christopher A.", "Ecle, Cornelio Jeremy G.", "Elacion, Rica C.",
+                    "Elardo, Cristina A.", "Gaganao, Rovinson D.", "Garcia, Albino E. Jr.", "Garcia, Maricel A.",
+                    "Gonzaga, Jenalyn M.", "Guial, Tessie A.", "Gulfre, Jelinda M.", "Hermocilla, Emily O.",
+                    "Hilvano, Noba F.", "Kuizon, Alma P.", "Lacaba, Lito D.", "Lacasa, Charito B.",
+                    "Lacasa, Maria Cristina C.", "Lagramada, Alyssa Faye Y.", "Lombrio, Lorna S.", "Lumagbas, Niño Laureano C.",
+                    "Macasil, Marina S.", "Manaba, Deurolanel A.", "Mandapat, Arciel V.", "Mirador, Maria Grace I.",
+                    "Montallana, Joy F.", "Morbos, Clarita E.", "Obias, Gavino T.", "Odon, Ma. Gracelda B.",
+                    "Odullo, Maria Jonah Mae C.", "Ogana, Juliet C.", "Ogario, Lynhard G.", "Padit, Rogelio L.",
+                    "Padullo, Renato A.", "Padullo, Wenifreda O.", "Pelicano, Trixie Hyacinth L.", "Pelobello, Judith T.",
+                    "Quirante, Franfel A.", "Quirante, Maria Nilda P.", "Ranas, Jumar A.", "Ranido, Arvin Melson D.",
+                    "Roca, Mae Richell L.", "Sabadlab, Mary Ann B.", "Servano, Rosalinda", "Tomada, Rafael Y.",
+                    "Villarazo, April Mae R.", "Virrey, Enrico C.", "Waniwan, Antonieta O.", "Yañez, Ara Lynne V.",
+                    "Yañez, Yanze Makarius T.", "Yanga, Noel A."
+                ].sort();
+                const defaultRooms = ["COE Lab 1", "CCS IT-Lab", "COE Room 201", "COE Room 202", "CANS Lecture Hall", "Dormitory 2nd Floor"].sort();
+
+                const defaultSchedules = [
+                    { id: 1, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III - 1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE Lab 1" },
+                    { id: 2, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE I", subjectTitle: "CpE 111 (Computer Engineering as a Discipline)", unifiedUnits: 1, instructorName: "Lagramada, Alyssa Faye Y.", dayAssignment: "Tuesday and Thursday", startTime: "08:00", endTime: "09:00", roomNumber: "COE Room 201" },
+                    { id: 3, college: "CCS", program: "Bachelor of Science in Information Technology", classSection: "BSIT II - A", subjectTitle: "IT 214 (Data Structures and Algorithms)", unifiedUnits: 3, instructorName: "Dialogo, Gil G.", dayAssignment: "Tuesday and Thursday", startTime: "13:00", endTime: "16:00", roomNumber: "CCS IT-Lab" }
+                ];
+
+                await saveRegistryToDB("registeredPrograms", defaultPrograms);
+                await saveRegistryToDB("registeredSections", defaultSections);
+                await saveRegistryToDB("registeredFaculty", defaultFaculty);
+                await saveRegistryToDB("registeredRooms", defaultRooms);
+
+                for (let s of defaultSchedules) {
+                    await writeScheduleToDB(s);
+                }
+            }
+        }
+
+        // ==========================================
+        // INDEXEDDB ASYNCHRONOUS TRANSACTION WRAPPERS
+        // ==========================================
+        function getRegistryFromDB(key) {
+            return new Promise((resolve) => {
+                const tx = db.transaction("registries", "readonly");
+                const store = tx.objectStore("registries");
+                const req = store.get(key);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        function saveRegistryToDB(key, val) {
+            return new Promise((resolve) => {
+                const tx = db.transaction("registries", "readwrite");
+                const store = tx.objectStore("registries");
+                store.put(val, key);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function getAllSchedulesFromDB() {
+            return new Promise((resolve) => {
+                const tx = db.transaction("schedules", "readonly");
+                const store = tx.objectStore("schedules");
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => resolve([]);
+            });
+        }
+
+        function writeScheduleToDB(scheduleRecord) {
+            return new Promise((resolve) => {
+                const tx = db.transaction("schedules", "readwrite");
+                const store = tx.objectStore("schedules");
+                store.put(scheduleRecord);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        function deleteScheduleFromDB(id) {
+            return new Promise((resolve) => {
+                const tx = db.transaction("schedules", "readwrite");
+                const store = tx.objectStore("schedules");
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+            });
+        }
+
+        let registeredPrograms = {};
+        let registeredSections = [];
+        let registeredFaculty = [];
+        let registeredRooms = [];
+        let sharedSchedules = [];
+
+        async function syncMemoryCacheWithDB() {
+            registeredPrograms = await getRegistryFromDB("registeredPrograms") || {};
+            registeredSections = await getRegistryFromDB("registeredSections") || [];
+            registeredFaculty = await getRegistryFromDB("registeredFaculty") || [];
+            registeredRooms = await getRegistryFromDB("registeredRooms") || [];
+            sharedSchedules = await getAllSchedulesFromDB() || [];
+        }
 
         let currentSummarySortMetric = 'units';
         let currentSummaryGroupingMode = 'none';
@@ -450,6 +559,35 @@ BSCpE III - 1
             }
         }
 
+        // --- NEW CONDITIONAL DEPENDENCY ROUTINES ---
+        function handleEncoderCollegeChange() {
+            populateEncoderPrograms();
+            const programSelect = document.getElementById("programSelect");
+            const classSectionSelect = document.getElementById("classSectionSelect");
+            
+            if (document.getElementById("collegeSelect").value !== "") {
+                programSelect.disabled = false;
+            } else {
+                programSelect.disabled = true;
+                programSelect.innerHTML = '<option value="">Select a Course</option>';
+            }
+            // Reset and seal section dropdown since program state changed
+            classSectionSelect.disabled = true;
+            classSectionSelect.innerHTML = '<option value="">Select Section</option>';
+        }
+
+        function handleEncoderProgramChange() {
+            const classSectionSelect = document.getElementById("classSectionSelect");
+            
+            if (document.getElementById("programSelect").value !== "") {
+                classSectionSelect.disabled = false;
+                populateEncoderSections();
+            } else {
+                classSectionSelect.disabled = true;
+                classSectionSelect.innerHTML = '<option value="">Select Section</option>';
+            }
+        }
+
         function populateEncoderPrograms() {
             const college = document.getElementById("collegeSelect").value;
             const programSelect = document.getElementById("programSelect");
@@ -461,17 +599,19 @@ BSCpE III - 1
             }
         }
 
+        function populateEncoderSections() {
+            const secSelect = document.getElementById("classSectionSelect");
+            secSelect.innerHTML = '<option value="">Select Section</option>';
+            registeredSections.forEach(sec => {
+                let opt = document.createElement("option"); opt.value = sec; opt.textContent = sec; secSelect.appendChild(opt);
+            });
+        }
+
         function refreshFormSelectors() {
             const instSelect = document.getElementById("instructorSelect");
             instSelect.innerHTML = '<option value="">Select Instructor...</option>';
             registeredFaculty.forEach(name => {
                 let opt = document.createElement("option"); opt.value = name; opt.textContent = name; instSelect.appendChild(opt);
-            });
-
-            const secSelect = document.getElementById("classSectionSelect");
-            secSelect.innerHTML = '<option value="">Select Section</option>';
-            registeredSections.forEach(sec => {
-                let opt = document.createElement("option"); opt.value = sec; opt.textContent = sec; secSelect.appendChild(opt);
             });
 
             const rSelect = document.getElementById("roomSelect");
@@ -480,7 +620,9 @@ BSCpE III - 1
                 let opt = document.createElement("option"); opt.value = rm; opt.textContent = rm; rSelect.appendChild(opt);
             });
             
-            populateEncoderPrograms(); populateUploadPrograms();
+            // Re-evaluating configurations
+            populateEncoderPrograms(); 
+            populateUploadPrograms();
         }
 
         function calculateWeeklyHours(dayAssignment, start, end) {
@@ -508,7 +650,7 @@ BSCpE III - 1
         }
 
         // Ingestion & Text Parser Algorithm
-        function processUploadedScheduleText() {
+        async function processUploadedScheduleText() {
             const targetCollege = document.getElementById("uploadCollegeSelect").value;
             const targetProgram = document.getElementById("uploadProgramSelect").value;
             const rawText = document.getElementById("rawSchedulePasteInput").value;
@@ -520,12 +662,12 @@ BSCpE III - 1
             const lines = rawText.split('\n');
             let currentSection = "BSCpE I"; let currentDayAssignment = "Monday"; let parsedCount = 0;
 
-            lines.forEach(line => {
-                let cleanLine = line.trim(); if (!cleanLine) return;
+            for (let line of lines) {
+                let cleanLine = line.trim(); if (!cleanLine) continue;
 
                 if (cleanLine.toUpperCase().includes("BACHELOR") || cleanLine.toUpperCase().includes("CLASS PROGRAM")) {
                     let sectExtract = cleanLine.match(/(BS[A-Zae-z\s\-–]+[IVX\d\-–]+)/i);
-                    if (sectExtract) currentSection = sectExtract[1].trim(); return;
+                    if (sectExtract) currentSection = sectExtract[1].trim(); continue;
                 }
 
                 const upper = cleanLine.toUpperCase();
@@ -537,7 +679,7 @@ BSCpE III - 1
                     else if (upper.trim() === "WEDNESDAY") currentDayAssignment = "Wednesday";
                     else if (upper.trim() === "THURSDAY") currentDayAssignment = "Thursday";
                     else if (upper.includes("FRIDAY")) currentDayAssignment = "Friday";
-                    else if (upper.includes("SATURDAY")) currentDayAssignment = "Saturday"; return;
+                    else if (upper.includes("SATURDAY")) currentDayAssignment = "Saturday"; continue;
                 }
 
                 if (cleanLine.includes("-") || cleanLine.includes("–") || (/\d{1,2}:\d{2}/.test(cleanLine))) {
@@ -547,34 +689,45 @@ BSCpE III - 1
                         let unitsBlock = parseInt(tokens[2].trim()) || 3; let instructorBlock = tokens[3].trim();
                         let roomBlock = tokens[4] ? tokens[4].trim().replace(/,+/g, '') : "General Room";
 
-                        if (subjectBlock.toUpperCase().includes("SUBJECT")) return;
+                        if (subjectBlock.toUpperCase().includes("SUBJECT")) continue;
 
                         let sep = timeBlock.includes("–") ? "–" : "-"; let pieces = timeBlock.split(sep);
-                        if (pieces.length < 2) return;
+                        if (pieces.length < 2) continue;
 
                         let start = convertTo24Hour(pieces[0]); let end = convertTo24Hour(pieces[1]);
 
-                        if (!registeredSections.includes(currentSection)) { registeredSections.push(currentSection); registeredSections.sort(); }
+                        if (!registeredSections.includes(currentSection)) { 
+                            registeredSections.push(currentSection); registeredSections.sort(); 
+                            await saveRegistryToDB("registeredSections", registeredSections);
+                        }
 
                         let matchFaculty = registeredFaculty.find(f => 
                             f.toLowerCase().includes(instructorBlock.toLowerCase()) || 
                             instructorBlock.toLowerCase().includes(f.split(',')[0].toLowerCase())
                         ) || instructorBlock;
 
-                        if (!registeredFaculty.includes(matchFaculty) && matchFaculty.trim() !== "") { registeredFaculty.push(matchFaculty); registeredFaculty.sort(); }
-                        if (!registeredRooms.includes(roomBlock) && roomBlock.trim() !== "") { registeredRooms.push(roomBlock); registeredRooms.sort(); }
+                        if (!registeredFaculty.includes(matchFaculty) && matchFaculty.trim() !== "") { 
+                            registeredFaculty.push(matchFaculty); registeredFaculty.sort(); 
+                            await saveRegistryToDB("registeredFaculty", registeredFaculty);
+                        }
+                        if (!registeredRooms.includes(roomBlock) && roomBlock.trim() !== "") { 
+                            registeredRooms.push(roomBlock); registeredRooms.sort(); 
+                            await saveRegistryToDB("registeredRooms", registeredRooms);
+                        }
 
-                        sharedSchedules.push({
+                        const newSchedule = {
                             id: Date.now() + Math.random(), college: targetCollege, program: targetProgram, classSection: currentSection,
                             subjectTitle: subjectBlock, unifiedUnits: unitsBlock, instructorName: matchFaculty, dayAssignment: currentDayAssignment,
                             startTime: start, endTime: end, roomNumber: roomBlock
-                        });
+                        };
+                        
+                        await writeScheduleToDB(newSchedule);
                         parsedCount++;
                     }
                 }
-            });
+            }
 
-            executeRegistryDataSynchronization(); clearIngestionConsole();
+            await executeRegistryDataSynchronization(); clearIngestionConsole();
             alert(`✅ Ingestion Sequence Finished! Parsed and appended ${parsedCount} schedules.`);
             switchTab('schedule-view');
         }
@@ -642,10 +795,10 @@ BSCpE III - 1
         // ==========================================
         // INLINE EDIT & DELETE INTERCEPTORS PIPELINES
         // ==========================================
-        function invokeScheduleRowDeletion(recordId) {
+        async function invokeScheduleRowDeletion(recordId) {
             if (confirm("⚠️ Confirm Schedule Block Deletion?\nAre you sure you want to permanently drop this schedule segment line from master records?")) {
-                sharedSchedules = sharedSchedules.filter(s => s.id !== recordId);
-                executeRegistryDataSynchronization();
+                await deleteScheduleFromDB(recordId);
+                await executeRegistryDataSynchronization();
             }
         }
 
@@ -653,7 +806,6 @@ BSCpE III - 1
             const match = sharedSchedules.find(s => s.id === recordId);
             if (!match) return;
 
-            // Pre-fill hidden reference tracking forms fields
             document.getElementById("modalRecordId").value = match.id;
             document.getElementById("modalSubjectTitle").value = match.subjectTitle;
             document.getElementById("modalUnifiedUnits").value = match.unifiedUnits;
@@ -661,7 +813,6 @@ BSCpE III - 1
             document.getElementById("modalStartTime").value = match.startTime;
             document.getElementById("modalEndTime").value = match.endTime;
 
-            // Build select dropdown nodes inside the layout form overlay layer modal context
             const instSel = document.getElementById("modalInstructorSelect");
             instSel.innerHTML = "";
             registeredFaculty.forEach(f => {
@@ -676,7 +827,6 @@ BSCpE III - 1
                 if (r === match.roomNumber) opt.selected = true; rmSel.appendChild(opt);
             });
 
-            // Display overlay rendering frame container
             document.getElementById("scheduleUpdateModal").classList.remove("hidden");
         }
 
@@ -684,24 +834,24 @@ BSCpE III - 1
             document.getElementById("scheduleUpdateModal").classList.add("hidden");
         }
 
-        // Save modifications block handler interceptor routine
-        document.getElementById("modalEditForm").addEventListener("submit", function(e) {
+        document.getElementById("modalEditForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const recordId = parseFloat(document.getElementById("modalRecordId").value);
-            const targetIdx = sharedSchedules.findIndex(s => s.id === recordId);
+            const target = sharedSchedules.find(s => s.id === recordId);
 
-            if (targetIdx === -1) return;
+            if (!target) return;
 
-            // Copy and modify record parameters layout indices safely
-            sharedSchedules[targetIdx].subjectTitle = document.getElementById("modalSubjectTitle").value.trim();
-            sharedSchedules[targetIdx].unifiedUnits = parseInt(document.getElementById("modalUnifiedUnits").value) || 3;
-            sharedSchedules[targetIdx].dayAssignment = document.getElementById("modalDayAssignment").value;
-            sharedSchedules[targetIdx].startTime = document.getElementById("modalStartTime").value;
-            sharedSchedules[targetIdx].endTime = document.getElementById("modalEndTime").value;
-            sharedSchedules[targetIdx].instructorName = document.getElementById("modalInstructorSelect").value;
-            sharedSchedules[targetIdx].roomNumber = document.getElementById("modalRoomSelect").value;
+            target.subjectTitle = document.getElementById("modalSubjectTitle").value.trim();
+            target.unifiedUnits = parseInt(document.getElementById("modalUnifiedUnits").value) || 3;
+            target.dayAssignment = document.getElementById("modalDayAssignment").value;
+            target.startTime = document.getElementById("modalStartTime").value;
+            target.endTime = document.getElementById("modalEndTime").value;
+            target.instructorName = document.getElementById("modalInstructorSelect").value;
+            target.roomNumber = document.getElementById("modalRoomSelect").value;
 
-            closeScheduleEditorModal(); executeRegistryDataSynchronization();
+            await writeScheduleToDB(target);
+            closeScheduleEditorModal(); 
+            await executeRegistryDataSynchronization();
             alert("✅ Matrix row updates calculated and written to rosters successfully!");
         });
 
@@ -907,51 +1057,129 @@ BSCpE III - 1
         }
 
         // --- ROOMS ACTIONS HANDLERS ---
-        document.getElementById("addRoomForm").addEventListener("submit", function(e) {
+        document.getElementById("addRoomForm").addEventListener("submit", async function(e) {
             e.preventDefault(); let val = document.getElementById("regRoomName").value.trim();
-            if (val && !registeredRooms.includes(val)) { registeredRooms.push(val); registeredRooms.sort(); document.getElementById("regRoomName").value = ""; executeRegistryDataSynchronization(); }
+            if (val && !registeredRooms.includes(val)) { 
+                registeredRooms.push(val); registeredRooms.sort(); 
+                document.getElementById("regRoomName").value = ""; 
+                await saveRegistryToDB("registeredRooms", registeredRooms);
+                await executeRegistryDataSynchronization(); 
+            }
         });
-        function editRoom(idx) {
+        async function editRoom(idx) {
             let oldVal = registeredRooms[idx]; let newVal = prompt("Modify University Room/Facility Title Descriptor:", oldVal);
-            if (newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredRooms[idx] = newVal; registeredRooms.sort(); sharedSchedules.forEach(s => { if(s.roomNumber === oldVal) s.roomNumber = newVal; }); executeRegistryDataSynchronization(); }
+            if (newVal && newVal.trim() !== "") { 
+                newVal = newVal.trim(); registeredRooms[idx] = newVal; registeredRooms.sort(); 
+                await saveRegistryToDB("registeredRooms", registeredRooms);
+                for (let s of sharedSchedules) {
+                    if(s.roomNumber === oldVal) { s.roomNumber = newVal; await writeScheduleToDB(s); }
+                }
+                await executeRegistryDataSynchronization(); 
+            }
         }
-        function deleteRoom(idx) { if (confirm("Delete this room configuration?")) { registeredRooms.splice(idx, 1); executeRegistryDataSynchronization(); } }
+        async function deleteRoom(idx) { 
+            if (confirm("Delete this room configuration?")) { 
+                registeredRooms.splice(idx, 1); 
+                await saveRegistryToDB("registeredRooms", registeredRooms);
+                await executeRegistryDataSynchronization(); 
+            } 
+        }
 
         // --- PROGRAMS, FACULTY, SECTIONS ACTIONS ---
-        document.getElementById("addProgramForm").addEventListener("submit", function(e) {
+        document.getElementById("addProgramForm").addEventListener("submit", async function(e) {
             e.preventDefault(); let col = document.getElementById("regProgCollege").value; let val = document.getElementById("regProgName").value.trim();
-            if(!registeredPrograms[col].includes(val)) { registeredPrograms[col].push(val); document.getElementById("regProgName").value = ""; executeRegistryDataSynchronization(); }
+            if(!registeredPrograms[col].includes(val)) { 
+                registeredPrograms[col].push(val); 
+                document.getElementById("regProgName").value = ""; 
+                await saveRegistryToDB("registeredPrograms", registeredPrograms);
+                await executeRegistryDataSynchronization(); 
+            }
         });
-        function editProgram(college, idx) {
+        async function editProgram(college, idx) {
             let oldVal = registeredPrograms[college][idx]; let newVal = prompt("Modify Program Title Description:", oldVal);
-            if(newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredPrograms[college][idx] = newVal; sharedSchedules.forEach(s => { if(s.college === college && s.program === oldVal) s.program = newVal; }); executeRegistryDataSynchronization(); }
+            if(newVal && newVal.trim() !== "") { 
+                newVal = newVal.trim(); registeredPrograms[college][idx] = newVal; 
+                await saveRegistryToDB("registeredPrograms", registeredPrograms);
+                for (let s of sharedSchedules) {
+                    if(s.college === college && s.program === oldVal) { s.program = newVal; await writeScheduleToDB(s); }
+                }
+                await executeRegistryDataSynchronization(); 
+            }
         }
-        function deleteProgram(college, idx) { if(confirm("Confirm program deletion?")) { registeredPrograms[college].splice(idx, 1); executeRegistryDataSynchronization(); } }
-        document.getElementById("addSectionForm").addEventListener("submit", function(e) {
+        async function deleteProgram(college, idx) { 
+            if(confirm("Confirm program deletion?")) { 
+                registeredPrograms[college].splice(idx, 1); 
+                await saveRegistryToDB("registeredPrograms", registeredPrograms);
+                await executeRegistryDataSynchronization(); 
+            } 
+        }
+        document.getElementById("addSectionForm").addEventListener("submit", async function(e) {
             e.preventDefault(); let val = document.getElementById("regSectionName").value.trim();
-            if(val && !registeredSections.includes(val)) { registeredSections.push(val); registeredSections.sort(); document.getElementById("regSectionName").value = ""; executeRegistryDataSynchronization(); }
+            if(val && !registeredSections.includes(val)) { 
+                registeredSections.push(val); registeredSections.sort(); 
+                document.getElementById("regSectionName").value = ""; 
+                await saveRegistryToDB("registeredSections", registeredSections);
+                await executeRegistryDataSynchronization(); 
+            }
         });
-        function editSection(idx) {
+        async function editSection(idx) {
             let oldVal = registeredSections[idx]; let newVal = prompt("Modify Section String:", oldVal);
-            if(newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredSections[idx] = newVal; registeredSections.sort(); sharedSchedules.forEach(s => { if(s.classSection === oldVal) s.classSection = newVal; }); executeRegistryDataSynchronization(); }
+            if(newVal && newVal.trim() !== "") { 
+                newVal = newVal.trim(); registeredSections[idx] = newVal; registeredSections.sort(); 
+                await saveRegistryToDB("registeredSections", registeredSections);
+                for (let s of sharedSchedules) {
+                    if(s.classSection === oldVal) { s.classSection = newVal; await writeScheduleToDB(s); }
+                }
+                await executeRegistryDataSynchronization(); 
+            }
         }
-        function deleteSection(idx) { if(confirm("Confirm removal?")) { registeredSections.splice(idx, 1); executeRegistryDataSynchronization(); } }
-        document.getElementById("addFacultyForm").addEventListener("submit", function(e) {
+        async function deleteSection(idx) { 
+            if(confirm("Confirm removal?")) { 
+                registeredSections.splice(idx, 1); 
+                await saveRegistryToDB("registeredSections", registeredSections);
+                await executeRegistryDataSynchronization(); 
+            } 
+        }
+        document.getElementById("addFacultyForm").addEventListener("submit", async function(e) {
             e.preventDefault(); let val = document.getElementById("regFacultyName").value.trim();
-            if(val && !registeredFaculty.includes(val)) { registeredFaculty.push(val); registeredFaculty.sort(); document.getElementById("regFacultyName").value = ""; executeRegistryDataSynchronization(); }
+            if(val && !registeredFaculty.includes(val)) { 
+                registeredFaculty.push(val); registeredFaculty.sort(); 
+                document.getElementById("regFacultyName").value = ""; 
+                await saveRegistryToDB("registeredFaculty", registeredFaculty);
+                await executeRegistryDataSynchronization(); 
+            }
         });
-        function editFaculty(idx) {
+        async function editFaculty(idx) {
             let oldVal = registeredFaculty[idx]; let newVal = prompt("Modify Instructor Name:", oldVal);
-            if(newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredFaculty[idx] = newVal; registeredFaculty.sort(); sharedSchedules.forEach(s => { if(s.instructorName === oldVal) s.instructorName = newVal; }); executeRegistryDataSynchronization(); }
+            if(newVal && newVal.trim() !== "") { 
+                newVal = newVal.trim(); registeredFaculty[idx] = newVal; registeredFaculty.sort(); 
+                await saveRegistryToDB("registeredFaculty", registeredFaculty);
+                for (let s of sharedSchedules) {
+                    if(s.instructorName === oldVal) { s.instructorName = newVal; await writeScheduleToDB(s); }
+                }
+                await executeRegistryDataSynchronization(); 
+            }
         }
-        function deleteFaculty(idx) { if(confirm("Confirm removal from indices?")) { registeredFaculty.splice(idx, 1); executeRegistryDataSynchronization(); } }
+        async function deleteFaculty(idx) { 
+            if(confirm("Confirm removal from indices?")) { 
+                registeredFaculty.splice(idx, 1); 
+                await saveRegistryToDB("registeredFaculty", registeredFaculty);
+                await executeRegistryDataSynchronization(); 
+            } 
+        }
 
-        function executeRegistryDataSynchronization() {
-            refreshFormSelectors(); renderRegistryManagement(); renderMasterSchedule(); renderSummaryDashboard(); updateFacultySelector(); renderWorkloads();
+        async function executeRegistryDataSynchronization() {
+            await syncMemoryCacheWithDB();
+            refreshFormSelectors(); 
+            renderRegistryManagement(); 
+            renderMasterSchedule(); 
+            renderSummaryDashboard(); 
+            updateFacultySelector(); 
+            renderWorkloads();
         }
 
         // Form Encoder Manual Submit Handler Interceptor
-        document.getElementById("scheduleForm").addEventListener("submit", function(e) {
+        document.getElementById("scheduleForm").addEventListener("submit", async function(e) {
             e.preventDefault();
             const record = {
                 id: Date.now(), college: document.getElementById("collegeSelect").value, program: document.getElementById("programSelect").value,
@@ -975,11 +1203,26 @@ BSCpE III - 1
 
             if (conflict) { alert(`⚠️ Schedule Collision!\nOverlaps with slot entry: ${conflict.subjectTitle}`); return; }
 
-            sharedSchedules.push(record); this.reset(); executeRegistryDataSynchronization();
-            alert("✅ Manual schedule element recorded successfully!"); switchTab('schedule-view');
+            await writeScheduleToDB(record);
+            this.reset(); 
+            
+            // Re-seal the conditional elements after submit reset
+            document.getElementById("programSelect").disabled = true;
+            document.getElementById("classSectionSelect").disabled = true;
+            
+            await executeRegistryDataSynchronization();
+            alert("✅ Manual schedule element recorded successfully!"); 
+            switchTab('schedule-view');
         });
 
-        window.onload = function() { executeRegistryDataSynchronization(); };
+        window.onload = async function() { 
+            try {
+                await initDatabase();
+                await executeRegistryDataSynchronization(); 
+            } catch (err) {
+                alert("Database initialization error. Please verify browser capabilities parameters.");
+            }
+        };
     </script>
 </body>
 </html>
