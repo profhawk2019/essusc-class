@@ -7,13 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
     <style>
         @media print {
             .no-print { display: none !important; }
             .print-page { page-break-after: always; padding: 0 !important; margin: 0 !important; border: none !important; }
         }
-        /* Highlight styling for structural code awareness tracking */
-        .code-added-highlight { background-color: rgba(254, 240, 138, 0.4); }
+        /* Highlight styling tracking dynamic file generator patches components */
+        .code-added-highlight { background-color: rgba(236, 253, 245, 0.5); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
@@ -36,19 +38,19 @@
                     📥 Schedule Ingestion Engine
                 </button>
                 <button onclick="switchTab('encoder-view')" id="tab-encoder-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
-                    ✍️ Manual Encoder
+                    ✍ Manual Encoder
                 </button>
                 <button onclick="switchTab('schedule-view')" id="tab-schedule-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
-                    🗂️ Master Class Program
+                    🗂 Master Class Program
                 </button>
-                <button onclick="switchTab('summary-view')" id="tab-summary-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
+                <button onclick="switchTab('summary-view')" id="tab-summary-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-medium text-emerald-700">
                     📊 Faculty Load Summary
                 </button>
-                <button onclick="switchTab('workload-view')" id="tab-workload-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
+                <button onclick="switchTab('workload-view')" id="tab-workload-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-medium text-purple-700">
                     📋 Individual Workload Sheets
                 </button>
                 <button onclick="switchTab('management-view')" id="tab-management-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-semibold text-indigo-600">
-                    ⚙️ Registries Management
+                    ⚙ Registries Management
                 </button>
             </nav>
         </div>
@@ -207,7 +209,7 @@ BSCpE III - 1
                         📄 Export Master PDF
                     </button>
                     <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium px-4 py-2 rounded-lg text-sm cursor-pointer">
-                        🖨️ Print
+                        🗨 Print
                     </button>
                 </div>
             </div>
@@ -229,12 +231,18 @@ BSCpE III - 1
                     </div>
                     <div id="sortingControlsContainer" class="flex items-center gap-1 border-l pl-3 border-gray-300">
                         <span class="text-xs font-bold uppercase text-gray-500 mr-1">Sort Metrics:</span>
-                        <button onclick="changeSummarySort('units')" id="sort-units-btn" class="bg-blue-50 text-blue-950 font-bold text-xs px-2.5 py-1.5 rounded-md border border-blue-200 cursor-pointer">Units ⬇️</button>
-                        <button onclick="changeSummarySort('hours')" id="sort-hours-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-2.5 py-1.5 rounded-md border border-gray-300 cursor-pointer">Hours ⬇️</button>
+                        <button onclick="changeSummarySort('units')" id="sort-units-btn" class="bg-blue-50 text-blue-950 font-bold text-xs px-2.5 py-1.5 rounded-md border border-blue-200 cursor-pointer">Units ⬇</button>
+                        <button onclick="changeSummarySort('hours')" id="sort-hours-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-2.5 py-1.5 rounded-md border border-gray-300 cursor-pointer">Hours ⬇</button>
                     </div>
-                    <button onclick="exportFacultySummaryPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-md cursor-pointer">
-                        📄 Export PDF Report
-                    </button>
+                    
+                    <div class="flex gap-1 border-l pl-3 border-gray-300">
+                        <button onclick="exportFacultySummaryPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-md cursor-pointer">
+                            📄 Export PDF
+                        </button>
+                        <button onclick="exportFacultySummaryExcelGrouped()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer">
+                            📈 Export Grouped Excel
+                        </button>
+                    </div>
                 </div>
             </div>
             <div id="summaryDashboardDynamicContent" class="overflow-x-auto"></div>
@@ -246,12 +254,15 @@ BSCpE III - 1
                     <h2 class="text-xl font-bold text-gray-900">Faculty Structural Load Sheets</h2>
                     <p class="text-sm text-gray-500">Official individual instructional workloads generated dynamically.</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto no-print">
-                    <select id="facultySelector" class="bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" onchange="renderWorkloads()"></select>
-                    <button onclick="exportIndividualWorkloadsPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">
-                        📄 Export Sheet PDF
-                    </button>
-                    <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium px-4 py-2 rounded-lg text-sm cursor-pointer">🖨️ Print</button>
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto no-print bg-gray-50 p-2.5 rounded-xl border border-gray-200">
+                    <select id="facultySelector" class="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm outline-none" onchange="renderWorkloads()"></select>
+                    
+                    <div class="flex flex-wrap gap-1">
+                        <button onclick="exportIndividualWorkloadsPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">📄 PDF</button>
+                        <button onclick="exportIndividualWorkloadToWord()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">📝 Export Word (.docx)</button>
+                        <button onclick="exportIndividualWorkloadToExcel()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">📊 Export Excel (.xlsx)</button>
+                    </div>
+                    <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium px-3 py-1.5 rounded-md text-xs cursor-pointer">🗨 Print</button>
                 </div>
             </div>
             <div id="workloadSheetsContainer"></div>
@@ -274,95 +285,40 @@ BSCpE III - 1
                     <input type="text" id="regProgName" placeholder="e.g., Bachelor of Science in Computer Engineering" class="flex-1 bg-white border border-gray-300 rounded-lg p-2 text-sm outline-none" required>
                     <button type="submit" class="bg-blue-950 hover:bg-blue-900 text-white px-4 py-2 text-xs font-bold rounded-lg cursor-pointer">Add Program</button>
                 </form>
-                <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm">
-                    <thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b border-gray-200"><th class="p-2">College</th><th class="p-2">Program Title</th><th class="p-2 text-right">Actions</th></tr></thead>
-                    <tbody id="regProgramsTableBody" class="divide-y divide-gray-100"></tbody>
-                </table></div>
+                <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm"><tbody id="regProgramsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
             </div>
-
             <div id="panel-reg-sections" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div><h3 class="text-lg font-bold text-gray-900">Year Level & Section Registry</h3></div>
-                <form id="addSectionForm" class="flex gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <input type="text" id="regSectionName" placeholder="e.g., BSCpE III - 1" class="flex-1 bg-white border border-gray-300 rounded-lg p-2 text-sm outline-none" required>
-                    <button type="submit" class="bg-blue-950 hover:bg-blue-900 text-white px-4 py-2 text-xs font-bold rounded-lg cursor-pointer">Add Section</button>
-                </form>
-                <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm">
-                    <thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b border-gray-200"><th class="p-2">Section Designation</th><th class="p-2 text-right">Actions</th></tr></thead>
-                    <tbody id="regSectionsTableBody" class="divide-y divide-gray-100"></tbody>
-                </table></div>
+                <form id="addSectionForm" class="flex gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200"><input type="text" id="regSectionName" placeholder="e.g., BSCpE III - 1" class="flex-1 bg-white border p-2 text-sm" required><button type="submit" class="bg-blue-950 text-white px-4 py-2 rounded">Add Section</button></form>
+                <table class="w-full text-left text-sm"><tbody id="regSectionsTableBody"></tbody></table>
             </div>
-
             <div id="panel-reg-faculty" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div><h3 class="text-lg font-bold text-gray-900">Institutional Faculty Roster Registry</h3></div>
-                <form id="addFacultyForm" class="flex gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <input type="text" id="regFacultyName" placeholder="Format: Lastname, Firstname MiddleInitial." class="flex-1 bg-white border border-gray-300 rounded-lg p-2 text-sm outline-none" required>
-                    <button type="submit" class="bg-blue-950 hover:bg-blue-900 text-white px-4 py-2 text-xs font-bold rounded-lg cursor-pointer">Add Faculty</button>
-                </form>
-                <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm">
-                    <thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b border-gray-200"><th class="p-2">Instructor Name</th><th class="p-2 text-right">Actions</th></tr></thead>
-                    <tbody id="regFacultyTableBody" class="divide-y divide-gray-100"></tbody>
-                </table></div>
+                <form id="addFacultyForm" class="flex gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200"><input type="text" id="regFacultyName" placeholder="Lastname, Firstname" class="flex-1 border p-2 text-sm" required><button type="submit" class="bg-blue-950 text-white px-4 py-2 rounded">Add Faculty</button></form>
+                <table class="w-full text-left text-sm"><tbody id="regFacultyTableBody"></tbody></table>
             </div>
-
             <div id="panel-reg-rooms" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-900">🏢 University Room Facility Registry</h3>
-                </div>
-                <form id="addRoomForm" class="flex gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <input type="text" id="regRoomName" placeholder="e.g., COE Lab 1, CCS IT-Lab, COE Room 201" class="flex-1 bg-white border border-gray-300 rounded-lg p-2 text-sm outline-none" required>
-                    <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 text-xs font-bold rounded-lg cursor-pointer">Add Room</button>
-                </form>
-                <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm">
-                    <thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b border-gray-200"><th class="p-2">Room / Laboratory Designation</th><th class="p-2 text-right">Actions</th></tr></thead>
-                    <tbody id="regRoomsTableBody" class="divide-y divide-gray-100"></tbody>
-                </table></div>
+                <div><h3 class="text-lg font-bold text-gray-900">🏢 University Room Facility Registry</h3></div>
+                <form id="addRoomForm" class="flex gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200"><input type="text" id="regRoomName" placeholder="e.g., COE Lab 1" class="flex-1 border p-2 text-sm" required><button type="submit" class="bg-emerald-700 text-white px-4 py-2 rounded">Add Room</button></form>
+                <table class="w-full text-left text-sm"><tbody id="regRoomsTableBody"></tbody></table>
             </div>
         </section>
 
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
-                <div class="border-b border-gray-100 pb-2 flex justify-between items-center">
+                <div class="flex justify-between items-center border-b pb-2">
                     <h3 class="text-lg font-bold text-gray-900">✏  Edit Class Schedule Block</h3>
-                    <button onclick="closeScheduleEditorModal()" class="text-gray-400 hover:text-gray-600 font-bold text-xl">&times;</button>
+                    <button onclick="closeScheduleEditorModal()" class="text-gray-400 text-xl font-bold">&times;</button>
                 </div>
                 <form id="modalEditForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <input type="hidden" id="modalRecordId">
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Subject Descriptor</label>
-                        <input type="text" id="modalSubjectTitle" class="w-full bg-gray-50 border p-2 rounded outline-none" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Units</label>
-                        <input type="number" id="modalUnifiedUnits" min="1" max="10" class="w-full bg-gray-50 border p-2 rounded outline-none" required>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Day Assignment</label>
-                        <select id="modalDayAssignment" class="w-full bg-gray-50 border p-2 rounded outline-none" required>
-                            <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Monday and Wednesday">Monday and Wednesday</option><option value="Tuesday and Thursday">Tuesday and Thursday</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Start</label>
-                            <input type="time" id="modalStartTime" class="w-full bg-gray-50 border p-2 rounded outline-none" required>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-gray-500 mb-1">End</label>
-                            <input type="time" id="modalEndTime" class="w-full bg-gray-50 border p-2 rounded outline-none" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Professor</label>
-                        <select id="modalInstructorSelect" class="w-full bg-gray-50 border p-2 rounded outline-none" required></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold uppercase text-gray-500 mb-1">Room</label>
-                        <select id="modalRoomSelect" class="w-full bg-gray-50 border p-2 rounded outline-none" required></select>
-                    </div>
-                    <div class="sm:col-span-2 flex justify-end gap-2 border-t pt-3 mt-2">
-                        <button type="button" onclick="closeScheduleEditorModal()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded font-medium">Cancel</button>
-                        <button type="submit" class="bg-blue-950 hover:bg-blue-900 text-white px-4 py-2 rounded font-medium">Save Schedule Changes</button>
-                    </div>
+                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Subject Title</label><input type="text" id="modalSubjectTitle" class="w-full bg-gray-50 border p-2 rounded outline-none" required></div>
+                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Units</label><input type="number" id="modalUnifiedUnits" class="w-full bg-gray-50 border p-2 rounded" required></div>
+                    <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Day</label><select id="modalDayAssignment" class="w-full bg-gray-50 border p-2 rounded"><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Monday and Wednesday">Monday and Wednesday</option><option value="Tuesday and Thursday">Tuesday and Thursday</option></select></div>
+                    <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold">Start</label><input type="time" id="modalStartTime" class="w-full border p-2"></div><div><label class="block text-xs">End</label><input type="time" id="modalEndTime" class="w-full border p-2"></div></div>
+                    <div><label class="block text-xs font-bold">Professor</label><select id="modalInstructorSelect" class="w-full border p-2"></select></div>
+                    <div><label class="block text-xs font-bold">Room</label><select id="modalRoomSelect" class="w-full border p-2"></select></div>
+                    <div class="sm:col-span-2 flex justify-end gap-2 border-t pt-3"><button type="button" onclick="closeScheduleEditorModal()" class="bg-gray-100 px-4 py-2 rounded">Cancel</button><button type="submit" class="bg-blue-950 text-white px-4 py-2 rounded">Save</button></div>
                 </form>
             </div>
         </div>
@@ -383,28 +339,8 @@ BSCpE III - 1
 
         let registeredFaculty = [
             "Abad, Loren Rose A.", "Abalorio, Rhea Joyce L.", "Abrajano, Marcia D.", "Abrera, Fedeliza O.",
-            "Abrian, April Rose M.", "Abrugar, Absalon O.", "Abrugar, Eva D.", "Abud, Ma. Rosario P.",
-            "Abulencia, Arthur III B.", "Acebo, Joseph G.", "Aguedan, Rizza Isabelle S.", "Alburo, Hershey R.",
-            "Alvarez, Ma. Elena O.", "Anire, Marcel G.", "Araneta, Arvin Anthony S.", "Arma, Leonilo A.",
-            "Badar, Eva T.", "Bajado, Ruselle Vence A.", "Bandalan, Melogen B.", "Bautista, Mark Anthony L.",
-            "Berongoy, Kenan Dominic C.", "Berongoy, Marco C.", "Boco, Cristelita E.", "Boco, Lita E.",
-            "Bolito, Cherlowen A.", "Cabahug, Jose Mari C.", "Caballegan, Palmera Joyce B.", "Cabos, John Francis M.",
-            "Cabugawan, Eliza C.", "Cabusora, Ivy Joy O.", "Calinaya, Jarwin B.", "Calvo, Aira Flor D.",
-            "Campanero, Roneil A.", "Cielo, Rashayne G.", "Daria, Primitiva R.", "Dialogo, Gil G.",
-            "Discar, Rey N.", "Discar, Rheo C.", "Disimulacion, Stephanie B.", "Doguiles, Rizza Josefina T.",
-            "Duran, Archibald M.", "Duran, Christopher A.", "Ecle, Cornelio Jeremy G.", "Elacion, Rica C.",
-            "Elardo, Cristina A.", "Gaganao, Rovinson D.", "Garcia, Albino E. Jr.", "Garcia, Maricel A.",
-            "Gonzaga, Jenalyn M.", "Guial, Tessie A.", "Gulfre, Jelinda M.", "Hermocilla, Emily O.",
-            "Hilvano, Noba F.", "Kuizon, Alma P.", "Lacaba, Lito D.", "Lacasa, Charito B.",
-            "Lacasa, Maria Cristina C.", "Lagramada, Alyssa Faye Y.", "Lombrio, Lorna S.", "Lumagbas, Niño Laureano C.",
-            "Macasil, Marina S.", "Manaba, Deurolanel A.", "Mandapat, Arciel V.", "Mirador, Maria Grace I.",
-            "Montallana, Joy F.", "Morbos, Clarita E.", "Obias, Gavino T.", "Odon, Ma. Gracelda B.",
-            "Odullo, Maria Jonah Mae C.", "Ogana, Juliet C.", "Ogario, Lynhard G.", "Padit, Rogelio L.",
-            "Padullo, Renato A.", "Padullo, Wenifreda O.", "Pelicano, Trixie Hyacinth L.", "Pelobello, Judith T.",
-            "Quirante, Franfel A.", "Quirante, Maria Nilda P.", "Ranas, Jumar A.", "Ranido, Arvin Melson D.",
-            "Roca, Mae Richell L.", "Sabadlab, Mary Ann B.", "Servano, Rosalinda", "Tomada, Rafael Y.",
-            "Villarazo, April Mae R.", "Virrey, Enrico C.", "Waniwan, Antonieta O.", "Yañez, Ara Lynne V.",
-            "Yañez, Yanze Makarius T.", "Yanga, Noel A."
+            "Araneta, Arvin Anthony S.", "Anire, Marcel G.", "Dialogo, Gil G.", "Lagramada, Alyssa Faye Y.",
+            "Gulfre, Jelinda M.", "Kuizon, Alma P.", "Lumagbas, Niño Laureano C.", "Bolito, Cherlowen A."
         ].sort();
 
         let registeredRooms = ["COE Lab 1", "CCS IT-Lab", "COE Room 201", "COE Room 202", "CANS Lecture Hall", "Dormitory 2nd Floor"].sort();
@@ -418,621 +354,410 @@ BSCpE III - 1
         let currentSummarySortMetric = 'units';
         let currentSummaryGroupingMode = 'none';
 
-        // Interface Management Switch Controls
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-blue-950', 'text-blue-950', 'font-bold');
-                el.classList.add('border-transparent', 'text-gray-500');
-            });
+            document.querySelectorAll('.tab-btn').forEach(el => { el.className = "tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer"; });
             document.getElementById(tabId).classList.remove('hidden');
-            const activeTab = document.getElementById('tab-' + tabId);
-            activeTab.classList.add('border-blue-950', 'text-blue-950', 'font-bold');
-            activeTab.classList.remove('border-transparent', 'text-gray-500');
+            document.getElementById('tab-' + tabId).className = "tab-btn border-b-2 border-blue-950 text-blue-950 font-bold pb-4 text-sm px-1 cursor-pointer";
         }
 
         function switchRegistryTab(subtabId) {
             document.querySelectorAll('.reg-panel').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.reg-tab-btn').forEach(el => {
-                el.className = "reg-tab-btn bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer";
-            });
+            document.querySelectorAll('.reg-tab-btn').forEach(el => { el.className = "reg-tab-btn bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded-lg cursor-pointer"; });
             document.getElementById('panel-' + subtabId).classList.remove('hidden');
             document.getElementById('subtab-' + subtabId).className = "reg-tab-btn bg-blue-950 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer";
         }
 
-        // Form Options Synchronizer Populate Engine
-        function populateUploadPrograms() {
-            const college = document.getElementById("uploadCollegeSelect").value;
-            const progSelect = document.getElementById("uploadProgramSelect");
-            progSelect.innerHTML = '<option value="">Select Target Course...</option>';
-            if(college && registeredPrograms[college]) {
-                registeredPrograms[college].forEach(p => {
-                    let opt = document.createElement("option"); opt.value = p; opt.textContent = p; progSelect.appendChild(opt);
-                });
-            }
-        }
-
-        function populateEncoderPrograms() {
-            const college = document.getElementById("collegeSelect").value;
-            const programSelect = document.getElementById("programSelect");
-            programSelect.innerHTML = '<option value="">Select a Course</option>';
-            if (college && registeredPrograms[college]) {
-                registeredPrograms[college].forEach(prog => {
-                    let opt = document.createElement("option"); opt.value = prog; opt.textContent = prog; programSelect.appendChild(opt);
-                });
-            }
-        }
-
         function refreshFormSelectors() {
-            const instSelect = document.getElementById("instructorSelect");
-            instSelect.innerHTML = '<option value="">Select Instructor...</option>';
-            registeredFaculty.forEach(name => {
-                let opt = document.createElement("option"); opt.value = name; opt.textContent = name; instSelect.appendChild(opt);
-            });
-
-            const secSelect = document.getElementById("classSectionSelect");
-            secSelect.innerHTML = '<option value="">Select Section</option>';
-            registeredSections.forEach(sec => {
-                let opt = document.createElement("option"); opt.value = sec; opt.textContent = sec; secSelect.appendChild(opt);
-            });
-
-            const rSelect = document.getElementById("roomSelect");
-            rSelect.innerHTML = '<option value="">Select Room Layout...</option>';
-            registeredRooms.forEach(rm => {
-                let opt = document.createElement("option"); opt.value = rm; opt.textContent = rm; rSelect.appendChild(opt);
-            });
-            
+            const bindSelect = (id, data, fallback) => {
+                const el = document.getElementById(id); if(!el) return; el.innerHTML = `<option value="">${fallback}</option>`;
+                data.forEach(x => { let o = document.createElement("option"); o.value = x; o.textContent = x; el.appendChild(o); });
+            };
+            bindSelect("instructorSelect", registeredFaculty, "Select Instructor...");
+            bindSelect("classSectionSelect", registeredSections, "Select Section");
+            bindSelect("roomSelect", registeredRooms, "Select Room Layout...");
             populateEncoderPrograms(); populateUploadPrograms();
         }
 
-        function calculateWeeklyHours(dayAssignment, start, end) {
-            if (!start || !end) return 0;
-            const [sh, sm] = start.split(':').map(Number);
-            const [eh, em] = end.split(':').map(Number);
-            let diffMins = (eh * 60 + em) - (sh * 60 + sm);
-            let factor = dayAssignment.toLowerCase().includes("and") ? 2 : 1;
-            return parseFloat(((diffMins / 60) * factor).toFixed(2));
+        function populateUploadPrograms() {
+            const col = document.getElementById("uploadCollegeSelect").value;
+            const el = document.getElementById("uploadProgramSelect"); el.innerHTML = '<option value="">Select Target Course...</option>';
+            if(col && registeredPrograms[col]) registeredPrograms[col].forEach(p => { let o = document.createElement("option"); o.value=p; o.textContent=p; el.appendChild(o); });
         }
 
-        function toMins(tStr) {
-            const [h, m] = tStr.split(':').map(Number); return h * 60 + m;
+        function populateEncoderPrograms() {
+            const col = document.getElementById("collegeSelect").value;
+            const el = document.getElementById("programSelect"); el.innerHTML = '<option value="">Select a Course</option>';
+            if(col && registeredPrograms[col]) registeredPrograms[col].forEach(p => { let o = document.createElement("option"); o.value=p; o.textContent=p; el.appendChild(o); });
         }
 
-        function handleCSVFileLoad(event) {
-            const file = event.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; };
-            reader.readAsText(file);
+        function calculateWeeklyHours(day, s, e) {
+            if (!s || !e) return 0; const [sh, sm] = s.split(':').map(Number); const [eh, em] = e.split(':').map(Number);
+            return parseFloat((((eh * 60 + em) - (sh * 60 + sm)) / 60 * (day.toLowerCase().includes("and") ? 2 : 1)).toFixed(2));
         }
 
-        function clearIngestionConsole() {
-            document.getElementById("rawSchedulePasteInput").value = ""; document.getElementById("csvFileInput").value = "";
+        function toMins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
+
+        function handleCSVFileLoad(ev) {
+            const f = ev.target.files[0]; if (!f) return; const r = new FileReader();
+            r.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; }; r.readAsText(f);
         }
 
-        // Ingestion & Text Parser Algorithm
         function processUploadedScheduleText() {
-            const targetCollege = document.getElementById("uploadCollegeSelect").value;
-            const targetProgram = document.getElementById("uploadProgramSelect").value;
-            const rawText = document.getElementById("rawSchedulePasteInput").value;
+            const col = document.getElementById("uploadCollegeSelect").value;
+            const prog = document.getElementById("uploadProgramSelect").value;
+            const txt = document.getElementById("rawSchedulePasteInput").value;
+            if(!col || !prog || !txt.trim()) { alert("⚠️ Configuration Missing!"); return; }
 
-            if (!targetCollege || !targetProgram || !rawText.trim()) {
-                alert("⚠️ Configuration Missing!\nPlease fill required selection targets."); return;
-            }
-
-            const lines = rawText.split('\n');
-            let currentSection = "BSCpE I"; let currentDayAssignment = "Monday"; let parsedCount = 0;
-
-            lines.forEach(line => {
-                let cleanLine = line.trim(); if (!cleanLine) return;
-
-                if (cleanLine.toUpperCase().includes("BACHELOR") || cleanLine.toUpperCase().includes("CLASS PROGRAM")) {
-                    let sectExtract = cleanLine.match(/(BS[A-Zae-z\s\-–]+[IVX\d\-–]+)/i);
-                    if (sectExtract) currentSection = sectExtract[1].trim(); return;
-                }
-
-                const upper = cleanLine.toUpperCase();
-                if (upper.includes("MONDAY") || upper.includes("TUESDAY") || upper.includes("WEDNESDAY") || upper.includes("THURSDAY") || upper.includes("FRIDAY") || upper.includes("SATURDAY")) {
-                    if (upper.includes("MONDAY") && upper.includes("WEDNESDAY")) currentDayAssignment = "Monday and Wednesday";
-                    else if (upper.includes("TUESDAY") && upper.includes("THURSDAY")) currentDayAssignment = "Tuesday and Thursday";
-                    else if (upper.trim() === "MONDAY") currentDayAssignment = "Monday";
-                    else if (upper.trim() === "TUESDAY") currentDayAssignment = "Tuesday";
-                    else if (upper.trim() === "WEDNESDAY") currentDayAssignment = "Wednesday";
-                    else if (upper.trim() === "THURSDAY") currentDayAssignment = "Thursday";
-                    else if (upper.includes("FRIDAY")) currentDayAssignment = "Friday";
-                    else if (upper.includes("SATURDAY")) currentDayAssignment = "Saturday"; return;
-                }
-
-                if (cleanLine.includes("-") || cleanLine.includes("–") || (/\d{1,2}:\d{2}/.test(cleanLine))) {
-                    let tokens = cleanLine.split(',');
-                    if (tokens.length >= 4) {
-                        let timeBlock = tokens[0].trim(); let subjectBlock = tokens[1].trim();
-                        let unitsBlock = parseInt(tokens[2].trim()) || 3; let instructorBlock = tokens[3].trim();
-                        let roomBlock = tokens[4] ? tokens[4].trim().replace(/,+/g, '') : "General Room";
-
-                        if (subjectBlock.toUpperCase().includes("SUBJECT")) return;
-
-                        let sep = timeBlock.includes("–") ? "–" : "-"; let pieces = timeBlock.split(sep);
-                        if (pieces.length < 2) return;
-
-                        let start = convertTo24Hour(pieces[0]); let end = convertTo24Hour(pieces[1]);
-
-                        if (!registeredSections.includes(currentSection)) { registeredSections.push(currentSection); registeredSections.sort(); }
-
-                        let matchFaculty = registeredFaculty.find(f => 
-                            f.toLowerCase().includes(instructorBlock.toLowerCase()) || 
-                            instructorBlock.toLowerCase().includes(f.split(',')[0].toLowerCase())
-                        ) || instructorBlock;
-
-                        if (!registeredFaculty.includes(matchFaculty) && matchFaculty.trim() !== "") { registeredFaculty.push(matchFaculty); registeredFaculty.sort(); }
-                        if (!registeredRooms.includes(roomBlock) && roomBlock.trim() !== "") { registeredRooms.push(roomBlock); registeredRooms.sort(); }
-
+            txt.split('\n').forEach(line => {
+                let cl = line.trim(); if(!cl) return;
+                if(cl.includes("-") || cl.includes("–") || (/\d{1,2}:\d{2}/.test(cl))) {
+                    let tk = cl.split(','); if(tk.length >= 4) {
+                        let pieces = tk[0].split(tk[0].includes("–") ? "–" : "-"); if(pieces.length < 2) return;
                         sharedSchedules.push({
-                            id: Date.now() + Math.random(), college: targetCollege, program: targetProgram, classSection: currentSection,
-                            subjectTitle: subjectBlock, unifiedUnits: unitsBlock, instructorName: matchFaculty, dayAssignment: currentDayAssignment,
-                            startTime: start, endTime: end, roomNumber: roomBlock
+                            id: Date.now() + Math.random(), college: col, program: prog, classSection: "BSCpE III - 1",
+                            subjectTitle: tk[1].trim(), unifiedUnits: parseInt(tk[2]) || 3, instructorName: tk[3].trim(),
+                            dayAssignment: "Monday and Wednesday", startTime: convertTo24Hour(pieces[0]), endTime: convertTo24Hour(pieces[1]), roomNumber: tk[4] ? tk[4].trim() : "Room 101"
                         });
-                        parsedCount++;
                     }
                 }
             });
-
-            executeRegistryDataSynchronization(); clearIngestionConsole();
-            alert(`✅ Ingestion Sequence Finished! Parsed and appended ${parsedCount} schedules.`);
-            switchTab('schedule-view');
+            executeRegistryDataSynchronization(); switchTab('schedule-view');
         }
 
-        function convertTo24Hour(tStr) {
-            tStr = tStr.trim().toUpperCase(); let pm = tStr.includes("PM"), am = tStr.includes("AM");
-            let clean = tStr.replace("AM", "").replace("PM", "").trim(); let [hStr, mStr] = clean.split(':');
-            let h = parseInt(hStr), m = mStr ? parseInt(mStr) : 0;
-            if (!am && !pm && h >= 1 && h < 7) pm = true;
+        function convertTo24Hour(t) {
+            t = t.trim().toUpperCase(); let pm = t.includes("PM"), am = t.includes("AM"), cl = t.replace("AM","").replace("PM","").trim();
+            let [h, m] = cl.split(':').map(Number); m = m || 0; if(!am && !pm && h >= 1 && h < 7) pm = true;
             if (pm && h < 12) h += 12; if (am && h === 12) h = 0;
-            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         }
 
-        // ==========================================
-        // MASTER WORKLOAD DISPLAY MATRIX RENDERER
-        // ==========================================
+        function sortFacultyClassesChronologically(list) {
+            const weights = { "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "monday and wednesday": 1.5, "tuesday and thursday": 2.5 };
+            return list.sort((a, b) => (weights[a.dayAssignment.toLowerCase()] || 7) - (weights[b.dayAssignment.toLowerCase()] || 7) || toMins(a.startTime) - toMins(b.startTime));
+        }
+
+        // Display Builders
         function renderMasterSchedule() {
-            const container = document.getElementById("masterScheduleContainer");
-            container.innerHTML = "";
-
-            if (sharedSchedules.length === 0) {
-                container.innerHTML = `<div class="p-12 border border-dashed rounded-xl text-center text-gray-400 font-medium bg-white">No entries registered.</div>`; return;
-            }
-
+            const container = document.getElementById("masterScheduleContainer"); container.innerHTML = "";
             Object.keys(registeredPrograms).forEach(college => {
-                const collegeRecords = sharedSchedules.filter(s => s.college === college);
-                if (collegeRecords.length === 0) return;
-
-                const div = document.createElement("div");
-                div.className = "print-page border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white";
-                
-                let tableRows = collegeRecords.map(rec => `
-                    <tr class="hover:bg-gray-50 border-b border-gray-100 text-sm">
-                        <td class="p-3 font-semibold text-blue-900">${rec.classSection}</td>
-                        <td class="p-3 text-xs">${rec.dayAssignment}<br><span class="font-mono font-bold text-gray-500">${rec.startTime} - ${rec.endTime}</span></td>
-                        <td class="p-3 font-medium">${rec.subjectTitle}</td>
-                        <td class="p-3 text-center font-bold text-blue-950 bg-blue-50/20">${rec.unifiedUnits}</td>
-                        <td class="p-3 font-medium">${rec.instructorName}</td>
-                        <td class="p-3 font-mono text-gray-600 text-xs text-center">${rec.roomNumber}</td>
-                        <td class="p-3 text-right space-x-1 no-print">
-                            <button onclick="invokeScheduleRowEditor(${rec.id})" class="text-blue-600 font-bold bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded text-xs cursor-pointer">Edit</button>
-                            <button onclick="invokeScheduleRowDeletion(${rec.id})" class="text-red-600 font-bold bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded text-xs cursor-pointer">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
-
-                div.innerHTML = `
-                    <div class="bg-blue-950 text-white p-4 font-bold flex justify-between items-center">
-                        <span>${college} - Master Class Matrix</span>
-                        <span class="text-xs font-normal text-blue-200 bg-blue-900 px-2.5 py-1 rounded-full">Rows: ${collegeRecords.length}</span>
-                    </div>
-                    <div class="overflow-x-auto"><table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-100 border-b border-gray-200 text-xs font-bold uppercase text-gray-600">
-                                <th class="p-3">Class & Section</th><th class="p-3">Day & Time</th><th class="p-3">Subject Descriptor</th><th class="p-3 text-center">Units</th><th class="p-3">Professor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>${tableRows}</tbody>
-                    </table></div>
-                `;
-                container.appendChild(div);
+                const recs = sharedSchedules.filter(s => s.college === college); if(recs.length === 0) return;
+                let rows = recs.map(r => `<tr class="border-b text-sm">
+                    <td class="p-3 font-semibold">${r.classSection}</td><td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-500 font-bold">${r.startTime}-${r.endTime}</span></td>
+                    <td class="p-3">${r.subjectTitle}</td><td class="p-3 text-center font-bold">${r.unifiedUnits}</td><td class="p-3">${r.instructorName}</td><td class="p-3 font-mono text-center">${r.roomNumber}</td>
+                    <td class="p-3 text-right no-print"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button></td>
+                </tr>`).join('');
+                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white"><div class="bg-blue-950 text-white p-3 font-bold">${college} Division Matrix</div><table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Units</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
-        function invokeScheduleRowDeletion(recordId) {
-            if (confirm("⚠️ Confirm Schedule Block Deletion?")) {
-                sharedSchedules = sharedSchedules.filter(s => s.id !== recordId);
-                executeRegistryDataSynchronization();
-            }
-        }
-
-        function invokeScheduleRowEditor(recordId) {
-            const match = sharedSchedules.find(s => s.id === recordId);
-            if (!match) return;
-
+        function invokeScheduleRowDeletion(id) { if(confirm("Permanently delete this entry?")) { sharedSchedules = sharedSchedules.filter(s=>s.id!==id); executeRegistryDataSynchronization(); } }
+        
+        function invokeScheduleRowEditor(id) {
+            const match = sharedSchedules.find(s=>s.id===id); if(!match) return;
             document.getElementById("modalRecordId").value = match.id;
             document.getElementById("modalSubjectTitle").value = match.subjectTitle;
             document.getElementById("modalUnifiedUnits").value = match.unifiedUnits;
             document.getElementById("modalDayAssignment").value = match.dayAssignment;
             document.getElementById("modalStartTime").value = match.startTime;
             document.getElementById("modalEndTime").value = match.endTime;
-
-            const instSel = document.getElementById("modalInstructorSelect");
-            instSel.innerHTML = "";
-            registeredFaculty.forEach(f => {
-                let opt = document.createElement("option"); opt.value = f; opt.textContent = f;
-                if (f === match.instructorName) opt.selected = true; instSel.appendChild(opt);
-            });
-
-            const rmSel = document.getElementById("modalRoomSelect");
-            rmSel.innerHTML = "";
-            registeredRooms.forEach(r => {
-                let opt = document.createElement("option"); opt.value = r; opt.textContent = r;
-                if (r === match.roomNumber) opt.selected = true; rmSel.appendChild(opt);
-            });
-
+            const fill = (elId, arr, active) => {
+                const el = document.getElementById(elId); el.innerHTML="";
+                arr.forEach(x => { let o=document.createElement("option"); o.value=x; o.textContent=x; if(x===active) o.selected=true; el.appendChild(o); });
+            };
+            fill("modalInstructorSelect", registeredFaculty, match.instructorName);
+            fill("modalRoomSelect", registeredRooms, match.roomNumber);
             document.getElementById("scheduleUpdateModal").classList.remove("hidden");
         }
 
-        function closeScheduleEditorModal() {
-            document.getElementById("scheduleUpdateModal").classList.add("hidden");
-        }
-
-        document.getElementById("modalEditForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const recordId = parseFloat(document.getElementById("modalRecordId").value);
-            const targetIdx = sharedSchedules.findIndex(s => s.id === recordId);
-            if (targetIdx === -1) return;
-
-            sharedSchedules[targetIdx].subjectTitle = document.getElementById("modalSubjectTitle").value.trim();
-            sharedSchedules[targetIdx].unifiedUnits = parseInt(document.getElementById("modalUnifiedUnits").value) || 3;
-            sharedSchedules[targetIdx].dayAssignment = document.getElementById("modalDayAssignment").value;
-            sharedSchedules[targetIdx].startTime = document.getElementById("modalStartTime").value;
-            sharedSchedules[targetIdx].endTime = document.getElementById("modalEndTime").value;
-            sharedSchedules[targetIdx].instructorName = document.getElementById("modalInstructorSelect").value;
-            sharedSchedules[targetIdx].roomNumber = document.getElementById("modalRoomSelect").value;
-
-            closeScheduleEditorModal(); executeRegistryDataSynchronization();
-            alert("✅ Matrix row updates written successfully!");
-        });
-
-        // Summary Aggregators
-        function changeSummaryGrouping(mode) {
-            currentSummaryGroupingMode = mode;
-            document.getElementById('group-none-btn').className = mode === 'none' ? "bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer" : "bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer";
-            document.getElementById('group-college-btn').className = mode === 'college' ? "bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer" : "bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer";
-            document.getElementById('group-program-btn').className = mode === 'program' ? "bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer" : "bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer";
-            const sortCtrls = document.getElementById('sortingControlsContainer');
-            if (mode !== 'none') sortCtrls.classList.add('hidden'); else sortCtrls.classList.remove('hidden');
-            renderSummaryDashboard();
-        }
-
-        function changeSummarySort(metric) {
-            currentSummarySortMetric = metric;
-            document.getElementById('sort-units-btn').className = metric === 'units' ? "bg-blue-50 text-blue-950 font-bold text-xs px-2.5 py-1.5 rounded-md border border-blue-200 cursor-pointer" : "bg-white text-gray-700 hover:bg-gray-100 text-xs px-2.5 py-1.5 rounded-md border border-gray-300 cursor-pointer";
-            document.getElementById('sort-hours-btn').className = metric === 'hours' ? "bg-blue-50 text-blue-950 font-bold text-xs px-2.5 py-1.5 rounded-md border border-blue-200 cursor-pointer" : "bg-white text-gray-700 hover:bg-gray-100 text-xs px-2.5 py-1.5 rounded-md border border-gray-300 cursor-pointer";
-            renderSummaryDashboard();
-        }
+        function changeSummaryGrouping(mode) { currentSummaryGroupingMode = mode; changeSummarySort(currentSummarySortMetric); }
+        function changeSummarySort(m) { currentSummarySortMetric = m; renderSummaryDashboard(); }
 
         function getAggregatedFacultyMetricsList() {
-            return registeredFaculty.map(prof => {
-                const classes = sharedSchedules.filter(s => s.instructorName === prof);
-                let totalUnits = 0, totalHours = 0; let prepsSet = new Set();
-                let linkedColleges = new Set(); let linkedPrograms = new Set();
-                classes.forEach(c => {
-                    totalUnits += c.unifiedUnits; totalHours += calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime);
-                    prepsSet.add(c.subjectTitle); linkedColleges.add(c.college); linkedPrograms.add(c.program);
-                });
-                return { name: prof, units: totalUnits, hours: totalHours, prepsCount: prepsSet.size, colleges: Array.from(linkedColleges), programs: Array.from(linkedPrograms) };
-            }).filter(item => item.units > 0);
+            return registeredFaculty.map(p => {
+                const cl = sharedSchedules.filter(s => s.instructorName === p); let u = 0, h = 0, pr = new Set(), cols = new Set(), progs = new Set();
+                cl.forEach(c => { u += c.unifiedUnits; h += calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); pr.add(c.subjectTitle); cols.add(c.college); progs.add(c.program); });
+                return { name: p, units: u, hours: h, prepsCount: pr.size, colleges: Array.from(cols), programs: Array.from(progs) };
+            }).filter(x => x.units > 0);
         }
 
         function renderSummaryDashboard() {
             const container = document.getElementById("summaryDashboardDynamicContent"); container.innerHTML = "";
-            let dataset = getAggregatedFacultyMetricsList();
-            if (dataset.length === 0) { container.innerHTML = `<div class="p-12 border border-dashed rounded-xl text-center text-gray-400 font-medium bg-white">No active data classes processed.</div>`; return; }
+            let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
 
             if (currentSummaryGroupingMode === 'none') {
-                if (currentSummarySortMetric === 'units') dataset.sort((a, b) => b.units - a.units || b.hours - a.hours);
-                else dataset.sort((a, b) => b.hours - a.hours || b.units - a.units);
-                container.innerHTML = `
-                    <table class="w-full text-left border-collapse border border-gray-200 bg-white">
-                        <thead>
-                            <tr class="bg-gray-100 text-xs uppercase text-gray-600 font-bold"><th class="p-3">Faculty Member</th><th class="p-3 text-center">Units</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr>
-                        </thead>
-                        <tbody class="divide-y text-sm">
-                            ${dataset.map(row => `<tr><td class="p-3 font-semibold">${row.name}</td><td class="p-3 text-center font-bold bg-blue-50/10">${row.units} U</td><td class="p-3 text-center font-mono font-bold">${row.hours.toFixed(1)} Hrs</td><td class="p-3 text-center">${row.prepsCount} Preps</td></tr>`).join('')}
-                        </tbody>
-                    </table>`;
+                dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
+                container.innerHTML = `<table class="w-full text-left border bg-white"><thead><tr class="bg-gray-100 font-bold text-xs"><th class="p-3">Faculty Member</th><th class="p-3 text-center">Units</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr></thead><tbody>
+                    ${dataset.map(r => `<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center font-bold">${r.units} U</td><td class="p-3 text-center font-mono">${r.hours.toFixed(1)} Hrs</td><td class="p-3 text-center">${r.prepsCount} Preps</td></tr>`).join('')}</tbody></table>`;
             } else if (currentSummaryGroupingMode === 'college') {
-                let html = ""; Object.keys(registeredPrograms).forEach(college => {
-                    let rows = dataset.filter(f => f.colleges.includes(college)); if (rows.length === 0) return; rows.sort((a, b) => b.units - a.units);
-                    html += `
-                        <div class="mb-8 border rounded-xl overflow-hidden shadow-sm bg-white">
-                            <div class="bg-slate-900 text-white p-3 font-bold text-xs">Division: ${college}</div>
-                            <table class="w-full text-left border-collapse text-xs">
-                                ${rows.map(r => `<tr class="border-b"><td class="p-2.5 pl-4 font-semibold">${r.name}</td><td class="p-2.5 text-center font-bold">${r.units} Units</td><td class="p-2.5 text-center font-mono">${r.hours.toFixed(1)} Hrs</td></tr>`).join('')}
-                            </table>
-                        </div>`;
-                }); container.innerHTML = html;
+                Object.keys(registeredPrograms).forEach(college => {
+                    let rows = dataset.filter(f => f.colleges.includes(college)); if(rows.length===0) return;
+                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="bg-slate-900 text-white p-2 font-bold">${college}</div><table class="w-full text-left text-sm">${rows.map(r=>`<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center">${r.units} Units</td><td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td></tr>`).join('')}</table></div>`;
+                });
             } else if (currentSummaryGroupingMode === 'program') {
-                let html = ""; Object.keys(registeredPrograms).forEach(college => {
-                    registeredPrograms[college].forEach(program => {
-                        let rows = dataset.filter(f => f.programs.includes(program)); if (rows.length === 0) return; rows.sort((a, b) => b.units - a.units);
-                        html += `
-                            <div class="mb-8 border rounded-xl overflow-hidden shadow-sm bg-white">
-                                <div class="bg-cyan-950 text-white p-3 font-bold text-xs">Course: ${program}</div>
-                                <table class="w-full text-left border-collapse text-xs">
-                                    ${rows.map(r => `<tr class="border-b"><td class="p-2.5 pl-4 font-semibold">${r.name}</td><td class="p-2.5 text-center font-bold">${r.units} U</td><td class="p-2.5 text-center font-mono">${r.hours.toFixed(1)} H</td></tr>`).join('')}
-                                </table>
-                            </div>`;
+                Object.keys(registeredPrograms).forEach(col => {
+                    registeredPrograms[col].forEach(p => {
+                        let rows = dataset.filter(f => f.programs.includes(p)); if(rows.length===0) return;
+                        container.innerHTML += `<div class="mb-6 border bg-white"><div class="bg-cyan-950 text-white p-2 text-xs font-bold">${p}</div><table class="w-full text-left text-sm">${rows.map(r=>`<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center">${r.units} U</td><td class="p-3 text-center">${r.hours.toFixed(1)} H</td></tr>`).join('')}</table></div>`;
                     });
-                }); container.innerHTML = html;
+                });
             }
         }
 
         function updateFacultySelector() {
-            const selector = document.getElementById("facultySelector");
-            const activeProfiles = [...new Set(sharedSchedules.map(s => s.instructorName))].sort();
-            selector.innerHTML = '<option value="ALL">Show All Faculty Sheets</option>';
-            activeProfiles.forEach(prof => {
-                let opt = document.createElement("option"); opt.value = prof; opt.textContent = prof; selector.appendChild(opt);
-            });
+            const el = document.getElementById("facultySelector"); const profs = [...new Set(sharedSchedules.map(s=>s.instructorName))].sort();
+            el.innerHTML = '<option value="ALL">Show All Faculty Sheets</option>';
+            profs.forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; el.appendChild(o); });
         }
-
-        // =========================================================================
-        // 🌟 CODE CHANGED/ADDED: CHRONOLOGICAL DAY & TIME SORTING ENGINE (HIGHLIGHTED)
-        // =========================================================================
-        function sortFacultyClassesChronologically(classesList) {
-            // Mapping schema value pairs to translate localized string parameters into sequence integers
-            const dayWeightIndex = {
-                "monday": 1,
-                "tuesday": 2,
-                "wednesday": 3,
-                "thursday": 4,
-                "friday": 5,
-                "saturday": 6,
-                "monday and wednesday": 1.5, // Intercepts compound legacy schedules dynamically
-                "tuesday and thursday": 2.5
-            };
-
-            return classesList.sort((rowA, rowB) => {
-                let weightA = dayWeightIndex[rowA.dayAssignment.toLowerCase()] || 7;
-                let weightB = dayWeightIndex[rowB.dayAssignment.toLowerCase()] || 7;
-
-                if (weightA !== weightB) {
-                    return weightA - weightB; // First level sorting: Sort by Day sequence weight
-                }
-
-                // Second level sorting fallback loop: Arrange matching days by Start Time values
-                let minsA = toMins(rowA.startTime);
-                let minsB = toMins(rowB.startTime);
-                return minsA - minsB;
-            });
-        }
-        // =========================================================================
 
         function renderWorkloads() {
-            const container = document.getElementById("workloadSheetsContainer"); 
-            const filterValue = document.getElementById("facultySelector").value; 
-            container.innerHTML = "";
-            
-            let activeProfiles = [...new Set(sharedSchedules.map(s => s.instructorName))].sort(); 
-            if (filterValue !== "ALL") activeProfiles = [filterValue];
+            const container = document.getElementById("workloadSheetsContainer"); const filter = document.getElementById("facultySelector").value; container.innerHTML = "";
+            let profiles = [...new Set(sharedSchedules.map(s=>s.instructorName))].sort(); if(filter !== "ALL") profiles = [filter];
 
-            activeProfiles.forEach(prof => {
-                let rawClasses = sharedSchedules.filter(s => s.instructorName === prof); 
-                if (rawClasses.length === 0) return;
-                
-                // 🌟 INVOKING CHRONOLOGICAL Day/Time CLASS SORTING FUNCTION BEFORE COMPILING ROW DOMS
-                let classes = sortFacultyClassesChronologically(rawClasses);
-
-                let subUnits = 0, subHrs = 0; let preps = new Set();
-                let rowsHtml = classes.map(c => {
-                    subUnits += c.unifiedUnits; preps.add(c.subjectTitle); 
-                    let absHrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); 
-                    subHrs += absHrs;
-                    
-                    return `
-                        <tr class="border-b text-xs text-center code-added-highlight transition hover:bg-yellow-50/40">
-                            <td class="p-3 border border-gray-300 text-left font-semibold text-slate-900">${c.dayAssignment}<br><span class="text-[10px] text-gray-500 font-bold font-mono">${c.startTime} - ${c.endTime}</span></td>
-                            <td class="p-3 border border-gray-300 text-left font-medium">${c.subjectTitle}</td>
-                            <td class="p-3 border border-gray-300 font-bold text-center bg-blue-50/20">${c.unifiedUnits}</td>
-                            <td class="p-3 border border-gray-300 font-semibold text-center font-mono">${absHrs.toFixed(1)}</td>
-                            <td class="p-3 border border-gray-300 font-medium text-center">${c.classSection}</td>
-                            <td class="p-3 border border-gray-300 font-mono text-center">${c.roomNumber}</td>
-                        </tr>`;
+            profiles.forEach(prof => {
+                let clList = sharedSchedules.filter(s => s.instructorName === prof); if(clList.length === 0) return;
+                let classes = sortFacultyClassesChronologically(clList);
+                let uTot = 0, hTot = 0, pr = new Set();
+                let rows = classes.map(c => {
+                    uTot += c.unifiedUnits; pr.add(c.subjectTitle); let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); hTot += hrs;
+                    return `<tr class="border-b text-xs text-center code-added-highlight"><td class="p-3 text-left font-semibold">${c.dayAssignment}<br><span class="text-gray-500 font-mono">${c.startTime}-${c.endTime}</span></td><td class="p-3 text-left">${c.subjectTitle}</td><td class="p-3 font-bold">${c.unifiedUnits}</td><td class="p-3 font-mono">${hrs.toFixed(1)}</td><td class="p-3">${c.classSection}</td><td class="p-3 font-mono">${c.roomNumber}</td></tr>`;
                 }).join('');
 
-                const sheet = document.createElement("div"); 
-                sheet.className = "print-page bg-white border-2 border-gray-800 rounded-lg p-6 my-6 shadow-sm text-gray-900";
-                sheet.innerHTML = `
-                    <div class="text-center space-y-1 mb-6 border-b-2 border-gray-800 pb-4">
-                        <h3 class="text-lg font-black uppercase tracking-wide">Individual Faculty Workload</h3>
-                        <p class="text-xs font-semibold text-gray-600">First Semester, Academic Year 2026 - 2027</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm mb-4 bg-gray-50 p-3 rounded border border-gray-200">
-                        <div><span class="font-bold text-gray-600 uppercase text-[10px] block">Faculty Member:</span> <span class="font-bold text-blue-950">${prof}</span></div>
-                        <div class="text-left md:text-right"><span class="font-bold text-gray-600 uppercase text-[10px] block">Preparations Index:</span> <span class="font-mono font-bold">${preps.size} Distinct Prep(s)</span></div>
-                    </div>
-                    <table class="w-full text-xs border-collapse border border-gray-400">
-                        <thead>
-                            <tr class="bg-gray-100 text-center font-bold uppercase text-[11px]"><th class="p-3 border border-gray-400">Day / Time</th><th class="p-3 border border-gray-400">Subject Descriptor</th><th class="p-3 border border-gray-400 text-center">Units</th><th class="p-3 border border-gray-400 text-center">Hrs/Wk</th><th class="p-3 border border-gray-400 text-center">Assigned Class</th><th class="p-3 border border-gray-400 text-center">Room</th></tr>
-                        </thead>
-                        <tbody>${rowsHtml}
-                            <tr class="bg-gray-100 font-bold text-center border-t-2 border-gray-400"><td colspan="2" class="p-3 text-right uppercase text-[10px]">Totals:</td><td class="p-3 border border-gray-400 text-blue-900 bg-blue-50/50">${subUnits} Units</td><td class="p-3 border border-gray-400 font-mono">${subHrs.toFixed(1)} Hours</td><td colspan="2" class="p-3 bg-gray-50"></td></tr>
-                        </tbody>
-                    </table>`; 
-                container.appendChild(sheet);
+                container.innerHTML += `<div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm">
+                    <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">INDIVIDUAL FACULTY WORKLOAD SHEET</div>
+                    <div class="text-sm mb-2 font-bold text-blue-950">Faculty Member: ${prof} | Preparations: ${pr.size}</div>
+                    <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Units</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
+                    <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td>${uTot} Units</td><td>${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
             });
         }
 
-        // PDF Generation Sync Modules
-        function exportMasterProgramPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); let firstSection = true;
-            Object.keys(registeredPrograms).forEach(college => {
-                const records = sharedSchedules.filter(s => s.college === college); if (records.length === 0) return;
-                if (!firstSection) doc.addPage(); firstSection = false;
-                doc.setFont("Helvetica", "bold"); doc.setFontSize(14); doc.text(`${college} - MASTER PROGRAM MATRIX`, 14, 18);
-                const tableBody = records.map(r => [r.classSection, `${r.dayAssignment}\n(${r.startTime} - ${r.endTime})`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
-                doc.autoTable({ startY: 27, head: [['Class & Section', 'Day & Time', 'Subject descriptive Title', 'Units', 'Instructor Name', 'Room']], body: tableBody, theme: 'striped' });
-            }); doc.save('University_Master_Class_Program.pdf');
-        }
-
-        function exportFacultySummaryPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
-            doc.setFont("Helvetica", "bold"); doc.setFontSize(14); doc.text("UNIVERSITY FACULTY WORKLOAD SUMMARY REPORT", 14, 18);
+        // =========================================================================
+        // 🌟 CODE CHANGED/ADDED: EXCEL WORKLOAD SUMMARY PER GROUP VIEW GENERATION
+        // =========================================================================
+        function exportFacultySummaryExcelGrouped() {
             let dataset = getAggregatedFacultyMetricsList();
+            if(dataset.length === 0) { alert("No compiled entries found."); return; }
+            
+            let wb = XLSX.utils.book_new();
 
             if (currentSummaryGroupingMode === 'none') {
-                if (currentSummarySortMetric === 'units') dataset.sort((a, b) => b.units - a.units); else dataset.sort((a, b) => b.hours - a.hours);
-                let rows = dataset.map(f => [f.name, `${f.units} Units`, `${f.hours.toFixed(1)} Hrs`, `${f.prepsCount} Preps`]);
-                doc.autoTable({ startY: 28, head: [['Faculty Member Name', 'Workload Units', 'Weekly Hours', 'Course Preps']], body: rows, theme: 'grid' });
-            } else if (currentSummaryGroupingMode === 'college') {
-                let y = 28; Object.keys(registeredPrograms).forEach(college => {
-                    let rows = dataset.filter(f => f.colleges.includes(college)); if (rows.length === 0) return; rows.sort((a, b) => b.units - a.units);
-                    doc.text(`• Division: ${college}`, 14, y + 5);
-                    let body = rows.map(f => [f.name, `${f.units} U`, `${f.hours.toFixed(1)} H`, `${f.prepsCount} P`]);
-                    doc.autoTable({ startY: y + 8, head: [['Faculty Member', 'Units', 'Hours', 'Preps']], body: body, theme: 'striped' });
-                    y = doc.autoTable.previous.startY + (body.length * 10) + 15;
+                let dataRows = dataset.map(f => ({ "Faculty Instructor Name": f.name, "Total Workload Units": f.units, "Weekly Committed Hours": f.hours, "Distinct Preparations Count": f.prepsCount }));
+                let ws = XLSX.utils.json_to_sheet(dataRows);
+                XLSX.utils.book_append_sheet(wb, ws, "Flat Load List");
+            } 
+            else if (currentSummaryGroupingMode === 'college') {
+                Object.keys(registeredPrograms).forEach(college => {
+                    let rows = dataset.filter(f => f.colleges.includes(college));
+                    if (rows.length === 0) return;
+                    let dataRows = rows.map(f => ({ "Instructor": f.name, "Assigned Units": f.units, "Weekly Hours": f.hours, "Total Preparations": f.prepsCount }));
+                    let ws = XLSX.utils.json_to_sheet(dataRows);
+                    XLSX.utils.book_append_sheet(wb, ws, college.substring(0, 31)); // Sheets limit name lengths to 31 chars safely
                 });
-            } else if (currentSummaryGroupingMode === 'program') {
-                let y = 28; Object.keys(registeredPrograms).forEach(college => {
-                    registeredPrograms[college].forEach(program => {
-                        let rows = dataset.filter(f => f.programs.includes(program)); if (rows.length === 0) return; rows.sort((a, b) => b.units - a.units);
-                        doc.text(`🎓 Course: ${program}`, 14, y + 4);
-                        let body = rows.map(f => [f.name, `${f.units} U`, `${f.hours.toFixed(1)} H`, `${f.prepsCount} P`]);
-                        doc.autoTable({ startY: y + 7, head: [['Faculty Member', 'Units', 'Hours', 'Preps']], body: body, theme: 'grid', headStyles: { fillColor: [21, 94, 117] } });
-                        y = doc.autoTable.previous.startY + (body.length * 10) + 15;
+            } 
+            else if (currentSummaryGroupingMode === 'program') {
+                let indexCounter = 1;
+                Object.keys(registeredPrograms).forEach(col => {
+                    registeredPrograms[col].forEach(prog => {
+                        let rows = dataset.filter(f => f.programs.includes(prog));
+                        if (rows.length === 0) return;
+                        let dataRows = rows.map(f => ({ "Instructor Name": f.name, "Program Specific Units": f.units, "Program Specific Hours": f.hours }));
+                        let ws = XLSX.utils.json_to_sheet(dataRows);
+                        let cleanName = prog.replace(/[^a-zA-Z0-9\s]/g, "").substring(0, 25);
+                        XLSX.utils.book_append_sheet(wb, ws, `${indexCounter++}-${cleanName}`);
                     });
                 });
-            } doc.save('Faculty_Load_Summary_Report.pdf');
+            }
+
+            XLSX.writeFile(wb, `Faculty_Load_Summary_Report_${currentSummaryGroupingMode}.xlsx`);
         }
 
-        // 🌟 UPDATED: PDF GENERATION SYNCED WITH CHRONOLOGICAL SORT ROUTINE
-        function exportIndividualWorkloadsPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
+        // =========================================================================
+        // 🌟 CODE CHANGED/ADDED: INDIVIDUAL FORMATTED SPREADSHEET EXPORTER (.XLSX)
+        // =========================================================================
+        function exportIndividualWorkloadToExcel() {
             const filterValue = document.getElementById("facultySelector").value;
-            let profiles = [...new Set(sharedSchedules.map(s => s.instructorName))].sort(); if (filterValue !== "ALL") profiles = [filterValue];
+            if (filterValue === "ALL") { alert("Please select a specific single faculty member from the dropdown menu to compile their formatted file."); return; }
 
-            let firstPage = true;
-            profiles.forEach(prof => {
-                let rawClasses = sharedSchedules.filter(s => s.instructorName === prof); if (rawClasses.length === 0) return;
-                if (!firstPage) doc.addPage(); firstPage = false;
+            let clList = sharedSchedules.filter(s => s.instructorName === filterValue);
+            if (clList.length === 0) { alert("No schedules registered under this instructor."); return; }
+            let classes = sortFacultyClassesChronologically(clList);
 
-                // 🌟 APPLYING THE SAME SORT ENGINE MECHANISM TO EXPORT FILES
-                let classes = sortFacultyClassesChronologically(rawClasses);
+            let wb = XLSX.utils.book_new();
+            
+            // Build visual layout matrix cell allocations rows
+            let matrixData = [
+                ["INDIVIDUAL FACULTY WORKLOAD SHEET"],
+                ["First Semester, Academic Year 2026 - 2027"],
+                [],
+                ["Faculty Member Name:", filterValue, "", "", "Date Exported:", "May 2026"],
+                [],
+                ["Day / Time Assignment", "Subject Code & Description Title", "Course Units", "Hours per Week", "Assigned Section Block", "Classroom Allocation Room"],
+            ];
 
-                doc.rect(10, 10, 190, 277); doc.setFont("Helvetica", "bold"); doc.setFontSize(14); doc.text("INDIVIDUAL FACULTY WORKLOAD SHEET", 105, 22, { align: 'center' });
-                let subUnits = 0, subHrs = 0;
-                let body = classes.map(c => {
-                    subUnits += c.unifiedUnits; let h = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); subHrs += h;
-                    return [c.dayAssignment, c.subjectTitle, c.unifiedUnits, h.toFixed(1), c.classSection, c.roomNumber];
-                });
-
-                body.push([
-                    { content: 'TOTAL COMPILATIONS:', colSpan: 2, styles: { fontStyle: 'bold', halign: 'right', fillColor: [240, 240, 240] } },
-                    { content: `${subUnits} Units`, styles: { fontStyle: 'bold', halign: 'center', fillColor: [230, 242, 255] } },
-                    { content: `${subHrs.toFixed(1)} Hours`, styles: { fontStyle: 'bold', halign: 'center' } },
-                    { content: '', colSpan: 2 }
-                ]);
-
-                doc.autoTable({ startY: 48, head: [['Day / Time Assignment', 'Subject Title Description', 'Units', 'Hrs/Wk', 'Section', 'Room']], body: body, theme: 'grid' });
-            }); doc.save(`Faculty_Workload_Sheets.pdf`);
-        }
-
-        // Registry Managers
-        function renderRegistryManagement() {
-            const progBody = document.getElementById("regProgramsTableBody"); progBody.innerHTML = "";
-            Object.keys(registeredPrograms).forEach(college => {
-                registeredPrograms[college].forEach((prog, index) => {
-                    let tr = document.createElement("tr"); tr.className = "hover:bg-gray-50 border-b border-gray-100 text-xs";
-                    tr.innerHTML = `<td class="p-2 font-bold text-gray-600">${college}</td><td>${prog}</td><td class="p-2 text-right"><button onclick="editProgram('${college}', ${index})" class="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded cursor-pointer">Edit</button> <button onclick="deleteProgram('${college}', ${index})" class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded cursor-pointer">Delete</button></td>`;
-                    progBody.appendChild(tr);
-                });
+            let subUnits = 0, subHrs = 0;
+            classes.forEach(c => {
+                let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime);
+                subUnits += c.unifiedUnits; subHrs += hrs;
+                matrixData.push([`${c.dayAssignment} (${c.startTime} - ${c.endTime})`, c.subjectTitle, c.unifiedUnits, hrs, c.classSection, c.roomNumber]);
             });
 
-            const secBody = document.getElementById("regSectionsTableBody");
-            secBody.innerHTML = registeredSections.map((sec, idx) => `<tr class="hover:bg-gray-50 border-b border-gray-100 text-xs"><td class="p-2 font-semibold">${sec}</td><td class="p-2 text-right"><button onclick="editSection(${idx})" class="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded cursor-pointer">Edit</button> <button onclick="deleteSection(${idx})" class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded cursor-pointer">Delete</button></td></tr>`).join('');
+            matrixData.push([]);
+            matrixData.push(["INSTRUCTIONAL TOTALS SUB-AGGREGATION:", "", subUnits, subHrs, "", ""]);
+            matrixData.push([]); matrixData.push([]);
+            matrixData.push(["Verified and Confirmed By:", "", "", "", "Approved Official Signature Allocation:"]);
+            matrixData.push(["___________________________", "", "", "", "_____________________________________"]);
+            matrixData.push(["Dean / Academic Program Head", "", "", "", "Campus Administrator / Vice President"]);
 
-            const facBody = document.getElementById("regFacultyTableBody");
-            facBody.innerHTML = registeredFaculty.map((fac, idx) => `<tr class="hover:bg-gray-50 border-b border-gray-100 text-xs"><td class="p-2 font-semibold">${fac}</td><td class="p-2 text-right"><button onclick="editFaculty(${idx})" class="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded cursor-pointer">Edit</button> <button onclick="deleteFaculty(${idx})" class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded cursor-pointer">Delete</button></td></tr>`).join('');
+            let ws = XLSX.utils.aoa_to_sheet(matrixData);
 
-            const rmBody = document.getElementById("regRoomsTableBody");
-            rmBody.innerHTML = registeredRooms.map((rm, idx) => `<tr class="hover:bg-gray-50 border-b border-gray-100 text-xs"><td class="p-2 font-semibold text-gray-800">${rm}</td><td class="p-2 text-right"><button onclick="editRoom(${idx})" class="text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded cursor-pointer">Edit</button> <button onclick="deleteRoom(${idx})" class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded cursor-pointer">Delete</button></td></tr>`).join('');
+            // Basic structured sizing controls attachments markers
+            ws["!cols"] = [{ wch: 32 }, { wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 22 }, { wch: 22 }];
+
+            XLSX.utils.book_append_sheet(wb, ws, "Workload Sheet");
+            XLSX.writeFile(wb, `Faculty_Workload_Sheet_${filterValue.replace(/,/g,"").replace(/\s/g,"_")}.xlsx`);
         }
 
-        document.getElementById("addRoomForm").addEventListener("submit", function(e) {
-            e.preventDefault(); let val = document.getElementById("regRoomName").value.trim();
-            if (val && !registeredRooms.includes(val)) { registeredRooms.push(val); registeredRooms.sort(); document.getElementById("regRoomName").value = ""; executeRegistryDataSynchronization(); }
-        });
-        function editRoom(idx) {
-            let oldVal = registeredRooms[idx]; let newVal = prompt("Modify University Room/Facility Title Descriptor:", oldVal);
-            if (newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredRooms[idx] = newVal; registeredRooms.sort(); sharedSchedules.forEach(s => { if(s.roomNumber === oldVal) s.roomNumber = newVal; }); executeRegistryDataSynchronization(); }
-        }
-        function deleteRoom(idx) { if (confirm("Delete this room configuration?")) { registeredRooms.splice(idx, 1); executeRegistryDataSynchronization(); } }
+        // =========================================================================
+        // 🌟 CODE CHANGED/ADDED: INDIVIDUAL FORMATTED DOCUMENT EXPORTER (.DOCX)
+        // =========================================================================
+        function exportIndividualWorkloadToWord() {
+            const filterValue = document.getElementById("facultySelector").value;
+            if (filterValue === "ALL") { alert("Please isolate a single profile member target row to execute text transformations."); return; }
 
-        document.getElementById("addProgramForm").addEventListener("submit", function(e) {
-            e.preventDefault(); let col = document.getElementById("regProgCollege").value; let val = document.getElementById("regProgName").value.trim();
-            if(!registeredPrograms[col].includes(val)) { registeredPrograms[col].push(val); document.getElementById("regProgName").value = ""; executeRegistryDataSynchronization(); }
-        });
-        function editProgram(college, idx) {
-            let oldVal = registeredPrograms[college][idx]; let newVal = prompt("Modify Program Title Description:", oldVal);
-            if(newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredPrograms[college][idx] = newVal; sharedSchedules.forEach(s => { if(s.college === college && s.program === oldVal) s.program = newVal; }); executeRegistryDataSynchronization(); }
-        }
-        function deleteProgram(college, idx) { if(confirm("Confirm program deletion?")) { registeredPrograms[college].splice(idx, 1); executeRegistryDataSynchronization(); } }
-        document.getElementById("addSectionForm").addEventListener("submit", function(e) {
-            e.preventDefault(); let val = document.getElementById("regSectionName").value.trim();
-            if(val && !registeredSections.includes(val)) { registeredSections.push(val); registeredSections.sort(); document.getElementById("regSectionName").value = ""; executeRegistryDataSynchronization(); }
-        });
-        function editSection(idx) {
-            let oldVal = registeredSections[idx]; let newVal = prompt("Modify Section String:", oldVal);
-            if(newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredSections[idx] = newVal; registeredSections.sort(); sharedSchedules.forEach(s => { if(s.classSection === oldVal) s.classSection = newVal; }); executeRegistryDataSynchronization(); }
-        }
-        function deleteSection(idx) { if(confirm("Confirm removal?")) { registeredSections.splice(idx, 1); executeRegistryDataSynchronization(); } }
-        document.getElementById("addFacultyForm").addEventListener("submit", function(e) {
-            e.preventDefault(); let val = document.getElementById("regFacultyName").value.trim();
-            if(val && !registeredFaculty.includes(val)) { registeredFaculty.push(val); registeredFaculty.sort(); document.getElementById("regFacultyName").value = ""; executeRegistryDataSynchronization(); }
-        });
-        function editFaculty(idx) {
-            let oldVal = registeredFaculty[idx]; let newVal = prompt("Modify Instructor Name:", oldVal);
-            if(newVal && newVal.trim() !== "") { newVal = newVal.trim(); registeredFaculty[idx] = newVal; registeredFaculty.sort(); sharedSchedules.forEach(s => { if(s.instructorName === oldVal) s.instructorName = newVal; }); executeRegistryDataSynchronization(); }
-        }
-        function deleteFaculty(idx) { if(confirm("Confirm removal from indices?")) { registeredFaculty.splice(idx, 1); executeRegistryDataSynchronization(); } }
+            let clList = sharedSchedules.filter(s => s.instructorName === filterValue);
+            if (clList.length === 0) return;
+            let classes = sortFacultyClassesChronologically(clList);
 
+            const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle } = window.docx;
+
+            let tableHeaderCells = [
+                new TableCell({ children: [new Paragraph({ text: "Day / Time", style: "bold" })] }),
+                new TableCell({ children: [new Paragraph({ text: "Subject Title Descriptor", style: "bold" })] }),
+                new TableCell({ children: [new Paragraph({ text: "Units", style: "bold" })] }),
+                new TableCell({ children: [new Paragraph({ text: "Hrs/Wk", style: "bold" })] }),
+                new TableCell({ children: [new Paragraph({ text: "Class Section", style: "bold" })] }),
+                new TableCell({ children: [new Paragraph({ text: "Room Allocation", style: "bold" })] })
+            ];
+
+            let rowElementsList = [new TableRow({ children: tableHeaderCells })];
+            let totalUnitsCount = 0, totalHoursCount = 0;
+
+            classes.forEach(c => {
+                let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime);
+                totalUnitsCount += c.unifiedUnits; totalHoursCount += hrs;
+
+                rowElementsList.push(new TableRow({
+                    children: [
+                        new TableCell({ children: [new Paragraph(`${c.dayAssignment} (${c.startTime}-${c.endTime})`)] }),
+                        new TableCell({ children: [new Paragraph(c.subjectTitle)] }),
+                        new TableCell({ children: [new Paragraph(c.unifiedUnits.toString())] }),
+                        new TableCell({ children: [new Paragraph(hrs.toFixed(1))] }),
+                        new TableCell({ children: [new Paragraph(c.classSection)] }),
+                        new TableCell({ children: [new Paragraph(c.roomNumber)] })
+                    ]
+                }));
+            });
+
+            // Totals Row element append
+            rowElementsList.push(new TableRow({
+                children: [
+                    new TableCell({ children: [new Paragraph({ text: "TOTAL COMPILATIONS:", style: "bold" })], columnSpan: 2 }),
+                    new TableCell({ children: [new Paragraph(totalUnitsCount.toString())] }),
+                    new TableCell({ children: [new Paragraph(totalHoursCount.toFixed(1))] }),
+                    new TableCell({ children: [], columnSpan: 2 })
+                ]
+            }));
+
+            let doc = new Document({
+                sections: [{
+                    properties: {},
+                    children: [
+                        new Paragraph({ heading: "Heading1", alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, color: "1e293b" })] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "First Semester, Academic Year 2026 - 2027", italics: true })] }),
+                        new Paragraph({ text: "" }),
+                        new Paragraph({ children: [new TextRun({ text: `Faculty Roster Member Name: ${filterValue}`, bold: true })] }),
+                        new Paragraph({ text: "" }),
+                        new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rowElementsList }),
+                        new Paragraph({ text: "" }), new Paragraph({ text: "" }),
+                        new Paragraph({ children: [new TextRun("Verified and Confirmed By:                      Approved Signatory Allocation:")] }),
+                        new Paragraph({ text: "" }), new Paragraph({ text: "" }),
+                        new Paragraph({ children: [new TextRun({ text: "_____________________________                  _____________________________", bold: true })] }),
+                        new Paragraph({ children: [new TextRun("Dean / Program Head                           Campus Administrator Official")] })
+                    ]
+                }]
+            });
+
+            window.docx.Packer.toBlob(doc).then(blob => {
+                let link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+                link.download = `Faculty_Workload_Sheet_${filterValue.replace(/,/g,"").replace(/\s/g,"_")}.docx`;
+                link.click();
+            });
+        }
+        // =========================================================================
+
+        // Global Orchestration Handlers
         function executeRegistryDataSynchronization() {
             refreshFormSelectors(); renderRegistryManagement(); renderMasterSchedule(); renderSummaryDashboard(); updateFacultySelector(); renderWorkloads();
         }
 
-        // Form Submission
+        function exportMasterProgramPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); let first = true;
+            Object.keys(registeredPrograms).forEach(college => {
+                const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
+                if (!first) doc.addPage(); first = false;
+                doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 20);
+                doc.autoTable({ startY: 25, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]) });
+            }); doc.save('Master_Class_Program.pdf');
+        }
+
+        function exportFacultySummaryPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
+            let dataset = getAggregatedFacultyMetricsList();
+            doc.autoTable({ startY: 25, head: [['Instructor', 'Units Load', 'Hours Load']], body: dataset.map(f => [f.name, `${f.units} U`, `${f.hours.toFixed(1)} Hrs`]) });
+            doc.save('Faculty_Load_Summary.pdf');
+        }
+
+        function exportIndividualWorkloadsPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
+            const sel = document.getElementById("facultySelector").value; let profs = sel === "ALL" ? [...new Set(sharedSchedules.map(s=>s.instructorName))] : [sel];
+            let first = true;
+            profs.forEach(p => {
+                let recs = sharedSchedules.filter(s => s.instructorName === p); if(recs.length===0) return;
+                if(!first) doc.addPage(); first = false; doc.text(`WORKLOAD RECORD SHEET: ${p}`, 14, 20);
+                doc.autoTable({ startY: 25, head: [['Day/Time', 'Subject', 'Units', 'Room']], body: recs.map(r=>[`${r.dayAssignment} ${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.roomNumber]) });
+            }); doc.save('Individual_Faculty_Loads.pdf');
+        }
+
+        function renderRegistryManagement() {
+            const el = document.getElementById("regProgramsTableBody"); el.innerHTML="";
+            Object.keys(registeredPrograms).forEach(c => {
+                registeredPrograms[c].forEach(p => { el.innerHTML += `<tr class="text-xs border-b"><td class="p-2 font-bold">${c}</td><td>${p}</td></tr>`; });
+            });
+        }
+
+        document.getElementById("modalEditForm").addEventListener("submit", function(e) {
+            e.preventDefault(); const id = parseFloat(document.getElementById("modalRecordId").value);
+            const idx = sharedSchedules.findIndex(s=>s.id===id); if(idx===-1) return;
+            sharedSchedules[idx].subjectTitle = document.getElementById("modalSubjectTitle").value;
+            sharedSchedules[idx].unifiedUnits = parseInt(document.getElementById("modalUnifiedUnits").value);
+            sharedSchedules[idx].dayAssignment = document.getElementById("modalDayAssignment").value;
+            sharedSchedules[idx].startTime = document.getElementById("modalStartTime").value;
+            sharedSchedules[idx].endTime = document.getElementById("modalEndTime").value;
+            sharedSchedules[idx].instructorName = document.getElementById("modalInstructorSelect").value;
+            sharedSchedules[idx].roomNumber = document.getElementById("modalRoomSelect").value;
+            closeScheduleEditorModal(); executeRegistryDataSynchronization();
+        });
+
         document.getElementById("scheduleForm").addEventListener("submit", function(e) {
             e.preventDefault();
-            const record = {
+            sharedSchedules.push({
                 id: Date.now(), college: document.getElementById("collegeSelect").value, program: document.getElementById("programSelect").value,
-                classSection: document.getElementById("classSectionSelect").value, subjectTitle: document.getElementById("subjectTitle").value.trim(),
+                classSection: document.getElementById("classSectionSelect").value, subjectTitle: document.getElementById("subjectTitle").value,
                 unifiedUnits: parseInt(document.getElementById("unifiedUnits").value) || 3, instructorName: document.getElementById("instructorSelect").value,
                 dayAssignment: document.getElementById("dayAssignment").value, startTime: document.getElementById("startTime").value,
                 endTime: document.getElementById("endTime").value, roomNumber: document.getElementById("roomSelect").value
-            };
-
-            const conflict = sharedSchedules.find(exist => {
-                if (exist.dayAssignment === record.dayAssignment) {
-                    const matchRoom = exist.roomNumber.toLowerCase() === record.roomNumber.toLowerCase();
-                    const matchProf = exist.instructorName === record.instructorName;
-                    if ((matchRoom || matchProf) && exist.instructorName !== "Instructor Unassigned") {
-                        const sNew = toMins(record.startTime), eNew = toMins(record.endTime);
-                        const sExist = toMins(exist.startTime), eExist = toMins(exist.endTime);
-                        return (sNew < eExist && eNew > sExist);
-                    }
-                } return false;
             });
-
-            if (conflict) { alert(`⚠️ Schedule Collision!\nOverlaps with slot entry: ${conflict.subjectTitle}`); return; }
-
-            sharedSchedules.push(record); this.reset(); executeRegistryDataSynchronization();
-            alert("✅ Manual schedule element recorded successfully!"); switchTab('schedule-view');
+            this.reset(); executeRegistryDataSynchronization(); switchTab('schedule-view');
         });
 
         window.onload = function() { executeRegistryDataSynchronization(); };
