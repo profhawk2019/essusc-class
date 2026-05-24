@@ -331,7 +331,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <button onclick="window.print()" class="bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 font-medium px-3 py-1.5 rounded-md text-xs cursor-pointer">🖨 Print</button>
                 </div>
             </div>
-            <div id="workloadSheetsContainer"></div>
+            <div id="workloadSheetsContainer" class="space-y-6"></div>
         </section>
 
         <!-- REGISTRIES MANAGEMENT -->
@@ -483,7 +483,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let [h, m] = timeString.split(':').map(Number);
             let ampm = h >= 12 ? 'PM' : 'AM';
             h = h % 12;
-            h = h ? h : 12; // true fallback logic for midnight hour
+            h = h ? h : 12; 
             return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${ampm}`;
         }
 
@@ -598,7 +598,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
         function toMins(t) { const [h, m] = t.split(':').map(Number); return h * 60 + m; }
 
-        // Core CSV file load reader framework mapping tokens cleanly
         function handleCSVFileLoad(ev) {
             const f = ev.target.files[0]; if (!f) return; const r = new FileReader();
             r.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; }; r.readAsText(f);
@@ -641,7 +640,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     const dayMatches = dayTimeBlock.match(/(Monday\s+and\s+Wednesday|Tuesday\s+and\s+Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
                     if(dayMatches) dayAssignment = dayMatches[1].trim();
 
-                    // Flexible match logic reading both 24H and 12H formats during ingestion checks
                     const timeMatches = dayTimeBlock.match(/(\d{1,2}:\d{2})\s*(AM|PM)?\s*[-–]\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i);
                     if(timeMatches) { 
                         let startRaw = timeMatches[1];
@@ -673,16 +671,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             executeRegistryDataSynchronization();
             alert(`✅ Ingestion Complete! Merged entry expanded by ${parsedCount} lines.`);
             switchTab('schedule-view');
-        }
-
-        function convertTo24Hour(t) {
-            t = t.trim().toUpperCase(); 
-            let pm = t.includes("PM"), am = t.includes("AM"), cl = t.replace("AM","").replace("PM","").trim();
-            let [h, m] = cl.split(':').map(Number); m = m || 0; 
-            if(!am && !pm && h >= 1 && h < 7) pm = true; // automatic parsing helper assumptions
-            if (pm && h < 12) h += 12; 
-            if (am && h === 12) h = 0;
-            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         }
 
         function sortFacultyClassesChronologically(list) {
@@ -721,7 +709,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             let csvRows = [];
             records.forEach(r => {
-                // Formatting times perfectly into 12H formats natively matching standard template
                 let formattedDayTime = `${r.dayAssignment} (${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)})`;
                 
                 let escapeStr = (str) => {
@@ -1024,12 +1011,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }
         }
 
-        // Dropdown selection hydration based on combined structural scopes
         function filterWorkloadFacultyDropdown() {
             const collegeScope = document.getElementById("facultyWorkloadCollegeScope").value;
             const el = document.getElementById("facultySelector");
             
-            // Collect instructors who actually have classes loaded inside selected targets
             let filteredProfs = [];
             if(collegeScope === "ALL") {
                 filteredProfs = [...new Set(sharedSchedules.map(s => s.instructorName))].sort();
@@ -1054,7 +1039,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let rows = classes.map(c => {
                 uTot += c.unifiedUnits; pr.add(c.subjectTitle); let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); hTot += hrs;
                 return `<tr class="border-b text-xs text-center code-added-highlight">
-                    <td class="p-3 text-left font-semibold">${c.dayAssignment}<br><span class="text-gray-500 font-mono text-[11px] font-bold">${convert24To12Hour(c.startTime)} - convert24To12Hour(c.endTime)}</span></td>
+                    <td class="p-3 text-left font-semibold">${c.dayAssignment}<br><span class="text-gray-500 font-mono text-[11px] font-bold">${convert24To12Hour(c.startTime)} - ${convert24To12Hour(c.endTime)}</span></td>
                     <td class="p-3 text-left">${c.subjectTitle}</td><td class="p-3 font-bold">${c.unifiedUnits}</td><td class="p-3 font-mono">${hrs.toFixed(1)}</td><td class="p-3">${c.classSection}</td><td class="p-3 font-mono">${c.roomNumber}</td>
                 </tr>`;
             }).join('');
@@ -1062,7 +1047,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return `<div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm print-page">
                 <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">INDIVIDUAL FACULTY WORKLOAD SHEET</div>
                 <div class="text-sm mb-2 font-bold text-blue-950">Faculty Member: ${prof} | Preparations: ${pr.size}</div>
-                <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time (12H Form)</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Units</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
+                <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Units</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
                 <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td>${uTot} Units</td><td>${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
         }
 
@@ -1195,13 +1180,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let matrixData = [
                         ["INDIVIDUAL FACULTY WORKLOAD SHEET"], ["Academic Year 2026 - 2027 Summary Allocation Blueprint"], [],
                         ["Faculty Member Name:", prof, "", "", "Date Exported:", "2026 Academic Register"], [],
-                        ["Day / Time Assignment (12H)", "Subject Code & Description", "Course Units", "Hours per Week", "Section Block", "Room Layout"]
+                        ["Day / Time Assignment", "Subject Code & Description", "Course Units", "Hours per Week", "Section Block", "Room Layout"]
                     ];
                     let subUnits = 0, subHrs = 0;
                     classes.forEach(c => {
                         let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); subUnits += c.unifiedUnits; subHrs += hrs;
                         let display12HTime = `${convert24To12Hour(c.startTime)} - ${convert24To12Hour(c.endTime)}`;
-                        matrixData.push([`${c.dayAssignment} (${display12HTime})`, c.subjectTitle, r.unifiedUnits ? r.unifiedUnits : c.unifiedUnits, hrs, c.classSection, c.roomNumber]);
+                        matrixData.push([`${c.dayAssignment} (${display12HTime})`, c.subjectTitle, c.unifiedUnits, hrs, c.classSection, c.roomNumber]);
                     });
                     matrixData.push([], ["TOTALS:", "", subUnits, subHrs, "", ""]);
                     let ws = XLSX.utils.aoa_to_sheet(matrixData);
@@ -1223,7 +1208,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, size: 28 })] }),
                         new Paragraph({ text: "" }), new Paragraph({ children: [new TextRun({ text: `Faculty Roster Member Name: ${prof}`, bold: true })] }), new Paragraph({ text: "" })
                     );
-                    let tableHeaderCells = ["Day / Time (12H)", "Subject Descriptive Title", "Units", "Hrs/Wk", "Class Section", "Room"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "bold" })] }));
+                    let tableHeaderCells = ["Day / Time", "Subject Descriptive Title", "Units", "Hrs/Wk", "Class Section", "Room"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "bold" })] }));
                     let rowElementsList = [new TableRow({ children: tableHeaderCells })];
                     let totalUnitsCount = 0, totalHoursCount = 0;
 
@@ -1303,6 +1288,16 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         }
 
         function clearIngestionConsole() { document.getElementById("rawSchedulePasteInput").value = ""; }
+
+        function convertTo24Hour(t) {
+            t = t.trim().toUpperCase(); 
+            let pm = t.includes("PM"), am = t.includes("AM"), cl = t.replace("AM","").replace("PM","").trim();
+            let [h, m] = cl.split(':').map(Number); m = m || 0; 
+            if(!am && !pm && h >= 1 && h < 7) pm = true; 
+            if (pm && h < 12) h += 12; 
+            if (am && h === 12) h = 0;
+            return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+        }
 
         document.getElementById("modalEditForm").addEventListener("submit", function(e) {
             e.preventDefault(); const id = parseFloat(document.getElementById("modalRecordId").value);
