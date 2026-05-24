@@ -304,55 +304,18 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
-                    <h3 class="text-lg font-bold text-gray-900">✏  Edit Class Schedule & Program Course Allocation</h3>
-                    <button onclick="closeScheduleEditorModal()" class="text-gray-400 text-xl font-bold cursor-pointer">&times;</button>
+                    <h3 class="text-lg font-bold text-gray-900">✏  Edit Class Schedule Block</h3>
+                    <button onclick="closeScheduleEditorModal()" class="text-gray-400 text-xl font-bold">&times;</button>
                 </div>
                 <form id="modalEditForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <input type="hidden" id="modalRecordId">
-                    
-                    <div class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/50 p-3 rounded-lg border border-blue-200">
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-blue-900 mb-1">Target Academic Program</label>
-                            <select id="modalProgramSelect" class="w-full bg-white border p-2 rounded outline-none" onchange="syncModalSectionsDropdown()"></select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold uppercase text-blue-900 mb-1">Assigned Section Block</label>
-                            <input type="text" id="modalClassSection" class="w-full bg-white border p-2 rounded outline-none font-mono font-bold" placeholder="e.g., BSCpE III-1" required>
-                        </div>
-                    </div>
-
                     <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Subject Title</label><input type="text" id="modalSubjectTitle" class="w-full bg-gray-50 border p-2 rounded outline-none" required></div>
                     <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Units</label><input type="number" id="modalUnifiedUnits" class="w-full bg-gray-50 border p-2 rounded" required></div>
                     <div><label class="block text-xs font-bold uppercase text-gray-500 mb-1">Day</label><select id="modalDayAssignment" class="w-full bg-gray-50 border p-2 rounded"><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Monday and Wednesday">Monday and Wednesday</option><option value="Tuesday and Thursday">Tuesday and Thursday</option></select></div>
                     <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold">Start</label><input type="time" id="modalStartTime" class="w-full border p-2"></div><div><label class="block text-xs">End</label><input type="time" id="modalEndTime" class="w-full border p-2"></div></div>
                     <div><label class="block text-xs font-bold">Professor</label><select id="modalInstructorSelect" class="w-full border p-2"></select></div>
                     <div><label class="block text-xs font-bold">Room</label><select id="modalRoomSelect" class="w-full border p-2"></select></div>
-                    <div class="sm:col-span-2 flex justify-end gap-2 border-t pt-3"><button type="button" onclick="closeScheduleEditorModal()" class="bg-gray-100 px-4 py-2 rounded cursor-pointer">Cancel</button><button type="submit" class="bg-blue-950 text-white px-4 py-2 rounded cursor-pointer">Save Changes</button></div>
-                </form>
-            </div>
-        </div>
-
-        <div id="registrySectionModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
-            <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-                <div class="flex justify-between items-center border-b pb-2">
-                    <h3 class="text-md font-bold text-gray-900">⚙ Edit Section Registry Entry</h3>
-                    <button onclick="closeRegistryModal()" class="text-gray-400 text-xl font-bold cursor-pointer">&times;</button>
-                </div>
-                <form id="registryEditForm" class="space-y-4 text-sm">
-                    <input type="hidden" id="regOrigKey">
-                    <input type="hidden" id="regOrigIndex">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Academic Program Course Context</label>
-                        <select id="regEditProgKey" class="w-full bg-gray-50 border p-2.5 rounded outline-none" required></select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Section Code Identification</label>
-                        <input type="text" id="regEditSectCode" class="w-full bg-gray-50 border p-2.5 rounded font-mono font-bold outline-none" required>
-                    </div>
-                    <div class="flex justify-end gap-2 pt-2">
-                        <button type="button" onclick="closeRegistryModal()" class="bg-gray-100 px-4 py-2 rounded cursor-pointer">Close</button>
-                        <button type="submit" class="bg-indigo-900 text-white px-4 py-2 rounded cursor-pointer">Update Registry</button>
-                    </div>
+                    <div class="sm:col-span-2 flex justify-end gap-2 border-t pt-3"><button type="button" onclick="closeScheduleEditorModal()" class="bg-gray-100 px-4 py-2 rounded">Cancel</button><button type="submit" class="bg-blue-950 text-white px-4 py-2 rounded">Save</button></div>
                 </form>
             </div>
         </div>
@@ -369,6 +332,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             "Graduate Studies": ["PhD", "MAED-EM", "MAED-Math", "MAM", "MATVE"]
         };
 
+        // 🌟 UPDATED: STRUCTURED KEY-VALUE OBJECT GROUPING BLUEPRINT SECTIONS BY CURRICULUM KEY
         let registeredSections = {
             "Bachelor of Science in Computer Engineering": ["BSCpE 1-1", "BSCpE III-1", "BSCpE IV-1"],
             "Bachelor of Science in Agricultural and Biosystems Engineering": ["BSABE III-2", "BSABE IV-1"],
@@ -381,7 +345,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
 
         let sharedSchedules = [
             { id: 3001, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "Math 111 (Mathematics in the Modern World)", unifiedUnits: 3, instructorName: "Bolito, Cherlowen A.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
-            { id: 3002, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE-3" }
+            { id: 3002, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "01:00", endTime: "04:00", roomNumber: "COE-3" }
         ];
 
         let currentSummarySortMetric = 'units';
@@ -409,6 +373,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             bindSelect("instructorSelect", registeredFaculty, "Select Instructor...");
             bindSelect("roomSelect", registeredRooms, "Select Room Layout...");
             
+            // Flatten options safely for manual entries dropdown lists selection
             let flatSections = [];
             Object.keys(registeredSections).forEach(k => { flatSections = flatSections.concat(registeredSections[k]); });
             bindSelect("classSectionSelect", [...new Set(flatSections)].sort(), "Select Section");
@@ -491,6 +456,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                         endTime = convertTo24Hour(timeMatches[2]);
                     }
 
+                    // Dynamically map runtime section keys securely into dictionary object arrays
                     if(!registeredSections[assignedProgram]) {
                         registeredSections[assignedProgram] = [];
                     }
@@ -535,6 +501,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         }
 
+        // Core chronological day/time tracking structure block
         function sortFacultyClassesChronologically(list) {
             const weights = { "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "monday and wednesday": 1.5, "tuesday and thursday": 2.5 };
             return list.sort((a, b) => (weights[a.dayAssignment.toLowerCase()] || 7) - (weights[b.dayAssignment.toLowerCase()] || 7) || toMins(a.startTime) - toMins(b.startTime));
@@ -545,18 +512,16 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             Object.keys(registeredPrograms).forEach(college => {
                 const recs = sharedSchedules.filter(s => s.college === college); if(recs.length === 0) return;
                 let rows = recs.map(r => `<tr class="border-b text-sm">
-                    <td class="p-3 font-semibold text-blue-950">${r.classSection}<br><span class="text-[11px] font-medium text-gray-500 block max-w-[200px] truncate">${r.program}</span></td>
-                    <td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-500 font-bold">${r.startTime}-${r.endTime}</span></td>
+                    <td class="p-3 font-semibold">${r.classSection}</td><td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-500 font-bold">${r.startTime}-${r.endTime}</span></td>
                     <td class="p-3">${r.subjectTitle}</td><td class="p-3 text-center font-bold">${r.unifiedUnits}</td><td class="p-3">${r.instructorName}</td><td class="p-3 font-mono text-center">${r.roomNumber}</td>
-                    <td class="p-3 text-right no-print"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer hover:bg-blue-100">Edit</button> <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer hover:bg-red-100">Delete</button></td>
+                    <td class="p-3 text-right no-print"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button></td>
                 </tr>`).join('');
-                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white"><div class="bg-blue-950 text-white p-3 font-bold">${college} Division Matrix</div><table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase"><th class="p-3">Section & Program Route</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Units</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white"><div class="bg-blue-950 text-white p-3 font-bold">${college} Division Matrix</div><table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Units</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
         function invokeScheduleRowDeletion(id) { if(confirm("Permanently delete this entry?")) { sharedSchedules = sharedSchedules.filter(s=>s.id!==id); executeRegistryDataSynchronization(); } }
         
-        // 🌟 UPDATED: SEEDED DYNAMIC DICTIONARY RE-ROUTING TO ALLOW ASSIGNING COURSE/SECTION IN REPORT
         function invokeScheduleRowEditor(id) {
             const match = sharedSchedules.find(s=>s.id===id); if(!match) return;
             document.getElementById("modalRecordId").value = match.id;
@@ -565,16 +530,6 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             document.getElementById("modalDayAssignment").value = match.dayAssignment;
             document.getElementById("modalStartTime").value = match.startTime;
             document.getElementById("modalEndTime").value = match.endTime;
-            document.getElementById("modalClassSection").value = match.classSection;
-
-            // Populate programs lookup inside edit wizard
-            const progSel = document.getElementById("modalProgramSelect"); progSel.innerHTML = "";
-            Object.keys(registeredSections).forEach(p => {
-                let o = document.createElement("option"); o.value = p; o.textContent = p;
-                if(p === match.program) o.selected = true;
-                progSel.appendChild(o);
-            });
-
             const fill = (elId, arr, active) => {
                 const el = document.getElementById(elId); el.innerHTML="";
                 arr.forEach(x => { let o=document.createElement("option"); o.value=x; o.textContent=x; if(x===active) o.selected=true; el.appendChild(o); });
@@ -585,55 +540,6 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
         }
 
         function closeScheduleEditorModal() { document.getElementById("scheduleUpdateModal").classList.add("hidden"); }
-
-        // 🌟 NEW: SECTIONS REGISTRY DIALOG PANEL EDIT INTERACTION SYSTEM PIPELINES
-        function openRegistryEditModal(type, progKey, idx) {
-            const sectCode = registeredSections[progKey][idx];
-            document.getElementById("regOrigKey").value = progKey;
-            document.getElementById("regOrigIndex").value = idx;
-            document.getElementById("regEditSectCode").value = sectCode;
-
-            const progSel = document.getElementById("regEditProgKey"); progSel.innerHTML = "";
-            Object.keys(registeredSections).sort().forEach(pk => {
-                let o = document.createElement("option"); o.value = pk; o.textContent = pk;
-                if(pk === progKey) o.selected = true;
-                progSel.appendChild(o);
-            });
-
-            document.getElementById("registrySectionModal").classList.remove("hidden");
-        }
-
-        function closeRegistryModal() { document.getElementById("registrySectionModal").classList.add("hidden"); }
-
-        document.getElementById("registryEditForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const origKey = document.getElementById("regOrigKey").value;
-            const origIdx = parseInt(document.getElementById("regOrigIndex").value);
-            const targetKey = document.getElementById("regEditProgKey").value;
-            const targetSectCode = document.getElementById("regEditSectCode").value.trim();
-
-            if(!targetSectCode) return;
-
-            // Cascading Engine updates structural keys across all active schedule tables
-            sharedSchedules.forEach(s => {
-                if(s.program === origKey && s.classSection === registeredSections[origKey][origIdx]) {
-                    s.program = targetKey;
-                    s.classSection = targetSectCode;
-                }
-            });
-
-            // Splice modification directly into local registry models memory bounds
-            registeredSections[origKey].splice(origIdx, 1);
-            if(!registeredSections[targetKey]) registeredSections[targetKey] = [];
-            if(!registeredSections[targetKey].includes(targetSectCode)) {
-                registeredSections[targetKey].push(targetSectCode);
-            }
-
-            closeRegistryModal();
-            executeRegistryDataSynchronization();
-            alert("✅ Section Registry and matching course load schedules successfully modernized!");
-        });
-
         function changeSummaryGrouping(mode) { currentSummaryGroupingMode = mode; changeSummarySort(currentSummarySortMetric); }
         function changeSummarySort(m) { currentSummarySortMetric = m; renderSummaryDashboard(); }
 
@@ -668,7 +574,34 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             }
         }
 
-        // Exporters Engines Configs Blocks
+        function updateFacultySelector() {
+            const el = document.getElementById("facultySelector"); const profs = [...new Set(sharedSchedules.map(s=>s.instructorName))].sort();
+            el.innerHTML = '<option value="ALL">Show All Faculty Sheets</option>';
+            profs.forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; el.appendChild(o); });
+        }
+
+        function renderWorkloads() {
+            const container = document.getElementById("workloadSheetsContainer"); const filter = document.getElementById("facultySelector").value; container.innerHTML = "";
+            let profiles = [...new Set(sharedSchedules.map(s=>s.instructorName))].sort(); if(filter !== "ALL") profiles = [filter];
+
+            profiles.forEach(prof => {
+                let clList = sharedSchedules.filter(s => s.instructorName === prof); if(clList.length === 0) return;
+                let classes = sortFacultyClassesChronologically(clList);
+                let uTot = 0, hTot = 0, pr = new Set();
+                let rows = classes.map(c => {
+                    uTot += c.unifiedUnits; pr.add(c.subjectTitle); let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); hTot += hrs;
+                    return `<tr class="border-b text-xs text-center code-added-highlight"><td class="p-3 text-left font-semibold">${c.dayAssignment}<br><span class="text-gray-500 font-mono">${c.startTime}-${c.endTime}</span></td><td class="p-3 text-left">${c.subjectTitle}</td><td class="p-3 font-bold">${c.unifiedUnits}</td><td class="p-3 font-mono">${hrs.toFixed(1)}</td><td class="p-3">${c.classSection}</td><td class="p-3 font-mono">${c.roomNumber}</td></tr>`;
+                }).join('');
+
+                container.innerHTML += `<div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm">
+                    <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">INDIVIDUAL FACULTY WORKLOAD SHEET</div>
+                    <div class="text-sm mb-2 font-bold text-blue-950">Faculty Member: ${prof} | Preparations: ${pr.size}</div>
+                    <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Units</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
+                    <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td>${uTot} Units</td><td>${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
+            });
+        }
+
+        // Exporters Pipeline Engine Logic Block
         function exportFacultySummaryExcelGrouped() {
             let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
             let wb = XLSX.utils.book_new();
@@ -776,41 +709,16 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             });
         }
 
-        function updateFacultySelector() {
-            const el = document.getElementById("facultySelector"); const profs = [...new Set(sharedSchedules.map(s=>s.instructorName))].sort();
-            el.innerHTML = '<option value="ALL">Show All Faculty Sheets</option>';
-            profs.forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; el.appendChild(o); });
-        }
-
-        function renderWorkloads() {
-            const container = document.getElementById("workloadSheetsContainer"); const filter = document.getElementById("facultySelector").value; container.innerHTML = "";
-            let profiles = [...new Set(sharedSchedules.map(s=>s.instructorName))].sort(); if(filter !== "ALL") profiles = [filter];
-
-            profiles.forEach(prof => {
-                let clList = sharedSchedules.filter(s => s.instructorName === prof); if(clList.length === 0) return;
-                let classes = sortFacultyClassesChronologically(clList);
-                let uTot = 0, hTot = 0, pr = new Set();
-                let rows = classes.map(c => {
-                    uTot += c.unifiedUnits; pr.add(c.subjectTitle); let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); hTot += hrs;
-                    return `<tr class="border-b text-xs text-center code-added-highlight"><td class="p-3 text-left font-semibold">${c.dayAssignment}<br><span class="text-gray-500 font-mono">${c.startTime}-${c.endTime}</span></td><td class="p-3 text-left">${c.subjectTitle}</td><td class="p-3 font-bold">${c.unifiedUnits}</td><td class="p-3 font-mono">${hrs.toFixed(1)}</td><td class="p-3">${c.classSection}</td><td class="p-3 font-mono">${c.roomNumber}</td></tr>`;
-                }).join('');
-
-                container.innerHTML += `<div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm">
-                    <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">INDIVIDUAL FACULTY WORKLOAD SHEET</div>
-                    <div class="text-sm mb-2 font-bold text-blue-950">Faculty Member: ${prof} | Preparations: ${pr.size}</div>
-                    <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Units</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
-                    <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td>${uTot} Units</td><td>${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
-            });
-        }
-
-        // 🌟 UPDATED: INJECTED GROUPED BLUEPRINT RENDERING MODULE BLOCKS
+        // =========================================================================
+        // 🌟 CODE MODIFIED: SYSTEM INGESTION INTEGRATED RENDER BLOCKS PANELS
+        // =========================================================================
         function renderRegistryManagement() {
             const el = document.getElementById("regProgramsTableBody"); el.innerHTML="";
             Object.keys(registeredPrograms).forEach(c => {
                 registeredPrograms[c].forEach(p => { el.innerHTML += `<tr class="text-xs border-b"><td class="p-2 font-bold text-slate-700">${c}</td><td>${p}</td></tr>`; });
             });
             
-            // 🌟 ATTACHMENT INJECTION REPLACED SECTION FOR CORE TWO-WAY ROUTING DISPLAYS
+            // 🌟 TRIGGERED ATTACHMENT INJECTION: REPLACED FLAT ARRAY WITH DICTIONARY INTERPRETER SNIPPET
             const sectTable = document.getElementById("regSectionsTableBody"); sectTable.innerHTML = "";
             Object.keys(registeredSections).sort().forEach(progKey => {
                 registeredSections[progKey].forEach((sectCode, idx) => {
@@ -818,8 +726,8 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                         <td class="p-3 font-medium text-indigo-950">${progKey}</td>
                         <td class="p-3 font-mono font-bold">${sectCode}</td>
                         <td class="p-3 text-right space-x-1">
-                            <button onclick="openRegistryEditModal('section', '${progKey}', ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer hover:bg-blue-100">Edit</button>
-                            <button onclick="deleteRegistryRow('section', '${progKey}', ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer hover:bg-red-100">Delete</button>
+                            <button onclick="openRegistryEditModal('section', '${progKey}', ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button>
+                            <button onclick="deleteRegistryRow('section', '${progKey}', ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button>
                         </td>
                     </tr>`;
                 });
@@ -828,37 +736,36 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             document.getElementById("regRoomsTableBody").innerHTML = registeredRooms.map(r => `<tr class="text-xs border-b"><td class="p-2 font-semibold text-slate-700">${r}</td></tr>`).join('');
             document.getElementById("regFacultyTableBody").innerHTML = registeredFaculty.map(f => `<tr class="text-xs border-b"><td class="p-2 font-semibold text-slate-700">${f}</td></tr>`).join('');
         }
+        // =========================================================================
 
+        function executeRegistryDataSynchronization() {
+            refreshFormSelectors(); renderRegistryManagement(); renderMasterSchedule(); renderSummaryDashboard(); updateFacultySelector(); renderWorkloads();
+        }
+
+        function exportMasterProgramPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); let first = true;
+            Object.keys(registeredPrograms).forEach(college => {
+                const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
+                if (!first) doc.addPage(); first = false;
+                doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 20);
+                doc.autoTable({ startY: 25, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]) });
+            }); doc.save('Master_Class_Program.pdf');
+        }
+
+        function exportFacultySummaryPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
+            let dataset = getAggregatedFacultyMetricsList();
+            doc.autoTable({ startY: 25, head: [['Instructor', 'Units Load', 'Hours Load']], body: dataset.map(f => [f.name, `${f.units} U`, `${f.hours.toFixed(1)} Hrs`]) });
+            doc.save('Faculty_Load_Summary.pdf');
+        }
+
+        function openRegistryEditModal(type, key, index) { console.log(`Editing target structural context entity sequence index ${index} under ${key}`); }
         function deleteRegistryRow(type, key, index) { if(confirm("Remove selected structural section element?")) { registeredSections[key].splice(index, 1); executeRegistryDataSynchronization(); } }
         function clearIngestionConsole() { document.getElementById("rawSchedulePasteInput").value = ""; }
 
-        // 🌟 UPDATED: REPORT INTERACTIVE FORM HANDLING TO RE-ASSIGN COLLEGE / PROGRAM COURSE / SECTIONS ON THE FLY
         document.getElementById("modalEditForm").addEventListener("submit", function(e) {
-            e.preventDefault(); 
-            const id = parseFloat(document.getElementById("modalRecordId").value);
+            e.preventDefault(); const id = parseFloat(document.getElementById("modalRecordId").value);
             const idx = sharedSchedules.findIndex(s=>s.id===id); if(idx===-1) return;
-            
-            const targetedProgram = document.getElementById("modalProgramSelect").value;
-            const targetedSection = document.getElementById("modalClassSection").value.trim();
-
-            if(!targetedSection) return;
-
-            // Resolve college parent matching context dynamically
-            let derivedCollege = "COE";
-            Object.keys(registeredPrograms).forEach(colKey => {
-                if(registeredPrograms[colKey].includes(targetedProgram)) derivedCollege = colKey;
-            });
-
-            // Re-sync registry index arrays lists bounds
-            if(!registeredSections[targetedProgram]) registeredSections[targetedProgram] = [];
-            if(!registeredSections[targetedProgram].includes(targetedSection)) {
-                registeredSections[targetedProgram].push(targetedSection);
-            }
-
-            // Commit modifications cleanly back to schema parameters
-            sharedSchedules[idx].college = derivedCollege;
-            sharedSchedules[idx].program = targetedProgram;
-            sharedSchedules[idx].classSection = targetedSection;
             sharedSchedules[idx].subjectTitle = document.getElementById("modalSubjectTitle").value;
             sharedSchedules[idx].unifiedUnits = parseInt(document.getElementById("modalUnifiedUnits").value);
             sharedSchedules[idx].dayAssignment = document.getElementById("modalDayAssignment").value;
@@ -866,9 +773,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             sharedSchedules[idx].endTime = document.getElementById("modalEndTime").value;
             sharedSchedules[idx].instructorName = document.getElementById("modalInstructorSelect").value;
             sharedSchedules[idx].roomNumber = document.getElementById("modalRoomSelect").value;
-            
-            closeScheduleEditorModal(); 
-            executeRegistryDataSynchronization();
+            closeScheduleEditorModal(); executeRegistryDataSynchronization();
         });
 
         document.getElementById("scheduleForm").addEventListener("submit", function(e) {
@@ -882,38 +787,6 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             });
             this.reset(); executeRegistryDataSynchronization(); switchTab('schedule-view');
         });
-
-        function exportMasterProgramPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); let first = true;
-            Object.keys(registeredPrograms).forEach(college => {
-                const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
-                if (!first) doc.addPage(); first = false;
-                doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 20);
-                doc.autoTable({ startY: 25, head: [['Section & Program', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [`${r.classSection}\n(${r.program.substring(0,25)}...)`, `${r.dayAssignment}\n${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]) });
-            }); doc.save('Master_Class_Program.pdf');
-        }
-
-        function exportFacultySummaryPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
-            let dataset = getAggregatedFacultyMetricsList();
-            doc.autoTable({ startY: 25, head: [['Instructor', 'Units Load', 'Hours Load']], body: dataset.map(f => [f.name, `${f.units} U`, `${f.hours.toFixed(1)} Hrs`]) });
-            doc.save('Faculty_Load_Summary.pdf');
-        }
-
-        function exportIndividualWorkloadsPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
-            const sel = document.getElementById("facultySelector").value; let profs = sel === "ALL" ? [...new Set(sharedSchedules.map(s=>s.instructorName))] : [sel];
-            let first = true;
-            profs.forEach(p => {
-                let recs = sharedSchedules.filter(s => s.instructorName === p); if(recs.length===0) return;
-                if(!first) doc.addPage(); first = false; doc.text(`WORKLOAD RECORD SHEET: ${p}`, 14, 20);
-                doc.autoTable({ startY: 25, head: [['Day/Time', 'Subject', 'Units', 'Class Block', 'Room']], body: recs.map(r=>[`${r.dayAssignment} ${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.classSection, r.roomNumber]) });
-            }); doc.save('Individual_Faculty_Loads.pdf');
-        }
-
-        function executeRegistryDataSynchronization() {
-            refreshFormSelectors(); renderRegistryManagement(); renderMasterSchedule(); renderSummaryDashboard(); updateFacultySelector(); renderWorkloads();
-        }
 
         window.onload = function() { executeRegistryDataSynchronization(); };
     </script>
