@@ -15,6 +15,14 @@
             .print-page { page-break-after: always; padding: 0 !important; margin: 0 !important; border: none !important; }
         }
         .code-added-highlight { background-color: rgba(254, 240, 138, 0.15); }
+        
+        /* Institutional Color Palette Schematics */
+        .header-coed { background-color: #1d4ed8 !important; color: white !important; }
+        .header-coe { background-color: #7f1d1d !important; color: white !important; }
+        .header-cans { background-color: #3f6212 !important; color: white !important; }
+        .header-ccs { background-color: #6b21a8 !important; color: white !important; }
+        .header-gs { background-color: #075985 !important; color: white !important; }
+        .header-default { background-color: #1e293b !important; color: white !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
@@ -23,7 +31,7 @@
         <div class="max-w-7xl mx-auto px-4 py-5 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">University Scheduling Hub</h1>
-                <p class="text-sm text-blue-200">Class Matrix & Faculty Workload Automated Generator (Persistent Sandbox)</p>
+                <p class="text-sm text-blue-200">Class Matrix & Faculty Workload Automated Generator</p>
             </div>
             <div class="flex items-center gap-3">
                 <button onclick="purgeLocalStorageCache()" class="bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">
@@ -201,12 +209,12 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             </form>
         </section>
 
-        <!-- MASTER PROGRAM MATRIX -->
+        <!-- MASTER CLASS PROGRAM -->
         <section id="schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">University Master Schedule Matrix</h2>
-                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by College divisions.</p>
+                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by color-coded College divisions.</p>
                 </div>
                 <div class="flex gap-2 no-print">
                     <button onclick="exportMasterProgramPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer">
@@ -220,12 +228,12 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             <div id="masterScheduleContainer" class="space-y-8"></div>
         </section>
 
-        <!-- CLASS SCHEDULE REPORT -->
+        <!-- CLASS SCHEDULE PER PROGRAM REPORT -->
         <section id="program-schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Class Schedule Report per Program / Section</h2>
-                    <p class="text-sm text-gray-500">Generate targeted structural scheduling matrices for specific curriculum profiles.</p>
+                    <p class="text-sm text-gray-500">Generate targeted structural scheduling matrices with active institutional color schemes.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 no-print bg-gray-50 p-3 rounded-xl border border-gray-200 w-full lg:w-auto">
                     <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -357,7 +365,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             </div>
         </section>
 
-        <!-- SCHEDULE EDIT MODAL -->
+        <!-- EDIT SCHEDULE MODAL -->
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -424,14 +432,13 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
     </main>
 
     <script>
-        // System Data Registry Reference Blocks
+        // System Data Registry Models
         let registeredPrograms = {};
         let registeredSections = {};
         let registeredFaculty = [];
         let registeredRooms = [];
         let sharedSchedules = [];
 
-        // Base Institutional State Definitions to seed blank local frames natively
         const defaultPrograms = {
             "COE": ["Bachelor of Science in Agricultural and Biosystems Engineering", "Bachelor of Science in Computer Engineering"],
             "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
@@ -455,9 +462,28 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             { id: 3002, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "01:00", endTime: "04:00", roomNumber: "COE-3" }
         ];
 
-        // =========================================================================
-        //  📥 LOCAL STORAGE CORE LIFECYCLE ENGINE
-        // =========================================================================
+        // Dynamic tailwind css injector map binding structural layouts cleanly
+        function getCollegeColorClass(collegeKey) {
+            const key = String(collegeKey).toUpperCase();
+            if (key === 'COED') return 'header-coed';
+            if (key === 'COE') return 'header-coe';
+            if (key === 'CANS') return 'header-cans';
+            if (key === 'CCS') return 'header-ccs';
+            if (key === 'GRADUATE STUDIES' || key === 'GS') return 'header-gs';
+            return 'header-default';
+        }
+
+        // Dynamic hex color dictionary extractor mapping target PDF auto-tables
+        function getCollegeHexCode(collegeKey) {
+            const key = String(collegeKey).toUpperCase();
+            if (key === 'COED') return [29, 78, 216];     // #1d4ed8
+            if (key === 'COE') return [127, 29, 29];     // #7f1d1d
+            if (key === 'CANS') return [63, 98, 18];     // #3f6212
+            if (key === 'CCS') return [107, 33, 168];    // #6b21a8
+            if (key === 'GRADUATE STUDIES' || key === 'GS') return [7, 89, 133]; // #075985
+            return [30, 41, 59];                         // default slate
+        }
+
         function initializeSystemStateHydration() {
             try {
                 registeredPrograms = JSON.parse(localStorage.getItem("hub_registeredPrograms")) || defaultPrograms;
@@ -466,7 +492,6 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                 registeredRooms = JSON.parse(localStorage.getItem("hub_registeredRooms")) || defaultRooms;
                 sharedSchedules = JSON.parse(localStorage.getItem("hub_sharedSchedules")) || defaultSchedules;
             } catch (err) {
-                console.error("Local storage hydration corrupted, loading factory defaults.", err);
                 loadFactoryStateDefaults();
             }
         }
@@ -489,15 +514,13 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
         }
 
         function purgeLocalStorageCache() {
-            if (confirm("🚨 DANGER! This will permanently erase all custom encoded and uploaded schedule matrices from browser cache. Proceed?")) {
+            if (confirm("🚨 Clear local caches and structural datasets?")) {
                 localStorage.clear();
                 loadFactoryStateDefaults();
                 executeRegistryDataSynchronization();
-                alert("Database reset completed successfully.");
                 switchTab('upload-view');
             }
         }
-        // =========================================================================
 
         let currentSummarySortMetric = 'units';
         let currentSummaryGroupingMode = 'none';
@@ -612,10 +635,9 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                 }
             }
             
-            // Commit structural appends permanently to the local browser sandbox state
             saveSystemStateToLocalStorage();
             executeRegistryDataSynchronization();
-            alert(`✅ Ingestion Script Succeeded! Permanent merged entry expanded by ${parsedCount} lines.`);
+            alert(`✅ Ingestion Complete! Merged entry expanded by ${parsedCount} lines.`);
             switchTab('schedule-view');
         }
 
@@ -635,17 +657,24 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             const container = document.getElementById("masterScheduleContainer"); container.innerHTML = "";
             Object.keys(registeredPrograms).forEach(college => {
                 const recs = sharedSchedules.filter(s => s.college === college); if(recs.length === 0) return;
+                
+                // Fetch localized class mapping configuration directly
+                let activeColorClass = getCollegeColorClass(college);
+                
                 let rows = recs.map(r => `<tr class="border-b text-sm">
                     <td class="p-3 font-semibold">${r.classSection}</td><td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-500 font-bold">${r.startTime}-${r.endTime}</span></td>
                     <td class="p-3">${r.subjectTitle}</td><td class="p-3 text-center font-bold">${r.unifiedUnits}</td><td class="p-3">${r.instructorName}</td><td class="p-3 font-mono text-center">${r.roomNumber}</td>
                     <td class="p-3 text-right no-print"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button></td>
                 </tr>`).join('');
-                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white"><div class="bg-blue-950 text-white p-3 font-bold">${college} Division Matrix</div><table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Units</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                
+                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white">
+                    <div class="${activeColorClass} p-3 font-bold uppercase tracking-wide">${college} Division Matrix</div>
+                    <table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Units</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
         function invokeScheduleRowDeletion(id) { 
-            if(confirm("Permanently delete this schedule entry from database logs?")) { 
+            if(confirm("Permanently delete this schedule entry?")) { 
                 sharedSchedules = sharedSchedules.filter(s=>s.id!==id); 
                 saveSystemStateToLocalStorage();
                 executeRegistryDataSynchronization(); 
@@ -739,12 +768,15 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
 
             let grouped = {};
             filtered.forEach(s => {
-                let key = `${s.program} - ${s.classSection}`;
+                let key = `${s.program}::${s.classSection}::${s.college}`;
                 if(!grouped[key]) grouped[key] = []; grouped[key].push(s);
             });
 
             Object.keys(grouped).forEach(key => {
+                let [progName, sectCode, colKey] = key.split("::");
                 let data = sortFacultyClassesChronologically(grouped[key]);
+                let activeColorClass = getCollegeColorClass(colKey);
+
                 let rows = data.map(r => `<tr class="border-b text-xs">
                     <td class="p-2.5 font-semibold text-gray-700">${r.dayAssignment}</td>
                     <td class="p-2.5 font-mono font-medium text-blue-950">${r.startTime} - ${r.endTime}</td>
@@ -753,7 +785,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                 </tr>`).join('');
 
                 container.innerHTML += `<div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white print-page">
-                    <div class="bg-indigo-950 text-white px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${key}</span></div>
+                    <div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode}</span></div>
                     <table class="w-full text-left table-auto"><thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Units</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
@@ -899,13 +931,15 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             } else if (currentSummaryGroupingMode === 'college') {
                 Object.keys(registeredPrograms).forEach(college => {
                     let rows = dataset.filter(f => f.colleges.includes(college)); if(rows.length===0) return;
-                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="bg-slate-900 text-white p-2 font-bold">${college}</div><table class="w-full text-left text-sm">${rows.map(r=>`<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center">${r.units} Units</td><td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td></tr>`).join('')}</table></div>`;
+                    let colorClass = getCollegeColorClass(college);
+                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Division</div><table class="w-full text-left text-sm">${rows.map(r=>`<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center">${r.units} Units</td><td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td></tr>`).join('')}</table></div>`;
                 });
             } else if (currentSummaryGroupingMode === 'program') {
                 Object.keys(registeredPrograms).forEach(col => {
                     registeredPrograms[col].forEach(p => {
                         let rows = dataset.filter(f => f.programs.includes(p)); if(rows.length===0) return;
-                        container.innerHTML += `<div class="mb-6 border bg-white"><div class="bg-cyan-950 text-white p-2 text-xs font-bold">${p}</div><table class="w-full text-left text-sm">${rows.map(r=>`<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center">${r.units} U</td><td class="p-3 text-center">${r.hours.toFixed(1)} H</td></tr>`).join('')}</table></div>`;
+                        let colorClass = getCollegeColorClass(col);
+                        container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 text-xs font-bold tracking-wide">${p}</div><table class="w-full text-left text-sm">${rows.map(r=>`<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-center">${r.units} U</td><td class="p-3 text-center">${r.hours.toFixed(1)} H</td></tr>`).join('')}</table></div>`;
                     });
                 });
             }
@@ -1091,8 +1125,16 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             Object.keys(registeredPrograms).forEach(college => {
                 const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
                 if (!first) doc.addPage(); first = false;
-                doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 20);
-                doc.autoTable({ startY: 25, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]) });
+                
+                let hexColor = getCollegeHexCode(college);
+                doc.setFontSize(12); doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 15);
+                
+                doc.autoTable({ 
+                    startY: 20, 
+                    head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], 
+                    body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]),
+                    headStyles: { fillColor: hexColor }
+                });
             }); doc.save('Master_Class_Program.pdf');
         }
 
@@ -1106,23 +1148,28 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
         function exportProgramSchedulePDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
             let filtered = getFilteredSchedules(); if(filtered.length === 0) return;
-            let grouped = {}; filtered.forEach(s => { let key = `${s.program} - ${s.classSection}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
+            let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}::${s.college}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
             let first = true;
             Object.keys(grouped).forEach(key => {
+                let [progName, sectCode, colKey] = key.split("::");
                 if(!first) doc.addPage(); first = false;
-                doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${key}`, 14, 15);
+                
+                let hexColor = getCollegeHexCode(colKey);
+                doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
+                
                 let dataRows = sortFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${r.startTime} - ${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
-                doc.autoTable({ startY: 22, head: [['Day', 'Time Bracket', 'Subject Title', 'Units', 'Faculty Instructor', 'Room']], body: dataRows, theme: 'striped', headStyles: { fillColor: [30, 27, 75] } });
+                doc.autoTable({ startY: 22, head: [['Day', 'Time Bracket', 'Subject Title', 'Units', 'Faculty Instructor', 'Room']], body: dataRows, theme: 'striped', headStyles: { fillColor: hexColor } });
             }); doc.save('Class_Schedules_Report.pdf');
         }
 
         function exportProgramScheduleExcel() {
             let filtered = getFilteredSchedules(); if(filtered.length === 0) return; let wb = XLSX.utils.book_new();
-            let grouped = {}; filtered.forEach(s => { let key = `${s.program} - ${s.classSection}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
+            let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
             Object.keys(grouped).forEach(key => {
-                let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${key}`], [], ["Day Assignment", "Time Window", "Subject Description", "Units", "Faculty Instructor", "Room Assignment"]];
+                let [progName, sectCode] = key.split("::");
+                let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window", "Subject Description", "Units", "Faculty Instructor", "Room Assignment"]];
                 sortFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${r.startTime}-${r.endTime}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
-                let ws = XLSX.utils.aoa_to_sheet(sheetRows); let cleanSheetName = key.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30); XLSX.utils.book_append_sheet(wb, ws, cleanSheetName);
+                let ws = XLSX.utils.aoa_to_sheet(sheetRows); let cleanSheetName = `${sectCode}`.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30); XLSX.utils.book_append_sheet(wb, ws, cleanSheetName);
             }); XLSX.writeFile(wb, "University_Class_Schedules.xlsx");
         }
 
