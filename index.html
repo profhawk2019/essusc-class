@@ -233,7 +233,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Class Schedule Report per Program / Section</h2>
-                    <p class="text-sm text-gray-500">Generate targeted structural scheduling matrices with active institutional color schemes.</p>
+                    <p class="text-sm text-gray-500">Generate, edit, and filter localized section sheets with direct action tools.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 no-print bg-gray-50 p-3 rounded-xl border border-gray-200 w-full lg:w-auto">
                     <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -462,7 +462,6 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             { id: 3002, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "01:00", endTime: "04:00", roomNumber: "COE-3" }
         ];
 
-        // Dynamic tailwind css injector map binding structural layouts cleanly
         function getCollegeColorClass(collegeKey) {
             const key = String(collegeKey).toUpperCase();
             if (key === 'COED') return 'header-coed';
@@ -473,15 +472,14 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             return 'header-default';
         }
 
-        // Dynamic hex color dictionary extractor mapping target PDF auto-tables
         function getCollegeHexCode(collegeKey) {
             const key = String(collegeKey).toUpperCase();
-            if (key === 'COED') return [29, 78, 216];     // #1d4ed8
-            if (key === 'COE') return [127, 29, 29];     // #7f1d1d
-            if (key === 'CANS') return [63, 98, 18];     // #3f6212
-            if (key === 'CCS') return [107, 33, 168];    // #6b21a8
-            if (key === 'GRADUATE STUDIES' || key === 'GS') return [7, 89, 133]; // #075985
-            return [30, 41, 59];                         // default slate
+            if (key === 'COED') return [29, 78, 216];
+            if (key === 'COE') return [127, 29, 29];
+            if (key === 'CANS') return [63, 98, 18];
+            if (key === 'CCS') return [107, 33, 168];
+            if (key === 'GRADUATE STUDIES' || key === 'GS') return [7, 89, 133];
+            return [30, 41, 59];
         }
 
         function initializeSystemStateHydration() {
@@ -658,7 +656,6 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
             Object.keys(registeredPrograms).forEach(college => {
                 const recs = sharedSchedules.filter(s => s.college === college); if(recs.length === 0) return;
                 
-                // Fetch localized class mapping configuration directly
                 let activeColorClass = getCollegeColorClass(college);
                 
                 let rows = recs.map(r => `<tr class="border-b text-sm">
@@ -668,13 +665,60 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                 </tr>`).join('');
                 
                 container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white">
-                    <div class="${activeColorClass} p-3 font-bold uppercase tracking-wide">${college} Division Matrix</div>
+                    <div class="${activeColorClass} p-3 font-bold uppercase tracking-wide flex justify-between items-center">
+                        <span>${college} Division Matrix</span>
+                        <button onclick="exportCollegeCSV('${college}')" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-md transition border border-white/30 no-print cursor-pointer">
+                            📤 Export Ingestion CSV
+                        </button>
+                    </div>
                     <table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Units</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
+        // CSV EXPORTER: Generates ingestion-ready formatted files per matching layout matrices
+        function exportCollegeCSV(collegeKey) {
+            const records = sharedSchedules.filter(s => s.college === collegeKey);
+            if (records.length === 0) {
+                alert("No schedule records available to build a data package for this selection.");
+                return;
+            }
+
+            // Generate rows cleanly matching standard ingestion parameters: Section,Day and Time Block,Subject Title,Units,Instructor,Room
+            let csvRows = [];
+            
+            records.forEach(r => {
+                let formattedDayTime = `${r.dayAssignment} (${r.startTime}-${r.endTime})`;
+                
+                // Wrap strings containing potential inner commas with dynamic block quotes
+                let escapeStr = (str) => {
+                    let cleaned = String(str || '').replace(/"/g, '""');
+                    return cleaned.includes(',') ? `"${cleaned}"` : cleaned;
+                };
+
+                csvRows.push([
+                    escapeStr(r.classSection),
+                    escapeStr(formattedDayTime),
+                    escapeStr(r.subjectTitle),
+                    r.unifiedUnits,
+                    escapeStr(r.instructorName),
+                    escapeStr(r.roomNumber)
+                ].join(','));
+            });
+
+            let csvContent = csvRows.join('\n');
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            
+            let safeFileName = String(collegeKey).replace(/[^a-zA-Z0-9]/g, "_");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `Ingestion_Template_${safeFileName}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
         function invokeScheduleRowDeletion(id) { 
-            if(confirm("Permanently delete this schedule entry?")) { 
+            if(confirm("Permanently delete this schedule entry from database logs?")) { 
                 sharedSchedules = sharedSchedules.filter(s=>s.id!==id); 
                 saveSystemStateToLocalStorage();
                 executeRegistryDataSynchronization(); 
@@ -782,11 +826,15 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
                     <td class="p-2.5 font-mono font-medium text-blue-950">${r.startTime} - ${r.endTime}</td>
                     <td class="p-2.5">${r.subjectTitle}</td><td class="p-2.5 text-center font-bold">${r.unifiedUnits}</td>
                     <td class="p-2.5">${r.instructorName}</td><td class="p-2.5 font-mono text-center bg-gray-50">${r.roomNumber}</td>
+                    <td class="p-2.5 text-right no-print space-x-1 whitespace-nowrap">
+                        <button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-blue-100">Edit</button>
+                        <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-red-100">Delete</button>
+                    </td>
                 </tr>`).join('');
 
                 container.innerHTML += `<div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white print-page">
                     <div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode}</span></div>
-                    <table class="w-full text-left table-auto"><thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Units</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                    <table class="w-full text-left table-auto"><thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Units</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th><th class="p-2.5 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
@@ -1117,7 +1165,7 @@ BSABE III-2,Tuesday and Thursday (10:30- 12:00),ABE 312,3,Cabahug,COE-11</div>
 
         function executeRegistryDataSynchronization() {
             refreshFormSelectors(); renderRegistryManagement(); renderMasterSchedule(); renderSummaryDashboard(); updateFacultySelector(); renderWorkloads();
-            if(!document.getElementById("program-schedule-view").classList.contains("hidden")) populateReportFilters();
+            if(!document.getElementById("program-schedule-view").classList.contains("hidden")) renderProgramScheduleReport();
         }
 
         function exportMasterProgramPDF() {
