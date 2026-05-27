@@ -24,6 +24,30 @@
         .header-ccs { background-color: #6b21a8 !important; color: white !important; }
         .header-gs { background-color: #075985 !important; color: white !important; }
         .header-default { background-color: #1e293b !important; color: white !important; }
+
+        /* Dynamic Border Accent Classes */
+        .border-coed { border-color: #1d4ed8 !important; }
+        .border-coe { border-color: #7f1d1d !important; }
+        .border-cans { border-color: #3f6212 !important; }
+        .border-ccs { border-color: #6b21a8 !important; }
+        .border-gs { border-color: #075985 !important; }
+        .border-default { border-color: #1e293b !important; }
+
+        /* Dynamic Soft Background Accent Classes */
+        .bg-coed-soft { background-color: rgba(29, 78, 216, 0.05) !important; }
+        .bg-coe-soft { background-color: rgba(127, 29, 29, 0.05) !important; }
+        .bg-cans-soft { background-color: rgba(63, 98, 18, 0.05) !important; }
+        .bg-ccs-soft { background-color: rgba(107, 33, 168, 0.05) !important; }
+        .bg-gs-soft { background-color: rgba(7, 89, 133, 0.05) !important; }
+        .bg-default-soft { background-color: rgba(30, 41, 59, 0.05) !important; }
+
+        /* Dynamic Text Colors matching palette */
+        .text-coed { color: #1d4ed8 !important; }
+        .text-coe { color: #7f1d1d !important; }
+        .text-cans { color: #3f6212 !important; }
+        .text-ccs { color: #6b21a8 !important; }
+        .text-gs { color: #075985 !important; }
+        .text-default { color: #1e293b !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
@@ -74,6 +98,7 @@
             </nav>
         </div>
 
+        <!-- ANALYTICS DASHBOARD HUB -->
         <section id="dashboard-view" class="tab-content bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
             <div class="border-b border-gray-100 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
@@ -140,6 +165,7 @@
                 </div>
             </div>
 
+            <!-- EXPLICIT LIST OF NON COMPLIANT INSTRUCTORS PER DEPT (COLOR CODED) -->
             <div class="p-5 border border-gray-200 rounded-xl bg-white shadow-sm space-y-4">
                 <div class="border-b pb-2">
                     <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
@@ -147,10 +173,11 @@
                         <span class="text-xs normal-case font-medium text-gray-500">(Active list of underloaded faculty profiles requiring schedule balances)</span>
                     </h3>
                 </div>
-                <div id="dashboard-non-compliant-faculty-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"></div>
+                <div id="dashboard-non-compliant-faculty-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
             </div>
         </section>
 
+        <!-- INGESTION ENGINE -->
         <section id="upload-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print space-y-6">
             <div class="border-b border-gray-100 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Document Ingestion & Parsing Engine</h2>
@@ -198,6 +225,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </div>
         </section>
 
+        <!-- MANUAL ENCODER -->
         <section id="encoder-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print">
             <div class="border-b border-gray-100 pb-4 mb-6">
                 <h2 class="text-xl font-bold text-gray-900">Manual Entry Wizard</h2>
@@ -288,6 +316,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </form>
         </section>
 
+        <!-- MASTER PROGRAM OVERVIEW -->
         <section id="schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
@@ -306,6 +335,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="masterScheduleContainer" class="space-y-8"></div>
         </section>
 
+        <!-- SCHEDULE SHEETS REPORT -->
         <section id="program-schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
@@ -339,6 +369,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="programScheduleReportContainer" class="space-y-6"></div>
         </section>
 
+        <!-- LOADING MATRIX & COMPLIANCE SUMMARY -->
         <section id="summary-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content space-y-6">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-5 gap-4">
                 <div>
@@ -351,7 +382,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <button onclick="changeSummaryGrouping('none')" id="group-none-btn" class="bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer">Flat List</button>
                         <button onclick="changeSummaryGrouping('college')" id="group-college-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By College</button>
                         <button onclick="changeSummaryGrouping('program')" id="group-program-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By Program</button>
-                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 font-medium text-xs px-3 py-1.5 rounded-md cursor-pointer">📋 General Workload Matrix</button>
+                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 border border-gray-200 font-medium text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">📋 General Workload Matrix</button>
                     </div>
                     <div id="sortingControlsContainer" class="flex items-center gap-1 border-l pl-3 border-gray-300">
                         <span class="text-xs font-bold uppercase text-gray-500 mr-1">Sort Metrics:</span>
@@ -368,6 +399,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="summaryDashboardDynamicContent" class="overflow-x-auto"></div>
         </section>
 
+        <!-- WORKLOAD BLUEPRINT SHEETS -->
         <section id="workload-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
@@ -406,6 +438,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="workloadSheetsContainer" class="space-y-6"></div>
         </section>
 
+        <!-- REGISTRIES DATA CONFIGURATION PANELS -->
         <section id="management-view" class="hidden space-y-8 no-print tab-content">
             <div class="bg-white p-4 rounded-xl border border-gray-200 flex flex-wrap gap-2 shadow-sm">
                 <button onclick="switchRegistryTab('reg-programs')" id="subtab-reg-programs" class="reg-tab-btn bg-blue-950 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">🎓 Programs Registry</button>
@@ -414,6 +447,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <button onclick="switchRegistryTab('reg-rooms')" id="subtab-reg-rooms" class="reg-tab-btn bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded-lg cursor-pointer text-emerald-700 font-bold">🏢 Rooms Registry</button>
             </div>
 
+            <!-- PROGRAMS PANEL -->
             <div id="panel-reg-programs" class="reg-panel bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">Degree Course / Program Configurations</h3>
@@ -422,6 +456,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm"><thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600"><th class="p-3">College</th><th class="p-3">Program Name</th><th class="p-3 text-right">Actions</th></thead><tbody id="regProgramsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
             </div>
 
+            <!-- SECTIONS PANEL -->
             <div id="panel-reg-sections" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">Year Level & Section Registry</h3>
@@ -430,14 +465,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="overflow-x-auto"><table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600"><th class="p-3">Associated Program</th><th class="p-3">Section Code</th><th class="p-3 text-right">Actions</th></thead><tbody id="regSectionsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
             </div>
 
+            <!-- FACULTY ROSTER PANEL -->
             <div id="panel-reg-faculty" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">Institutional Faculty Roster Registry</h3>
                     <button onclick="openRegistryAddModal('faculty')" class="bg-blue-950 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">+ Add New Instructor</button>
                 </div>
+                <!-- Dynamic Grouping Container -->
                 <div id="regFacultyGroupedContainer" class="space-y-6"></div>
             </div>
 
+            <!-- FACILITY REGISTER ROOMS -->
             <div id="panel-reg-rooms" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">🏢 University Room Facility Registry</h3>
@@ -447,6 +485,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </div>
         </section>
 
+        <!-- EDIT SCHEDULE MODAL -->
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -471,6 +510,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </div>
         </div>
 
+        <!-- GLOBAL CONFIG MODAL REGISTRIES -->
         <div id="registryGlobalModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -483,6 +523,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <input type="hidden" id="regOldKey">
                     <input type="hidden" id="regOldIndex">
 
+                    <!-- Always visible for Faculty, hidden or context-dependent for other fields -->
                     <div id="regWrapperFacultyCollege" class="block">
                         <label class="block mb-1 text-gray-600">Parent Department / Home College Assignment</label>
                         <select id="regFacultyInputCollege" class="w-full border p-2 rounded bg-gray-50 text-xs">
@@ -659,6 +700,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (key === 'CCS') return [107, 33, 168];
             if (key === 'GRADUATE STUDIES' || key === 'GS') return [7, 89, 133];
             return [30, 41, 59];
+        }
+
+        // Translation helper for dynamic theme adjustments
+        function getCollegeNormalizedStyleKey(collegeKey) {
+            const key = String(collegeKey).toUpperCase();
+            if (key === 'COED') return 'coed';
+            if (key === 'COE') return 'coe';
+            if (key === 'CANS') return 'cans';
+            if (key === 'CCS') return 'ccs';
+            if (key === 'GRADUATE STUDIES' || key === 'GS') return 'gs';
+            return 'default';
         }
 
         function initializeSystemStateHydration() {
@@ -925,7 +977,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 });
             }
 
-            // Render Underloaded Active Grid Board
+            // Render Color-Coded Underloaded Active Grid Board
             const nonCompliantContainer = document.getElementById("dashboard-non-compliant-faculty-container");
             if (nonCompliantContainer) {
                 nonCompliantContainer.innerHTML = "";
@@ -933,22 +985,24 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 Object.keys(collegeAudit).forEach(col => {
                     let missingProfiles = collegeAudit[col].underloadedList;
+                    let styleKey = getCollegeNormalizedStyleKey(col);
+
                     missingProfiles.forEach(f => {
                         printedDeficiencies++;
                         nonCompliantContainer.innerHTML += `
-                            <div class="p-3 border border-red-200 rounded-xl bg-red-50/20 flex flex-col justify-between space-y-2">
+                            <div class="p-3 border-l-4 border bg-white rounded-xl shadow-xs border-gray-200 border-${styleKey} bg-${styleKey}-soft flex flex-col justify-between space-y-2">
                                 <div>
-                                    <div class="flex justify-between items-start">
-                                        <span class="text-[10px] font-extrabold uppercase text-red-700 bg-red-100/60 px-1.5 py-0.5 rounded">${col}</span>
-                                        <span class="text-[10px] text-gray-400 font-mono font-bold">Deficit: -${f.deficit} U</span>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded text-white header-${styleKey}">${col}</span>
+                                        <span class="text-[10px] font-mono font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">Deficit: -${f.deficit} U</span>
                                     </div>
-                                    <div class="text-xs font-bold text-gray-900 mt-1 truncate">${f.name}</div>
-                                    <div class="text-[10px] text-gray-500 truncate">${f.rank}</div>
+                                    <div class="text-xs font-bold text-gray-900 mt-2 truncate">${f.name}</div>
+                                    <div class="text-[10px] text-gray-500 truncate mt-0.5">${f.rank}</div>
                                 </div>
-                                <div class="bg-white border border-red-100 rounded-lg px-2.5 py-1.5 flex justify-between items-center text-[11px] font-medium mt-1">
-                                    <span class="text-gray-500">Current: <strong class="text-gray-900">${f.units}</strong></span>
+                                <div class="bg-white/80 backdrop-blur-xs border border-gray-100 rounded-lg px-2 py-1.5 flex justify-between items-center text-[11px] font-medium mt-1">
+                                    <span class="text-gray-500">Current: <strong class="text-gray-900">${f.units} U</strong></span>
                                     <span class="text-gray-300">|</span>
-                                    <span class="text-gray-500">Target: <strong class="text-red-600">${f.target}</strong></span>
+                                    <span class="text-gray-500">Target: <strong class="text-${styleKey} font-bold">${f.target} U</strong></span>
                                 </div>
                             </div>
                         `;
@@ -1257,7 +1311,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 });
             }
 
-            // Group Faculty Panel cleanly inside registries configuration view
             const facultyGroupedContainer = document.getElementById("regFacultyGroupedContainer");
             if (facultyGroupedContainer) {
                 facultyGroupedContainer.innerHTML = "";
