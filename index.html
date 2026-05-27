@@ -501,6 +501,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <div id="regWrapperRank" class="hidden">
                         <label class="block mb-1 text-gray-600">Institutional Academic Rank</label>
                         <select id="regInputRank" class="w-full border p-2 rounded bg-gray-50 text-xs">
+                            <option value="TBA">TBA</option>
                             <option value="Lecturer">Lecturer</option>
                             <option value="Instructor I">Instructor I</option>
                             <option value="Instructor II">Instructor II</option>
@@ -584,7 +585,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         const defaultFaculty = defaultFacultyRaw.sort().map((name, i) => ({
             name: name,
             college: (name.includes("Araneta") || name.includes("Bolito") || name.includes("Cabahug")) ? "COE" : (i % 3 === 0 ? "CCS" : (i % 2 === 0 ? "COEd" : "CANS")),
-            rank: i % 4 === 0 ? "Assistant Professor I" : (i % 5 === 0 ? "Associate Professor II" : "Instructor I"),
+            rank: i === 0 ? "TBA" : (i % 4 === 0 ? "Assistant Professor I" : (i % 5 === 0 ? "Associate Professor II" : "Instructor I")),
             designation: name.includes("Araneta") ? "Head" : (i % 6 === 0 ? "Dean" : (i % 7 === 0 ? "Coordinator / In-Charge" : "Without Designation"))
         }));
 
@@ -814,7 +815,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let matchFacultyName = matchFaculty ? matchFaculty.name : instructor;
                     
                     if(!matchFaculty) {
-                        registeredFaculty.push({ name: instructor, college: selectedCollege, rank: "Instructor I", designation: "Without Designation" });
+                        registeredFaculty.push({ name: instructor, college: selectedCollege, rank: "TBA", designation: "Without Designation" });
                     }
                     if(!registeredRooms.includes(room)) registeredRooms.push(room);
 
@@ -966,19 +967,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         ]
                     },
                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } } }
-                });
-            }
-
-            if (complianceChartInstance) complianceChartInstance.destroy();
-            const ctx3 = document.getElementById("compliancePieChart")?.getContext("2d");
-            if (ctx3) {
-                complianceChartInstance = new Chart(ctx3, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Compliant', 'Non-Compliant'],
-                        datasets: [{ data: [compliantCount, nonCompliantCount], backgroundColor: ['#10b981', '#ef4444'] }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
                 });
             }
         }
@@ -1822,7 +1810,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 }
                 if(s.instructorName) {
                     if(!registeredFaculty.some(f => f.name === s.instructorName)) {
-                        registeredFaculty.push({ name: s.instructorName, college: s.college || "COE", rank: "Instructor I", designation: "Without Designation" });
+                        registeredFaculty.push({ name: s.instructorName, college: s.college || "COE", rank: "TBA", designation: "Without Designation" });
                     }
                 }
                 if(s.roomNumber) {
