@@ -390,7 +390,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <p class="text-sm text-gray-500">Official individual instructional workloads generated dynamically with allocation checks.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto no-print bg-gray-50 p-2.5 rounded-xl border border-gray-200">
-                    
                     <div class="flex flex-col sm:flex-row gap-2">
                         <select id="facultyWorkloadCollegeScope" class="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs font-bold outline-none text-blue-950" onchange="filterWorkloadFacultyDropdown()">
                             <option value="ALL">Show All College Divisions</option>
@@ -400,18 +399,15 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
-
                         <select id="facultySelector" class="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs outline-none" onchange="renderWorkloads()">
                             <option value="ALL">Show All Faculty Sheets</option>
                         </select>
                     </div>
-                    
                     <div class="flex flex-wrap items-center gap-1.5 lg:ml-auto">
                         <span class="text-xs font-bold uppercase text-gray-400 mr-1">Download:</span>
                         <button onclick="triggerWorkloadExport('pdf')" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-md cursor-pointer">📄 PDF</button>
                         <button onclick="triggerWorkloadExport('docx')" class="bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-md cursor-pointer">📝 Word</button>
                         <button onclick="triggerWorkloadExport('xlsx')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-md cursor-pointer">📊 Excel</button>
-                        
                         <select id="workloadScopeSelector" class="bg-white border border-gray-300 rounded-md px-2 py-1 text-xs outline-none font-medium text-gray-700">
                             <option value="current">Current Selection Scope</option>
                             <option value="all">As a Whole (All Combined)</option>
@@ -604,7 +600,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         const defaultFaculty = defaultFacultyRaw.sort().map((name, i) => ({
             name: name,
             rank: i % 4 === 0 ? "Assistant Professor I" : (i % 5 === 0 ? "Associate Professor II" : "Instructor I"),
-            designation: name.includes("Araneta") ? "Head" : "Without Designation"
+            designation: name.includes("Araneta") ? "Head" : (i % 6 === 0 ? "Dean" : (i % 7 === 0 ? "Coordinator / In-Charge" : "Without Designation"))
         }));
 
         const defaultRooms = ["COE-1", "COE-3", "COE-4", "COE-5", "COE-8", "COE-9", "COE-11", "COE-12", "CCS-1", "CCS-15", "CCS-16"].sort();
@@ -623,6 +619,20 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             "Without Designation": 18,
             "Lecturer": 18
         };
+
+        function getDesignationBadgeStyles(designation) {
+            const des = String(designation || '').trim();
+            if (des === 'Dean' || des === 'Director') {
+                return 'bg-red-100 text-red-800 border border-red-200 font-extrabold shadow-xs';
+            } else if (des === 'Head' || des === 'Program Head') {
+                return 'bg-purple-100 text-purple-800 border border-purple-200 font-bold';
+            } else if (des === 'Coordinator / In-Charge') {
+                return 'bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold';
+            } else if (des === 'Lecturer') {
+                return 'bg-amber-100 text-amber-800 border border-amber-200';
+            }
+            return 'bg-gray-100 text-gray-700 border border-gray-200';
+        }
 
         function convert24To12Hour(timeString) {
             if(!timeString || !timeString.includes(':')) return "";
@@ -1216,10 +1226,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             const facultyTable = document.getElementById("regFacultyTableBody"); if(facultyTable) {
                 facultyTable.innerHTML = "";
                 registeredFaculty.forEach((facObj, idx) => {
+                    let badgeStyles = getDesignationBadgeStyles(facObj.designation);
                     facultyTable.innerHTML += `<tr class="text-xs border-b hover:bg-gray-50/50">
                         <td class="p-3 font-semibold text-gray-900">${facObj.name}</td>
                         <td class="p-3"><span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-medium text-[11px]">${facObj.rank || 'Instructor I'}</span></td>
-                        <td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md font-medium text-[11px]">${facObj.designation}</span></td>
+                        <td class="p-3"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide ${badgeStyles}">${facObj.designation}</span></td>
                         <td class="p-3 text-right space-x-1"><button onclick="openRegistryEditModal('faculty', null, ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button><button onclick="deleteRegistryRow('faculty', null, ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button></td></tr>`;
                 });
             }
@@ -1380,18 +1391,31 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return registeredFaculty.map(p => {
                 const cl = sharedSchedules.filter(s => s.instructorName === p.name); 
                 let u = 0, h = 0, pr = new Set(), cols = new Set(), progs = new Set(), subjectsList = [];
+                
                 cl.forEach(c => { 
                     u += c.unifiedUnits; 
                     h += calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); 
                     pr.add(c.subjectTitle); 
-                    cols.add(c.college); 
-                    progs.add(c.program);
+                    if(c.college) cols.add(c.college); 
+                    if(c.program) progs.add(c.program);
                     subjectsList.push(c.subjectTitle);
                 });
+
+                // Fallback default mapping logic to prevent detachment if schedules haven't been loaded
+                if (cols.size === 0) {
+                    Object.keys(defaultPrograms).forEach(key => {
+                        defaultPrograms[key].forEach(pName => {
+                            if (p.designation === 'Dean' && key === 'COE' && p.name.includes("Araneta")) cols.add("COE");
+                            else if (p.name.includes("Bolito") && key === "COE") cols.add("COE");
+                        });
+                    });
+                    if (cols.size === 0) cols.add("COE"); 
+                }
+
                 return { 
                     name: p.name, 
                     rank: p.rank || 'Instructor I', 
-                    designation: p.designation, 
+                    designation: p.designation || 'Without Designation', 
                     units: u, 
                     hours: h, 
                     prepsCount: pr.size, 
@@ -1399,7 +1423,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     programs: Array.from(progs),
                     subjects: subjectsList
                 };
-            }).filter(x => x.units > 0);
+            }).filter(x => x.units > 0 || x.designation !== 'Without Designation');
         }
 
         function createSummaryComplianceBadgeHTML(units, designation) {
@@ -1439,6 +1463,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 dataset.forEach(faculty => {
                     let minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
                     let meetsTarget = faculty.units >= minAllowedUnits;
+                    let badgeStyles = getDesignationBadgeStyles(faculty.designation);
                     
                     let statusElement = meetsTarget 
                         ? `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-gray-500 font-medium text-center">(${minAllowedUnits} Unit/s Target Met)</div>`
@@ -1458,7 +1483,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <tr class="border-b border-gray-300 text-[11px] text-gray-500 bg-white/70">
                             <td class="border-x border-b border-gray-300 p-2 px-3 italic bg-gray-50/10" colspan="5">
                                 Academic Rank: <span class="text-gray-950 font-bold mr-6 not-italic">${faculty.rank}</span> 
-                                Designation Role: <span class="text-indigo-900 font-bold underline not-italic bg-blue-50 px-2 py-0.5 rounded">${faculty.designation}</span>
+                                Designation Role: <span class="px-2 py-0.5 rounded text-[11px] font-bold tracking-wide not-italic ${badgeStyles}">${faculty.designation}</span>
                             </td>
                         </tr>
                     `;
@@ -1472,26 +1497,32 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (currentSummaryGroupingMode === 'none') {
                 dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                 container.innerHTML = `<table class="w-full text-left border bg-white"><thead><tr class="bg-gray-100 font-bold text-xs"><th class="p-3">Faculty Member</th><th class="p-3">Academic Rank</th><th class="p-3">Designation Role</th><th class="p-3 text-center">Unit/s Load</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr></thead><tbody>
-                    ${dataset.map(r => `<tr class="border-b">
-                        <td class="p-3 font-semibold">${r.name}</td>
-                        <td class="p-3 text-xs text-gray-500 font-medium">${r.rank}</td>
-                        <td class="p-3 text-xs text-gray-600">${r.designation}</td>
-                        <td class="p-3 text-center font-bold bg-blue-50/10">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
-                        <td class="p-3 text-center font-mono">${r.hours.toFixed(1)} Hrs</td>
-                        <td class="p-3 text-center">${r.prepsCount} Preps</td>
-                    </tr>`).join('')}</tbody></table>`;
+                    ${dataset.map(r => {
+                        let badgeStyles = getDesignationBadgeStyles(r.designation);
+                        return `<tr class="border-b">
+                            <td class="p-3 font-semibold">${r.name}</td>
+                            <td class="p-3 text-xs text-gray-500 font-medium">${r.rank}</td>
+                            <td class="p-3 text-xs"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
+                            <td class="p-3 text-center font-bold bg-blue-50/10">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
+                            <td class="p-3 text-center font-mono">${r.hours.toFixed(1)} Hrs</td>
+                            <td class="p-3 text-center">${r.prepsCount} Preps</td>
+                        </tr>`;
+                    }).join('')}</tbody></table>`;
             } else if (currentSummaryGroupingMode === 'college') {
                 Object.keys(registeredPrograms).forEach(college => {
                     let rows = dataset.filter(f => f.colleges.includes(college)); if(rows.length===0) return;
                     let colorClass = getCollegeColorClass(college);
                     container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Division</div><table class="w-full text-left text-sm">
-                        ${rows.map(r=>`<tr class="border-b">
-                            <td class="p-3 font-semibold w-1/4">${r.name}</td>
-                            <td class="p-3 text-gray-400 text-xs w-1/5">${r.rank}</td>
-                            <td class="p-3 text-gray-500 text-xs w-1/5">${r.designation}</td>
-                            <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
-                            <td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td>
-                        </tr>`).join('')}</table></div>`;
+                        ${rows.map(r => {
+                            let badgeStyles = getDesignationBadgeStyles(r.designation);
+                            return `<tr class="border-b">
+                                <td class="p-3 font-semibold w-1/4">${r.name}</td>
+                                <td class="p-3 text-gray-400 text-xs w-1/5">${r.rank}</td>
+                                <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
+                                <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
+                                <td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td>
+                            </tr>`;
+                        }).join('')}</table></div>`;
                 });
             } else if (currentSummaryGroupingMode === 'program') {
                 Object.keys(registeredPrograms).forEach(col => {
@@ -1499,13 +1530,16 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         let rows = dataset.filter(f => f.programs.includes(p)); if(rows.length===0) return;
                         let colorClass = getCollegeColorClass(col);
                         container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 text-xs font-bold tracking-wide">${p}</div><table class="w-full text-left text-sm">
-                            ${rows.map(r=>`<tr class="border-b">
-                                <td class="p-3 font-semibold w-1/4">${r.name}</td>
-                                <td class="p-3 text-xs text-gray-400 w-1/5">${r.rank}</td>
-                                <td class="p-3 text-xs text-gray-500 w-1/5">${r.designation}</td>
-                                <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
-                                <td class="p-3 text-center">${r.hours.toFixed(1)} H</td>
-                            </tr>`).join('')}</table></div>`;
+                            ${rows.map(r => {
+                                let badgeStyles = getDesignationBadgeStyles(r.designation);
+                                return `<tr class="border-b">
+                                    <td class="p-3 font-semibold w-1/4">${r.name}</td>
+                                    <td class="p-3 text-xs text-gray-400 w-1/5">${r.rank}</td>
+                                    <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
+                                    <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
+                                    <td class="p-3 text-center">${r.hours.toFixed(1)} H</td>
+                                </tr>`;
+                            }).join('')}</table></div>`;
                     });
                 });
             }
