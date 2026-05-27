@@ -94,7 +94,7 @@
                     <span id="kpi-total-units" class="text-3xl font-extrabold text-emerald-950 mt-2">0 Unit/s</span>
                 </div>
                 <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col justify-between">
-                    <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Load Compliance Rate</span>
+                    <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Audited Compliance Rate</span>
                     <span id="kpi-compliance-rate" class="text-3xl font-extrabold text-amber-950 mt-2">100%</span>
                 </div>
             </div>
@@ -117,7 +117,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="p-5 border border-gray-200 rounded-xl bg-white space-y-3 lg:col-span-1 shadow-sm">
-                    <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2">⚖️ Compliance Audit Per College</h3>
+                    <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2">⚖️ Compliance Audit Per College <span class="normal-case text-[10px] text-gray-400 font-medium">(Excluding TBA)</span></h3>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs border-collapse">
                             <thead>
@@ -843,11 +843,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let totalSchedules = sharedSchedules.length;
             let totalFacultyCount = registeredFaculty.length;
             let dataset = getAggregatedFacultyMetricsList(); 
-            let activeFacultyCount = dataset.length;
             
             let totalUnits = 0;
             let compliantCount = 0;
             let nonCompliantCount = 0;
+            let totalAuditedFaculty = 0;
 
             let collegeAudit = {
                 "COE": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1 },
@@ -859,6 +859,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             
             dataset.forEach(f => {
                 totalUnits += f.units;
+                
+                // CRITICAL EXCLUSION: Skip auditing logic completely if the faculty rank is explicitly "TBA"
+                if (f.rank === "TBA") {
+                    return;
+                }
+                
+                totalAuditedFaculty++;
                 let minReq = designationUnitMinimums[f.designation] || 18;
                 let isCompliant = f.units >= minReq;
 
@@ -885,7 +892,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             document.getElementById("kpi-total-faculty").textContent = totalFacultyCount;
             document.getElementById("kpi-total-units").textContent = totalUnits + " Unit/s";
             
-            let compliancePercent = activeFacultyCount > 0 ? Math.round((compliantCount / activeFacultyCount) * 100) : 100;
+            let compliancePercent = totalAuditedFaculty > 0 ? Math.round((compliantCount / totalAuditedFaculty) * 100) : 100;
             document.getElementById("kpi-compliance-rate").textContent = compliancePercent + "%";
             
             const tableBody = document.getElementById("dashboard-college-compliance-table-body");
@@ -1431,7 +1438,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }).filter(x => x.units > 0 || x.designation !== 'Without Designation');
         }
 
-        function createSummaryComplianceBadgeHTML(units, designation) {
+        function createSummaryComplianceBadgeHTML(units, designation, rank) {
+            // CRITICAL UI COMPLIANCE OVERRIDE: Display a neutral notice if the profile rank is listed as "TBA"
+            if (rank === "TBA") {
+                return `<span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded ml-2"> Bypassed (TBA Rank)</span>`;
+            }
+            
             let requiredUnits = designationUnitMinimums[designation] || 18;
             if(units < requiredUnits) {
                 return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Shortfall (${requiredUnits} Unit/s req.)</span>`;
@@ -1470,9 +1482,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let meetsTarget = faculty.units >= minAllowedUnits;
                     let badgeStyles = getDesignationBadgeStyles(faculty.designation);
                     
-                    let statusElement = meetsTarget 
-                        ? `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-gray-500 font-medium text-center">(${minAllowedUnits} Unit/s Target Met)</div>`
-                        : `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">(Deficit: Required ${minAllowedUnits} Unit/s)</div>`;
+                    let statusElement = "";
+                    if (faculty.rank === "TBA") {
+                        statusElement = `<div class="text-gray-400 font-extrabold text-center text-xs tracking-wider">EXCLUDED</div><div class="text-[10px] text-gray-400 font-medium text-center">(TBA Rank Parameter)</div>`;
+                    } else {
+                        statusElement = meetsTarget 
+                            ? `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-gray-500 font-medium text-center">(${minAllowedUnits} Unit/s Target Met)</div>`
+                            : `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">(Deficit: Required ${minAllowedUnits} Unit/s)</div>`;
+                    }
 
                     let listedSubjectsJoined = faculty.subjects.length > 0 ? [...new Set(faculty.subjects)].join("; ") : "No Course Segments Loaded";
 
@@ -1509,7 +1526,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <td class="p-3 text-xs font-bold text-indigo-950">${r.homeCollege}</td>
                             <td class="p-3 text-xs text-gray-500 font-medium">${r.rank}</td>
                             <td class="p-3 text-xs"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
-                            <td class="p-3 text-center font-bold bg-blue-50/10">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
+                            <td class="p-3 text-center font-bold bg-blue-50/10">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation, r.rank)}</td>
                             <td class="p-3 text-center font-mono">${r.hours.toFixed(1)} Hrs</td>
                             <td class="p-3 text-center">${r.prepsCount} Preps</td>
                         </tr>`;
@@ -1526,7 +1543,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                 <td class="p-3 font-semibold w-1/4">${r.name}</td>
                                 <td class="p-3 text-gray-400 text-xs w-1/5">${r.rank}</td>
                                 <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
-                                <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
+                                <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation, r.rank)}</td>
                                 <td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td>
                             </tr>`;
                         }).join('')}</table></div>`;
@@ -1543,7 +1560,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                     <td class="p-3 font-semibold w-1/4">${r.name} <span class="text-xs text-gray-400">(${r.homeCollege})</span></td>
                                     <td class="p-3 text-xs text-gray-400 w-1/5">${r.rank}</td>
                                     <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
-                                    <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
+                                    <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation, r.rank)}</td>
                                     <td class="p-3 text-center">${r.hours.toFixed(1)} H</td>
                                 </tr>`;
                             }).join('')}</table></div>`;
@@ -1590,7 +1607,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }).join('');
 
             let statusBadge = "";
-            if (uTot < requiredMinUnits) {
+            if (facultyObj.rank === "TBA") {
+                statusBadge = `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-bold ml-2">⚙️ Standard Registry Review Pending</span>`;
+            } else if (uTot < requiredMinUnits) {
                 statusBadge = `<span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold ml-2">⚠️ Below Minimum Standard (${requiredMinUnits} Unit/s Required)</span>`;
             } else {
                 statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold ml-2">✅ Compliance Verified</span>`;
