@@ -116,19 +116,21 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="p-5 border border-gray-200 rounded-xl bg-white space-y-3 lg:col-span-1 shadow-sm">
-                    <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2">⚖️ Compliance Audit Per College <span class="normal-case text-[10px] text-gray-400 font-medium">(Excluding TBA)</span></h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-gray-100 text-gray-600 font-bold border-b">
-                                    <th class="p-2">College</th>
-                                    <th class="p-2 text-center text-emerald-700">Compliant</th>
-                                    <th class="p-2 text-center text-red-600">Non-Compliant</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dashboard-college-compliance-table-body" class="divide-y divide-gray-100 font-medium"></tbody>
-                        </table>
+                <div class="p-5 border border-gray-200 rounded-xl bg-white space-y-3 lg:col-span-1 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2 mb-2">⚖️ Compliance Audit Per College <span class="normal-case text-[10px] text-gray-400 font-medium">(Excluding TBA)</span></h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-600 font-bold border-b">
+                                        <th class="p-2">College</th>
+                                        <th class="p-2 text-center text-emerald-700">Compliant</th>
+                                        <th class="p-2 text-center text-red-600">Non-Compliant</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-college-compliance-table-body" class="divide-y divide-gray-100 font-medium"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -136,6 +138,16 @@
                     <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2">⭐ Top Compliance Workload Per Division</h3>
                     <div id="dashboard-top-performers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
+            </div>
+
+            <div class="p-5 border border-gray-200 rounded-xl bg-white shadow-sm space-y-4">
+                <div class="border-b pb-2">
+                    <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                        <span>⚠️ Strategic Deficiency Registry</span>
+                        <span class="text-xs normal-case font-medium text-gray-500">(Active list of underloaded faculty profiles requiring schedule balances)</span>
+                    </h3>
+                </div>
+                <div id="dashboard-non-compliant-faculty-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4"></div>
             </div>
         </section>
 
@@ -850,20 +862,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let totalAuditedFaculty = 0;
 
             let collegeAudit = {
-                "COE": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1 },
-                "CCS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1 },
-                "COEd": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1 },
-                "CANS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1 },
-                "Graduate Studies": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1 }
+                "COE": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
+                "CCS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
+                "COEd": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
+                "CANS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
+                "Graduate Studies": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] }
             };
             
             dataset.forEach(f => {
                 totalUnits += f.units;
                 
-                // CRITICAL EXCLUSION: Skip auditing logic completely if the faculty rank is explicitly "TBA"
-                if (f.rank === "TBA") {
-                    return;
-                }
+                if (f.rank === "TBA") return;
                 
                 totalAuditedFaculty++;
                 let minReq = designationUnitMinimums[f.designation] || 18;
@@ -874,16 +883,23 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 let homeColKey = f.homeCollege;
                 if (collegeAudit.hasOwnProperty(homeColKey)) {
-                    if (isCompliant) collegeAudit[homeColKey].compliant++;
-                    else collegeAudit[homeColKey].nonCompliant++;
-
                     if (isCompliant) {
+                        collegeAudit[homeColKey].compliant++;
                         if (f.units > collegeAudit[homeColKey].maxUnits || 
                            (f.units === collegeAudit[homeColKey].maxUnits && f.hours > collegeAudit[homeColKey].maxHours)) {
                             collegeAudit[homeColKey].maxUnits = f.units;
                             collegeAudit[homeColKey].maxHours = f.hours;
                             collegeAudit[homeColKey].topFaculty = f;
                         }
+                    } else {
+                        collegeAudit[homeColKey].nonCompliant++;
+                        collegeAudit[homeColKey].underloadedList.push({
+                            name: f.name,
+                            rank: f.rank,
+                            units: f.units,
+                            target: minReq,
+                            deficit: minReq - f.units
+                        });
                     }
                 }
             });
@@ -907,6 +923,44 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         </tr>
                     `;
                 });
+            }
+
+            // Render Underloaded Active Grid Board
+            const nonCompliantContainer = document.getElementById("dashboard-non-compliant-faculty-container");
+            if (nonCompliantContainer) {
+                nonCompliantContainer.innerHTML = "";
+                let printedDeficiencies = 0;
+
+                Object.keys(collegeAudit).forEach(col => {
+                    let missingProfiles = collegeAudit[col].underloadedList;
+                    missingProfiles.forEach(f => {
+                        printedDeficiencies++;
+                        nonCompliantContainer.innerHTML += `
+                            <div class="p-3 border border-red-200 rounded-xl bg-red-50/20 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <div class="flex justify-between items-start">
+                                        <span class="text-[10px] font-extrabold uppercase text-red-700 bg-red-100/60 px-1.5 py-0.5 rounded">${col}</span>
+                                        <span class="text-[10px] text-gray-400 font-mono font-bold">Deficit: -${f.deficit} U</span>
+                                    </div>
+                                    <div class="text-xs font-bold text-gray-900 mt-1 truncate">${f.name}</div>
+                                    <div class="text-[10px] text-gray-500 truncate">${f.rank}</div>
+                                </div>
+                                <div class="bg-white border border-red-100 rounded-lg px-2.5 py-1.5 flex justify-between items-center text-[11px] font-medium mt-1">
+                                    <span class="text-gray-500">Current: <strong class="text-gray-900">${f.units}</strong></span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="text-gray-500">Target: <strong class="text-red-600">${f.target}</strong></span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+
+                if (printedDeficiencies === 0) {
+                    nonCompliantContainer.className = "block w-full text-center p-6 border border-dashed rounded-xl bg-emerald-50/10 text-emerald-700 font-bold text-xs";
+                    nonCompliantContainer.innerHTML = "✨ Complete Curricular Balance Verified! All operational faculty profiles match or exceed their benchmark structural loading parameters.";
+                } else {
+                    nonCompliantContainer.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full";
+                }
             }
 
             const performersGrid = document.getElementById("dashboard-top-performers-grid");
@@ -1439,7 +1493,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         }
 
         function createSummaryComplianceBadgeHTML(units, designation, rank) {
-            // CRITICAL UI COMPLIANCE OVERRIDE: Display a neutral notice if the profile rank is listed as "TBA"
             if (rank === "TBA") {
                 return `<span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded ml-2"> Bypassed (TBA Rank)</span>`;
             }
