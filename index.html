@@ -98,7 +98,6 @@
             </nav>
         </div>
 
-        <!-- ANALYTICS DASHBOARD HUB -->
         <section id="dashboard-view" class="tab-content bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
             <div class="border-b border-gray-100 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
@@ -165,7 +164,6 @@
                 </div>
             </div>
 
-            <!-- EXPLICIT LIST OF NON COMPLIANT INSTRUCTORS PER DEPT (COLOR CODED) -->
             <div class="p-5 border border-gray-200 rounded-xl bg-white shadow-sm space-y-4">
                 <div class="border-b pb-2">
                     <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
@@ -177,7 +175,6 @@
             </div>
         </section>
 
-        <!-- INGESTION ENGINE -->
         <section id="upload-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print space-y-6">
             <div class="border-b border-gray-100 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Document Ingestion & Parsing Engine</h2>
@@ -225,7 +222,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </div>
         </section>
 
-        <!-- MANUAL ENCODER -->
         <section id="encoder-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print">
             <div class="border-b border-gray-100 pb-4 mb-6">
                 <h2 class="text-xl font-bold text-gray-900">Manual Entry Wizard</h2>
@@ -316,7 +312,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </form>
         </section>
 
-        <!-- MASTER PROGRAM OVERVIEW -->
         <section id="schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
@@ -335,7 +330,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="masterScheduleContainer" class="space-y-8"></div>
         </section>
 
-        <!-- SCHEDULE SHEETS REPORT -->
         <section id="program-schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
@@ -369,7 +363,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="programScheduleReportContainer" class="space-y-6"></div>
         </section>
 
-        <!-- LOADING MATRIX & COMPLIANCE SUMMARY -->
         <section id="summary-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content space-y-6">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-5 gap-4">
                 <div>
@@ -399,7 +392,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="summaryDashboardDynamicContent" class="overflow-x-auto"></div>
         </section>
 
-        <!-- WORKLOAD BLUEPRINT SHEETS -->
         <section id="workload-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
@@ -438,7 +430,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="workloadSheetsContainer" class="space-y-6"></div>
         </section>
 
-        <!-- REGISTRIES DATA CONFIGURATION PANELS -->
         <section id="management-view" class="hidden space-y-8 no-print tab-content">
             <div class="bg-white p-4 rounded-xl border border-gray-200 flex flex-wrap gap-2 shadow-sm">
                 <button onclick="switchRegistryTab('reg-programs')" id="subtab-reg-programs" class="reg-tab-btn bg-blue-950 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">🎓 Programs Registry</button>
@@ -447,7 +438,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <button onclick="switchRegistryTab('reg-rooms')" id="subtab-reg-rooms" class="reg-tab-btn bg-gray-100 text-gray-700 text-xs px-4 py-2 rounded-lg cursor-pointer text-emerald-700 font-bold">🏢 Rooms Registry</button>
             </div>
 
-            <!-- PROGRAMS PANEL -->
             <div id="panel-reg-programs" class="reg-panel bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">Degree Course / Program Configurations</h3>
@@ -456,7 +446,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm"><thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600"><th class="p-3">College</th><th class="p-3">Program Name</th><th class="p-3 text-right">Actions</th></thead><tbody id="regProgramsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
             </div>
 
-            <!-- SECTIONS PANEL -->
             <div id="panel-reg-sections" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">Year Level & Section Registry</h3>
@@ -465,17 +454,28 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="overflow-x-auto"><table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600"><th class="p-3">Associated Program</th><th class="p-3">Section Code</th><th class="p-3 text-right">Actions</th></thead><tbody id="regSectionsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
             </div>
 
-            <!-- FACULTY ROSTER PANEL -->
             <div id="panel-reg-faculty" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
-                <div class="flex justify-between items-center border-b pb-3">
-                    <h3 class="text-lg font-bold text-gray-900">Institutional Faculty Roster Registry</h3>
-                    <button onclick="openRegistryAddModal('faculty')" class="bg-blue-950 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">+ Add New Instructor</button>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900">Institutional Faculty Roster Registry</h3>
+                        <p class="text-xs text-gray-400">Manage database entries or sync datasets with clean CSV migrations.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="exportFacultyRosterCSV()" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer flex items-center gap-1">
+                            📤 Export Faculty CSV
+                        </button>
+                        <label class="bg-indigo-900 hover:bg-indigo-950 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer flex items-center gap-1 text-center">
+                            📥 Import Faculty CSV
+                            <input type="file" id="facultyCsvFileInput" accept=".csv" class="hidden" onchange="importFacultyRosterCSV(event)">
+                        </label>
+                        <button onclick="openRegistryAddModal('faculty')" class="bg-blue-950 hover:bg-blue-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition cursor-pointer">
+                            + Add New Instructor
+                        </button>
+                    </div>
                 </div>
-                <!-- Dynamic Grouping Container -->
                 <div id="regFacultyGroupedContainer" class="space-y-6"></div>
             </div>
 
-            <!-- FACILITY REGISTER ROOMS -->
             <div id="panel-reg-rooms" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
                 <div class="flex justify-between items-center border-b pb-3">
                     <h3 class="text-lg font-bold text-gray-900">🏢 University Room Facility Registry</h3>
@@ -485,7 +485,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </div>
         </section>
 
-        <!-- EDIT SCHEDULE MODAL -->
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -510,7 +509,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             </div>
         </div>
 
-        <!-- GLOBAL CONFIG MODAL REGISTRIES -->
         <div id="registryGlobalModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
@@ -523,7 +521,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <input type="hidden" id="regOldKey">
                     <input type="hidden" id="regOldIndex">
 
-                    <!-- Always visible for Faculty, hidden or context-dependent for other fields -->
                     <div id="regWrapperFacultyCollege" class="block">
                         <label class="block mb-1 text-gray-600">Parent Department / Home College Assignment</label>
                         <select id="regFacultyInputCollege" class="w-full border p-2 rounded bg-gray-50 text-xs">
@@ -702,7 +699,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return [30, 41, 59];
         }
 
-        // Translation helper for dynamic theme adjustments
         function getCollegeNormalizedStyleKey(collegeKey) {
             const key = String(collegeKey).toUpperCase();
             if (key === 'COED') return 'coed';
@@ -977,7 +973,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 });
             }
 
-            // Render Color-Coded Underloaded Active Grid Board
             const nonCompliantContainer = document.getElementById("dashboard-non-compliant-faculty-container");
             if (nonCompliantContainer) {
                 nonCompliantContainer.innerHTML = "";
@@ -1084,6 +1079,81 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } } }
                 });
             }
+        }
+
+        // BACKUP DATA MIGRATION: FACULTY EXPORT & RE-IMPORT CONSOLE HOOKS
+        function exportFacultyRosterCSV() {
+            if (registeredFaculty.length === 0) { alert("Roster dataset records are currently empty."); return; }
+            
+            let csvLines = [["Faculty Full Name", "College Department", "Academic Rank", "Designation Role"].join(",")];
+            
+            registeredFaculty.forEach(f => {
+                let cleanEscape = (str) => {
+                    let text = String(str || '').replace(/"/g, '""').trim();
+                    return text.includes(',') ? `"${text}"` : text;
+                };
+                csvLines.push([
+                    cleanEscape(f.name),
+                    cleanEscape(f.college),
+                    cleanEscape(f.rank),
+                    cleanEscape(f.designation)
+                ].join(","));
+            });
+
+            let blob = new Blob([csvLines.join("\n")], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "ESSU_Salcedo_Faculty_Roster_Backup.csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        function importFacultyRosterCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let rawText = e.target.result;
+                let rows = rawText.split(/\r?\n/);
+                let newlyLoadedFaculty = [];
+                let duplicateSkipped = 0;
+
+                for (let i = 0; i < rows.length; i++) {
+                    let cleanLine = rows[i].trim();
+                    if (!cleanLine) continue;
+
+                    // Support quote escaping logic structures
+                    let cells = cleanLine.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                    if (cells.length >= 4) {
+                        let nameVal = cells[0];
+                        let collegeVal = cells[1];
+                        let rankVal = cells[2];
+                        let designationVal = cells[3];
+
+                        // Skip layout templates
+                        if (nameVal.toLowerCase().includes("faculty full name") || nameVal.toLowerCase().includes("name of faculty")) continue;
+
+                        // Check structural updates or duplicates
+                        let existingMatchIndex = registeredFaculty.findIndex(f => f.name.toLowerCase() === nameVal.toLowerCase());
+                        let profileModel = { name: nameVal, college: collegeVal, rank: rankVal, designation: designationVal };
+
+                        if (existingMatchIndex !== -1) {
+                            // Update parameters in place
+                            registeredFaculty[existingMatchIndex] = profileModel;
+                        } else {
+                            registeredFaculty.push(profileModel);
+                            newlyLoadedFaculty.push(nameVal);
+                        }
+                    }
+                }
+
+                registeredFaculty.sort((a, b) => a.name.localeCompare(b.name));
+                saveSystemStateToLocalStorage();
+                executeRegistryDataSynchronization();
+                alert(`✅ Faculty Data Synchronization Finished!\nSuccessfully appended/updated registry records.`);
+                event.target.value = ""; // clear selector
+            };
+            reader.readAsText(file);
         }
 
         function renderMasterSchedule() {
