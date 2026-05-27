@@ -137,33 +137,6 @@
                     <div id="dashboard-top-performers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 space-y-3">
-                    <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide">Compliance Standards Ratio</h3>
-                    <div class="relative h-64 w-full flex items-center justify-center">
-                        <canvas id="compliancePieChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 lg:col-span-2 space-y-4 flex flex-col justify-between">
-                    <div>
-                        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-wide border-b pb-2">Institutional Target Unit Rules Parameter Reference</h3>
-                        <ul class="text-xs space-y-2.5 text-gray-600 font-medium mt-3">
-                            <li class="flex justify-between items-center bg-white p-2 rounded border border-gray-100"><span>Dean / Director Assignment Track:</span> <span class="font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">Minimum 9 Unit/s</span></li>
-                            <li class="flex justify-between items-center bg-white p-2 rounded border border-gray-100"><span>Head / Program Head Assignment Track:</span> <span class="font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">Minimum 12 Unit/s</span></li>
-                            <li class="flex justify-between items-center bg-white p-2 rounded border border-gray-100"><span>Coordinator / In-Charge Track:</span> <span class="font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">Minimum 15 Unit/s</span></li>
-                            <li class="flex justify-between items-center bg-white p-2 rounded border border-gray-100"><span>Regular Full-Time Roster / Lecturer Status:</span> <span class="font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded">Minimum 18 Unit/s</span></li>
-                        </ul>
-                    </div>
-                    <div class="bg-indigo-900/5 p-3 rounded-xl border border-indigo-900/10 text-xs text-indigo-900 font-semibold flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <span>Need to run full audits or preview structural document layouts?</span>
-                        <button onclick="switchTab('summary-view'); changeSummaryGrouping('matrix-tab');" class="bg-blue-950 text-white font-bold px-4 py-2 rounded-lg hover:bg-blue-900 transition text-[11px] cursor-pointer whitespace-nowrap">
-                            Open General Workload Matrix 📋
-                        </button>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <section id="upload-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print space-y-6">
@@ -450,7 +423,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <h3 class="text-lg font-bold text-gray-900">Institutional Faculty Roster Registry</h3>
                     <button onclick="openRegistryAddModal('faculty')" class="bg-blue-950 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">+ Add New Instructor</button>
                 </div>
-                <div class="overflow-x-auto"><table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600"><th class="p-3">Instructor Full Name</th><th class="p-3">Academic Rank</th><th class="p-3">Designation Role</th><th class="p-3 text-right">Actions</th></thead><tbody id="regFacultyTableBody" class="divide-y divide-gray-100"></tbody></table></div>
+                <div id="regFacultyGroupedContainer" class="space-y-6"></div>
             </div>
 
             <div id="panel-reg-rooms" class="reg-panel hidden bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
@@ -497,6 +470,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <input type="hidden" id="regContextAction">
                     <input type="hidden" id="regOldKey">
                     <input type="hidden" id="regOldIndex">
+
+                    <div id="regWrapperFacultyCollege" class="block">
+                        <label class="block mb-1 text-gray-600">Parent Department / Home College Assignment</label>
+                        <select id="regFacultyInputCollege" class="w-full border p-2 rounded bg-gray-50 text-xs">
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                    </div>
 
                     <div id="regWrapperCollege" class="hidden">
                         <label class="block mb-1 text-gray-600">Parent College Hub Division</label>
@@ -599,6 +583,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         
         const defaultFaculty = defaultFacultyRaw.sort().map((name, i) => ({
             name: name,
+            college: (name.includes("Araneta") || name.includes("Bolito") || name.includes("Cabahug")) ? "COE" : (i % 3 === 0 ? "CCS" : (i % 2 === 0 ? "COEd" : "CANS")),
             rank: i % 4 === 0 ? "Assistant Professor I" : (i % 5 === 0 ? "Associate Professor II" : "Instructor I"),
             designation: name.includes("Araneta") ? "Head" : (i % 6 === 0 ? "Dean" : (i % 7 === 0 ? "Coordinator / In-Charge" : "Without Designation"))
         }));
@@ -671,11 +656,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 registeredRooms = JSON.parse(localStorage.getItem("hub_registeredRooms")) || defaultRooms;
                 sharedSchedules = JSON.parse(localStorage.getItem("hub_sharedSchedules")) || defaultSchedules;
 
-                if(registeredFaculty.length > 0 && typeof registeredFaculty[0] === 'string') {
-                    registeredFaculty = registeredFaculty.map(fName => ({ name: fName, rank: "Instructor I", designation: "Without Designation" }));
-                } else if (registeredFaculty.length > 0 && !registeredFaculty[0].hasOwnProperty('rank')) {
-                    registeredFaculty.forEach(f => { f.rank = "Instructor I"; });
-                }
+                registeredFaculty.forEach(f => {
+                    if (!f.college) f.college = "COE"; 
+                    if (!f.rank) f.rank = "Instructor I";
+                    if (!f.designation) f.designation = "Without Designation";
+                });
             } catch (err) {
                 loadFactoryStateDefaults();
             }
@@ -719,6 +704,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if(tabId === 'program-schedule-view') { populateReportFilters(); renderProgramScheduleReport(); }
             if(tabId === 'workload-view') { filterWorkloadFacultyDropdown(); }
             if(tabId === 'summary-view') { renderSummaryDashboard(); }
+            if(tabId === 'management-view') { renderRegistryManagement(); }
         }
 
         function switchRegistryTab(subtabId) {
@@ -732,7 +718,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             const el = document.getElementById("instructorSelect"); if(!el) return;
             el.innerHTML = `<option value="">Select Instructor...</option>`;
             registeredFaculty.forEach(x => { 
-                let o = document.createElement("option"); o.value = x.name; o.textContent = `${x.name} [${x.rank}] (${x.designation})`; el.appendChild(o); 
+                let o = document.createElement("option"); o.value = x.name; o.textContent = `${x.name} [${x.college}] [${x.rank}] (${x.designation})`; el.appendChild(o); 
             });
 
             const rEl = document.getElementById("roomSelect"); if(rEl) {
@@ -828,7 +814,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let matchFacultyName = matchFaculty ? matchFaculty.name : instructor;
                     
                     if(!matchFaculty) {
-                        registeredFaculty.push({ name: instructor, rank: "Instructor I", designation: "Without Designation" });
+                        registeredFaculty.push({ name: instructor, college: selectedCollege, rank: "Instructor I", designation: "Without Designation" });
                     }
                     if(!registeredRooms.includes(room)) registeredRooms.push(room);
 
@@ -878,21 +864,20 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 if (isCompliant) compliantCount++;
                 else nonCompliantCount++;
 
-                f.colleges.forEach(colKey => {
-                    if (collegeAudit.hasOwnProperty(colKey)) {
-                        if (isCompliant) collegeAudit[colKey].compliant++;
-                        else collegeAudit[colKey].nonCompliant++;
+                let homeColKey = f.homeCollege;
+                if (collegeAudit.hasOwnProperty(homeColKey)) {
+                    if (isCompliant) collegeAudit[homeColKey].compliant++;
+                    else collegeAudit[homeColKey].nonCompliant++;
 
-                        if (isCompliant) {
-                            if (f.units > collegeAudit[colKey].maxUnits || 
-                               (f.units === collegeAudit[colKey].maxUnits && f.hours > collegeAudit[colKey].maxHours)) {
-                                collegeAudit[colKey].maxUnits = f.units;
-                                collegeAudit[colKey].maxHours = f.hours;
-                                collegeAudit[colKey].topFaculty = f;
-                            }
+                    if (isCompliant) {
+                        if (f.units > collegeAudit[homeColKey].maxUnits || 
+                           (f.units === collegeAudit[homeColKey].maxUnits && f.hours > collegeAudit[homeColKey].maxHours)) {
+                            collegeAudit[homeColKey].maxUnits = f.units;
+                            collegeAudit[homeColKey].maxHours = f.hours;
+                            collegeAudit[homeColKey].topFaculty = f;
                         }
                     }
-                });
+                }
             });
             
             document.getElementById("kpi-total-schedules").textContent = totalSchedules;
@@ -924,7 +909,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     if (topFac) {
                         performersGrid.innerHTML += `
                             <div class="p-3 border rounded-xl bg-gray-50/50 space-y-1">
-                                <div class="text-[10px] font-extrabold uppercase text-indigo-700 tracking-wider">${col} Leader</div>
+                                <div class="text-[10px] font-extrabold uppercase text-indigo-700 tracking-wider">${col} Department Leader</div>
                                 <div class="text-xs font-bold text-gray-900 truncate">${topFac.name}</div>
                                 <div class="text-[11px] text-gray-500 truncate">${topFac.designation}</div>
                                 <div class="flex justify-between items-center text-xs font-bold pt-1.5 border-t border-gray-200/60 mt-1">
@@ -936,7 +921,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     } else {
                         performersGrid.innerHTML += `
                             <div class="p-3 border border-dashed rounded-xl flex flex-col justify-center items-center text-center text-gray-400 bg-gray-50/20">
-                                <div class="text-[10px] font-bold uppercase tracking-wider">${col}</div>
+                                <div class="text-[10px] font-bold uppercase tracking-wider">${col} Division</div>
                                 <div class="text-[11px] italic font-medium">No Compliant Record</div>
                             </div>
                         `;
@@ -1223,15 +1208,52 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 });
             }
 
-            const facultyTable = document.getElementById("regFacultyTableBody"); if(facultyTable) {
-                facultyTable.innerHTML = "";
-                registeredFaculty.forEach((facObj, idx) => {
-                    let badgeStyles = getDesignationBadgeStyles(facObj.designation);
-                    facultyTable.innerHTML += `<tr class="text-xs border-b hover:bg-gray-50/50">
-                        <td class="p-3 font-semibold text-gray-900">${facObj.name}</td>
-                        <td class="p-3"><span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-medium text-[11px]">${facObj.rank || 'Instructor I'}</span></td>
-                        <td class="p-3"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide ${badgeStyles}">${facObj.designation}</span></td>
-                        <td class="p-3 text-right space-x-1"><button onclick="openRegistryEditModal('faculty', null, ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button><button onclick="deleteRegistryRow('faculty', null, ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button></td></tr>`;
+            // Group Faculty Panel cleanly inside registries configuration view
+            const facultyGroupedContainer = document.getElementById("regFacultyGroupedContainer");
+            if (facultyGroupedContainer) {
+                facultyGroupedContainer.innerHTML = "";
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                
+                uniqueCollegesKeys.forEach(colKey => {
+                    let matchingFacultyRows = registeredFaculty
+                        .map((f, i) => ({ data: f, originalIndex: i }))
+                        .filter(fItem => fItem.data.college === colKey);
+                        
+                    let colorClass = getCollegeColorClass(colKey);
+                    
+                    let tableContentHtml = matchingFacultyRows.map(item => {
+                        let badgeStyles = getDesignationBadgeStyles(item.data.designation);
+                        return `
+                            <tr class="text-xs border-b hover:bg-gray-50/50">
+                                <td class="p-3 font-semibold text-gray-900 w-1/3">${item.data.name}</td>
+                                <td class="p-3 w-1/4"><span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-medium text-[11px]">${item.data.rank || 'Instructor I'}</span></td>
+                                <td class="p-3 w-1/4"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide ${badgeStyles}">${item.data.designation}</span></td>
+                                <td class="p-3 text-right space-x-1">
+                                    <button onclick="openRegistryEditModal('faculty', null, ${item.originalIndex})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button>
+                                    <button onclick="deleteRegistryRow('faculty', null, ${item.originalIndex})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    if (matchingFacultyRows.length > 0) {
+                        facultyGroupedContainer.innerHTML += `
+                            <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-xs">
+                                <div class="${colorClass} px-3 py-2 text-xs font-bold uppercase tracking-wider">${colKey} Faculty Roster Division</div>
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600">
+                                        <tr>
+                                            <th class="p-3">Instructor Full Name</th>
+                                            <th class="p-3">Academic Rank</th>
+                                            <th class="p-3">Designation Role</th>
+                                            <th class="p-3 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">${tableContentHtml}</tbody>
+                                </table>
+                            </div>
+                        `;
+                    }
                 });
             }
 
@@ -1246,6 +1268,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             document.getElementById("regContextAction").value = "ADD";
             document.getElementById("registryModalTitle").textContent = `Add New ${mode.toUpperCase()} Entry`;
             
+            document.getElementById("regWrapperFacultyCollege").className = (mode === 'faculty') ? "block" : "hidden";
             document.getElementById("regWrapperCollege").className = (mode === 'program') ? "block" : "hidden";
             document.getElementById("regWrapperProgram").className = (mode === 'section') ? "block" : "hidden";
             document.getElementById("regWrapperRank").className = (mode === 'faculty') ? "block" : "hidden";
@@ -1270,6 +1293,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             document.getElementById("regOldIndex").value = index;
             document.getElementById("registryModalTitle").textContent = `Edit ${mode.toUpperCase()} Config`;
 
+            document.getElementById("regWrapperFacultyCollege").className = "hidden";
             document.getElementById("regWrapperCollege").className = "hidden";
             document.getElementById("regWrapperProgram").className = "hidden";
             document.getElementById("regWrapperRank").className = "hidden";
@@ -1290,8 +1314,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 }
             } else if(mode === 'faculty') {
                 currentVal = registeredFaculty[index].name;
+                document.getElementById("regWrapperFacultyCollege").classList.remove("hidden");
                 document.getElementById("regWrapperRank").classList.remove("hidden");
                 document.getElementById("regWrapperDesignation").classList.remove("hidden");
+                document.getElementById("regFacultyInputCollege").value = registeredFaculty[index].college || "COE";
                 document.getElementById("regInputRank").value = registeredFaculty[index].rank || "Instructor I";
                 document.getElementById("regInputDesignation").value = registeredFaculty[index].designation;
             } else if(mode === 'room') {
@@ -1311,10 +1337,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             if(action === "ADD") {
                 if(mode === 'faculty') { 
+                    const collegeDeptVal = document.getElementById("regFacultyInputCollege").value;
                     const rankVal = document.getElementById("regInputRank").value;
                     const des = document.getElementById("regInputDesignation").value;
                     if(!registeredFaculty.some(f => f.name === inputVal)) {
-                        registeredFaculty.push({ name: inputVal, rank: rankVal, designation: des });
+                        registeredFaculty.push({ name: inputVal, college: collegeDeptVal, rank: rankVal, designation: des });
                     } 
                 }
                 else if(mode === 'room') { if(!registeredRooms.includes(inputVal)) registeredRooms.push(inputVal); }
@@ -1332,10 +1359,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 if(mode === 'faculty') {
                     let oldName = registeredFaculty[index].name;
+                    const targetCollegeDept = document.getElementById("regFacultyInputCollege").value;
                     const targetRank = document.getElementById("regInputRank").value;
                     const targetDes = document.getElementById("regInputDesignation").value;
                     
                     registeredFaculty[index].name = inputVal;
+                    registeredFaculty[index].college = targetCollegeDept;
                     registeredFaculty[index].rank = targetRank;
                     registeredFaculty[index].designation = targetDes;
                     
@@ -1390,36 +1419,24 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         function getAggregatedFacultyMetricsList() {
             return registeredFaculty.map(p => {
                 const cl = sharedSchedules.filter(s => s.instructorName === p.name); 
-                let u = 0, h = 0, pr = new Set(), cols = new Set(), progs = new Set(), subjectsList = [];
+                let u = 0, h = 0, pr = new Set(), progs = new Set(), subjectsList = [];
                 
                 cl.forEach(c => { 
                     u += c.unifiedUnits; 
                     h += calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); 
                     pr.add(c.subjectTitle); 
-                    if(c.college) cols.add(c.college); 
                     if(c.program) progs.add(c.program);
                     subjectsList.push(c.subjectTitle);
                 });
 
-                // Fallback default mapping logic to prevent detachment if schedules haven't been loaded
-                if (cols.size === 0) {
-                    Object.keys(defaultPrograms).forEach(key => {
-                        defaultPrograms[key].forEach(pName => {
-                            if (p.designation === 'Dean' && key === 'COE' && p.name.includes("Araneta")) cols.add("COE");
-                            else if (p.name.includes("Bolito") && key === "COE") cols.add("COE");
-                        });
-                    });
-                    if (cols.size === 0) cols.add("COE"); 
-                }
-
                 return { 
                     name: p.name, 
+                    homeCollege: p.college || "COE",
                     rank: p.rank || 'Instructor I', 
                     designation: p.designation || 'Without Designation', 
                     units: u, 
                     hours: h, 
                     prepsCount: pr.size, 
-                    colleges: Array.from(cols), 
                     programs: Array.from(progs),
                     subjects: subjectsList
                 };
@@ -1473,7 +1490,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                     matrixHeaderRows += `
                         <tr class="border-t border-gray-300 text-gray-900 bg-white hover:bg-gray-50/40">
-                            <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800">${faculty.name}</td>
+                            <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800">${faculty.name} <span class="text-xs text-blue-900 font-medium">(${faculty.homeCollege})</span></td>
                             <td class="border-r border-gray-300 p-2.5 leading-normal text-gray-600">${listedSubjectsJoined}</td>
                             <td class="border-r border-gray-300 p-2.5 text-center font-bold text-gray-950 text-sm">${faculty.units}</td>
                             <td class="border-r border-gray-300 p-2.5 text-center font-mono text-gray-700">${faculty.hours.toFixed(1)}</td>
@@ -1496,11 +1513,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             if (currentSummaryGroupingMode === 'none') {
                 dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
-                container.innerHTML = `<table class="w-full text-left border bg-white"><thead><tr class="bg-gray-100 font-bold text-xs"><th class="p-3">Faculty Member</th><th class="p-3">Academic Rank</th><th class="p-3">Designation Role</th><th class="p-3 text-center">Unit/s Load</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr></thead><tbody>
+                container.innerHTML = `<table class="w-full text-left border bg-white"><thead><tr class="bg-gray-100 font-bold text-xs"><th class="p-3">Faculty Member</th><th class="p-3">Home College</th><th class="p-3">Academic Rank</th><th class="p-3">Designation Role</th><th class="p-3 text-center">Unit/s Load</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr></thead><tbody>
                     ${dataset.map(r => {
                         let badgeStyles = getDesignationBadgeStyles(r.designation);
                         return `<tr class="border-b">
                             <td class="p-3 font-semibold">${r.name}</td>
+                            <td class="p-3 text-xs font-bold text-indigo-950">${r.homeCollege}</td>
                             <td class="p-3 text-xs text-gray-500 font-medium">${r.rank}</td>
                             <td class="p-3 text-xs"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
                             <td class="p-3 text-center font-bold bg-blue-50/10">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
@@ -1509,10 +1527,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         </tr>`;
                     }).join('')}</tbody></table>`;
             } else if (currentSummaryGroupingMode === 'college') {
-                Object.keys(registeredPrograms).forEach(college => {
-                    let rows = dataset.filter(f => f.colleges.includes(college)); if(rows.length===0) return;
+                const collegeListArray = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                collegeListArray.forEach(college => {
+                    let rows = dataset.filter(f => f.homeCollege === college); if(rows.length===0) return;
                     let colorClass = getCollegeColorClass(college);
-                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Division</div><table class="w-full text-left text-sm">
+                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Department Division</div><table class="w-full text-left text-sm">
                         ${rows.map(r => {
                             let badgeStyles = getDesignationBadgeStyles(r.designation);
                             return `<tr class="border-b">
@@ -1533,7 +1552,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             ${rows.map(r => {
                                 let badgeStyles = getDesignationBadgeStyles(r.designation);
                                 return `<tr class="border-b">
-                                    <td class="p-3 font-semibold w-1/4">${r.name}</td>
+                                    <td class="p-3 font-semibold w-1/4">${r.name} <span class="text-xs text-gray-400">(${r.homeCollege})</span></td>
                                     <td class="p-3 text-xs text-gray-400 w-1/5">${r.rank}</td>
                                     <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
                                     <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.designation)}</td>
@@ -1551,9 +1570,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             
             let filteredProfs = [];
             if(collegeScope === "ALL") {
-                filteredProfs = [...new Set(sharedSchedules.map(s => s.instructorName))].sort();
+                filteredProfs = registeredFaculty.map(f => f.name).sort();
             } else {
-                filteredProfs = [...new Set(sharedSchedules.filter(s => s.college === collegeScope).map(s => s.instructorName))].sort();
+                filteredProfs = registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort();
             }
 
             el.innerHTML = '<option value="ALL">Show All Faculty Sheets (Filtered Scope)</option>';
@@ -1571,7 +1590,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         function buildWorkloadHTML(prof, classes) {
             let uTot = 0, hTot = 0, pr = new Set();
             
-            let facultyObj = registeredFaculty.find(f => f.name === prof) || { name: prof, rank: "Instructor I", designation: "Without Designation" };
+            let facultyObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
             let requiredMinUnits = designationUnitMinimums[facultyObj.designation] || 18;
 
             let rows = classes.map(c => {
@@ -1594,6 +1613,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm mb-4 border-b pb-3 border-gray-100">
                     <div>
                         <div class="text-base font-bold text-blue-950">Faculty Member: ${prof}</div>
+                        <div class="text-xs text-gray-500 font-semibold mt-0.5">Academic Department Home: <span class="text-indigo-950 font-bold">${facultyObj.college}</span></div>
                         <div class="text-xs text-gray-500 font-semibold mt-0.5">Academic Rank: <span class="text-gray-800 font-bold">${facultyObj.rank || 'Instructor I'}</span></div>
                         <div class="text-xs text-gray-600 font-medium mt-0.5">Designation Track: <span class="underline font-bold text-gray-800">${facultyObj.designation}</span></div>
                     </div>
@@ -1617,17 +1637,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 targetFacultyList = [facultyFilter];
             } else {
                 if(collegeScope === "ALL") {
-                    targetFacultyList = [...new Set(sharedSchedules.map(s => s.instructorName))].sort();
+                    targetFacultyList = registeredFaculty.map(f => f.name).sort();
                 } else {
-                    targetFacultyList = [...new Set(sharedSchedules.filter(s => s.college === collegeScope).map(s => s.instructorName))].sort();
+                    targetFacultyList = registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort();
                 }
             }
 
             targetFacultyList.forEach(prof => {
                 let clList = sharedSchedules.filter(s => s.instructorName === prof);
-                if (collegeScope !== "ALL" && facultyFilter === "ALL") {
-                    clList = clList.filter(s => s.college === collegeScope);
-                }
                 if(clList.length === 0) return;
                 let classes = sortFacultyClassesChronologically(clList);
                 container.innerHTML += buildWorkloadHTML(prof, classes);
@@ -1639,11 +1656,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let wb = XLSX.utils.book_new();
 
             if (currentSummaryGroupingMode === 'none' || currentSummaryGroupingMode === 'matrix-tab') {
-                let dataRows = dataset.map(f => ({ "Faculty Instructor Name": f.name, "Academic Rank": f.rank, "Designation Assignment": f.designation, "Total Workload Unit/s": f.units, "Weekly Committed Hours": f.hours, "Distinct Preparations Count": f.prepsCount }));
+                let dataRows = dataset.map(f => ({ "Faculty Name": f.name, "Department College": f.homeCollege, "Academic Rank": f.rank, "Designation Assignment": f.designation, "Total Workload Unit/s": f.units, "Weekly Committed Hours": f.hours, "Distinct Preparations Count": f.prepsCount }));
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataRows), "Flat Load List");
             } else if (currentSummaryGroupingMode === 'college') {
-                Object.keys(registeredPrograms).forEach(college => {
-                    let rows = dataset.filter(f => f.colleges.includes(college)); if (rows.length === 0) return;
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                uniqueCollegesKeys.forEach(college => {
+                    let rows = dataset.filter(f => f.homeCollege === college); if (rows.length === 0) return;
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(f => ({ "Instructor": f.name, "Rank": f.rank, "Designation": f.designation, "Assigned Unit/s": f.units, "Weekly Hours": f.hours }))), college.substring(0, 31));
                 });
             } else if (currentSummaryGroupingMode === 'program') {
@@ -1652,7 +1670,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     registeredPrograms[col].forEach(prog => {
                         let rows = dataset.filter(f => f.programs.includes(prog)); if (rows.length === 0) return;
                         let cleanName = prog.replace(/[^a-zA-Z0-9\s]/g, "").substring(0, 25);
-                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(f => ({ "Instructor Name": f.name, "Rank": f.rank, "Designation": f.designation, "Unit/s": f.units, "Hours": f.hours }))), `${indexCounter++}-${cleanName}`);
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(f => ({ "Instructor Name": f.name, "Home College": f.homeCollege, "Rank": f.rank, "Designation": f.designation, "Unit/s": f.units, "Hours": f.hours }))), `${indexCounter++}-${cleanName}`);
                     });
                 });
             }
@@ -1668,9 +1686,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let facultyScopeList = [];
             
             if(collegeScope === "ALL") {
-                facultyScopeList = [...new Set(sharedSchedules.map(s => s.instructorName))].sort();
+                facultyScopeList = registeredFaculty.map(f => f.name).sort();
             } else {
-                facultyScopeList = [...new Set(sharedSchedules.filter(s => s.college === collegeScope).map(s => s.instructorName))].sort();
+                facultyScopeList = registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort();
             }
 
             if (targetScope === "current") {
@@ -1679,8 +1697,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             } else if (targetScope === "all") {
                 workloadMap.push({ titleId: "University_As_A_Whole_Workloads", members: facultyScopeList });
             } else if (targetScope === "college") {
-                Object.keys(registeredPrograms).forEach(colKey => {
-                    let filteredMembers = facultyScopeList.filter(fName => sharedSchedules.some(s => s.instructorName === fName && s.college === colKey));
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                uniqueCollegesKeys.forEach(colKey => {
+                    let filteredMembers = registeredFaculty.filter(f => f.college === colKey).map(f => f.name);
                     if(filteredMembers.length > 0) workloadMap.push({ titleId: `College_${colKey}_Workloads`, members: filteredMembers });
                 });
             } else if (targetScope === "program") {
@@ -1708,10 +1727,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                     let classes = sortFacultyClassesChronologically(clList);
                     let preps = new Set(classes.map(c => c.subjectTitle)).size;
-                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, rank: "Instructor I", designation: "Without Designation" };
+                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
 
                     doc.setFontSize(14); doc.text("INDIVIDUAL FACULTY WORKLOAD SHEET", 105, 15, { align: "center" });
-                    doc.setFontSize(10); doc.text(`Faculty Member: ${prof} | Rank: ${facObj.rank} | Role: ${facObj.designation} | Preparations: ${preps}`, 14, 23);
+                    doc.setFontSize(10); doc.text(`Faculty Member: ${prof} | Dept: ${facObj.college} | Rank: ${facObj.rank} | Role: ${facObj.designation} | Preparations: ${preps}`, 14, 23);
 
                     let totU = 0, totH = 0;
                     let tableBody = classes.map(c => {
@@ -1733,10 +1752,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 packageItem.members.forEach(prof => {
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
                     let classes = sortFacultyClassesChronologically(clList);
-                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, rank: "Instructor I", designation: "Without Designation" };
+                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     let matrixData = [
                         ["INDIVIDUAL FACULTY WORKLOAD SHEET"], ["Academic Year 2026 - 2027 Summary Allocation Blueprint"], [],
-                        ["Faculty Member Name:", prof, "Academic Rank:", facObj.rank, "Designation:", facObj.designation], [],
+                        ["Faculty Member Name:", prof, "Academic Rank:", facObj.rank, "Designation:", facObj.designation, "Department:", facObj.college], [],
                         ["Day / Time Assignment", "Subject Code & Description", "Course Unit/s", "Hours per Week", "Section Block", "Room Layout"]
                     ];
                     let subUnits = 0, subHrs = 0;
@@ -1761,10 +1780,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 packageItem.members.forEach(prof => {
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
                     let classes = sortFacultyClassesChronologically(clList);
-                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, rank: "Instructor I", designation: "Without Designation" };
+                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     sectionChildren.push(
                         new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, size: 28 })] }),
-                        new Paragraph({ text: "" }), new Paragraph({ children: [new TextRun({ text: `Faculty Member: ${prof} | Rank: ${facObj.rank} | Designation: ${facObj.designation}`, bold: true })] }), new Paragraph({ text: "" })
+                        new Paragraph({ text: "" }), new Paragraph({ children: [new TextRun({ text: `Faculty Member: ${prof} | College Dept: ${facObj.college} | Rank: ${facObj.rank} | Designation: ${facObj.designation}`, bold: true })] }), new Paragraph({ text: "" })
                     );
                     let tableHeaderCells = ["Day / Time", "Subject Descriptive Title", "Unit/s", "Hrs/Wk", "Class Section", "Room"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "bold" })] }));
                     let rowElementsList = [new TableRow({ children: tableHeaderCells })];
@@ -1803,7 +1822,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 }
                 if(s.instructorName) {
                     if(!registeredFaculty.some(f => f.name === s.instructorName)) {
-                        registeredFaculty.push({ name: s.instructorName, rank: "Instructor I", designation: "Without Designation" });
+                        registeredFaculty.push({ name: s.instructorName, college: s.college || "COE", rank: "Instructor I", designation: "Without Designation" });
                     }
                 }
                 if(s.roomNumber) {
@@ -1853,7 +1872,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         function exportFacultySummaryPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
             let dataset = getAggregatedFacultyMetricsList();
-            doc.autoTable({ startY: 25, head: [['Instructor', 'Academic Rank', 'Designation', 'Unit/s Load', 'Hours Load']], body: dataset.map(f => [f.name, f.rank, f.designation, `${f.units} Unit/s`, `${f.hours.toFixed(1)} Hrs`]) });
+            doc.autoTable({ startY: 25, head: [['Instructor', 'Home College', 'Academic Rank', 'Designation', 'Unit/s Load', 'Hours Load']], body: dataset.map(f => [f.name, f.homeCollege, f.rank, f.designation, `${f.units} Unit/s`, `${f.hours.toFixed(1)} Hrs`]) });
             doc.save('Faculty_Load_Summary.pdf');
         }
 
