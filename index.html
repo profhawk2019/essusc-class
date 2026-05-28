@@ -168,7 +168,7 @@
                 <div class="border-b pb-2">
                     <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
                         <span>⚠️ Strategic Deficiency Registry</span>
-                        <span class="text-xs normal-case font-medium text-gray-500">(Active list of underloaded/underhour faculty profiles requiring schedule balances)</span>
+                        <span class="text-xs normal-case font-medium text-gray-500">(Faculty profiles failing both Designation Units and the 20-Hour alternative check)</span>
                     </h3>
                 </div>
                 <div id="dashboard-non-compliant-faculty-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
@@ -367,7 +367,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-5 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Faculty Load Summary Metrics</h2>
-                    <p class="text-sm text-gray-500">Aggregated load summary indices with reactive designation and hour threshold triggers.</p>
+                    <p class="text-sm text-gray-500">Aggregated load summary indices with reactive designation and hour cascading checks.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-4 no-print bg-gray-50 p-3 rounded-xl border border-gray-200">
                     <div class="flex items-center gap-1">
@@ -396,7 +396,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Faculty Structural Load Sheets</h2>
-                    <p class="text-sm text-gray-500">Official individual instructional workloads generated dynamically with dual unit-hour metrics checks.</p>
+                    <p class="text-sm text-gray-500">Official individual instructional workloads generated dynamically with adaptive configuration criteria.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto no-print bg-gray-50 p-2.5 rounded-xl border border-gray-200">
                     <div class="flex flex-col sm:flex-row gap-2">
@@ -894,7 +894,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             switchTab('dashboard-view');
         }
 
-        function fontFacultyClassesChronologically(list) {
+        function sortFacultyClassesChronologically(list) {
             const weights = { "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "monday and wednesday": 1.5, "tuesday and thursday": 2.5 };
             return list.sort((a, b) => (weights[a.dayAssignment.toLowerCase()] || 7) - (weights[b.dayAssignment.toLowerCase()] || 7) || toMins(a.startTime) - toMins(b.startTime));
         }
@@ -925,8 +925,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 totalAuditedFaculty++;
                 let minReq = designationUnitMinimums[f.designation] || 18;
                 
-                /* OPTIMIZED COMPLIANCE PARALYZERS: Requires Minimum Units AND Atleast 20 Hours */
-                let isCompliant = (f.units >= minReq) && (f.hours >= 20);
+                /* STEP-BY-STEP OVERRIDE LOGIC: Check Units first; if failed, check if hours are >= 20 */
+                let isCompliant = false;
+                if (f.units >= minReq) {
+                    isCompliant = true;
+                } else if (f.hours >= 20) {
+                    isCompliant = true;
+                }
 
                 if (isCompliant) compliantCount++;
                 else nonCompliantCount++;
@@ -943,18 +948,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         }
                     } else {
                         collegeAudit[homeColKey].nonCompliant++;
-                        
-                        let reason = [];
-                        if (f.units < minReq) reason.push(`Deficit: -${minReq - f.units} U`);
-                        if (f.hours < 20) reason.push(`Hours: ${f.hours.toFixed(1)}/20h`);
-                        
                         collegeAudit[homeColKey].underloadedList.push({
                             name: f.name,
                             rank: f.rank,
                             units: f.units,
                             hours: f.hours,
                             target: minReq,
-                            deficitReason: reason.join(' | ')
+                            deficit: minReq - f.units
                         });
                     }
                 }
@@ -997,18 +997,15 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                 <div>
                                     <div class="flex justify-between items-center">
                                         <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded text-white header-${styleKey}">${col}</span>
-                                        <span class="text-[10px] font-mono font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100 whitespace-nowrap">${f.deficitReason}</span>
+                                        <span class="text-[10px] font-mono font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">Deficit: -${f.deficit} U</span>
                                     </div>
                                     <div class="text-xs font-bold text-gray-900 mt-2 truncate">${f.name}</div>
                                     <div class="text-[10px] text-gray-500 truncate mt-0.5">${f.rank}</div>
                                 </div>
-                                <div class="bg-white/80 backdrop-blur-xs border border-gray-100 rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[11px] font-medium mt-1">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-500">Current Load: <strong class="text-gray-900">${f.units} U / ${f.hours.toFixed(1)} Hrs</strong></span>
-                                    </div>
-                                    <div class="flex justify-between text-[10px] border-t pt-0.5 border-gray-100">
-                                        <span class="text-gray-400">Bench: min ${f.target} U & 20h</span>
-                                    </div>
+                                <div class="bg-white/80 backdrop-blur-xs border border-gray-100 rounded-lg px-2 py-1.5 flex justify-between items-center text-[11px] font-medium mt-1">
+                                    <span class="text-gray-500">Load: <strong class="text-gray-900">${f.units} U / ${f.hours.toFixed(1)} h</strong></span>
+                                    <span class="text-gray-300">|</span>
+                                    <span class="text-gray-500">Req: <strong class="text-${styleKey} font-bold">${f.target} U</strong></span>
                                 </div>
                             </div>
                         `;
@@ -1017,7 +1014,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 if (printedDeficiencies === 0) {
                     nonCompliantContainer.className = "block w-full text-center p-6 border border-dashed rounded-xl bg-emerald-50/10 text-emerald-700 font-bold text-xs";
-                    nonCompliantContainer.innerHTML = "✨ Complete Curricular Balance Verified! All operational faculty profiles match or exceed their benchmark instructional standard loading and 20 hours minimum metric requirements.";
+                    nonCompliantContainer.innerHTML = "✨ Complete Curricular Balance Verified! All operational faculty profiles match designation standards or satisfy the secondary 20-hour load criteria.";
                 } else {
                     nonCompliantContainer.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full";
                 }
@@ -1133,7 +1130,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let cleanLine = rows[i].trim();
                     if (!cleanLine) continue;
 
-                    // Support quote escaping logic structures
                     let cells = cleanLine.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
                     if (cells.length >= 4) {
                         let nameVal = cells[0];
@@ -1141,15 +1137,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         let rankVal = cells[2];
                         let designationVal = cells[3];
 
-                        // Skip layout templates
                         if (nameVal.toLowerCase().includes("faculty full name") || nameVal.toLowerCase().includes("name of faculty")) continue;
 
-                        // Check structural updates or duplicates
                         let existingMatchIndex = registeredFaculty.findIndex(f => f.name.toLowerCase() === nameVal.toLowerCase());
                         let profileModel = { name: nameVal, college: collegeVal, rank: rankVal, designation: designationVal };
 
                         if (existingMatchIndex !== -1) {
-                            // Update parameters in place
                             registeredFaculty[existingMatchIndex] = profileModel;
                         } else {
                             registeredFaculty.push(profileModel);
@@ -1162,7 +1155,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 saveSystemStateToLocalStorage();
                 executeRegistryDataSynchronization();
                 alert(`✅ Faculty Data Synchronization Finished!\nSuccessfully appended/updated registry records.`);
-                event.target.value = ""; // clear selector
+                event.target.value = ""; 
             };
             reader.readAsText(file);
         }
@@ -1353,7 +1346,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode, colKey] = key.split("::");
-                let data = fontFacultyClassesChronologically(grouped[key]);
+                let data = sortFacultyClassesChronologically(grouped[key]);
                 let activeColorClass = getCollegeColorClass(colKey);
 
                 let rows = data.map(r => `<tr class="border-b text-xs">
@@ -1626,22 +1619,24 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }).filter(x => x.units > 0 || x.designation !== 'Without Designation');
         }
 
-        /* OPTIMIZED REMARKS BADGE GENERATOR: Validates target designation minimum units AND absolute 20 hours barrier */
+        /* Adaptive sequential audit indicator function */
         function createSummaryComplianceBadgeHTML(units, hours, designation, rank) {
             if (rank === "TBA") {
                 return `<span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded ml-2"> Bypassed (TBA Rank)</span>`;
             }
             
             let requiredUnits = designationUnitMinimums[designation] || 18;
-            let errors = [];
             
-            if (units < requiredUnits) errors.push(`${requiredUnits} U req.`);
-            if (hours < 20) errors.push(`Under 20 Hrs`);
-            
-            if (errors.length > 0) {
-                return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Deficit (${errors.join(' & ')})</span>`;
+            // Check Units First
+            if (units >= requiredUnits) {
+                return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Units Compliant)</span>`;
+            } 
+            // Fallback to Hours check
+            else if (hours >= 20) {
+                return `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Hours Override)</span>`;
             }
-            return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK</span>`;
+            
+            return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U & under 20h)</span>`;
         }
 
         function renderSummaryDashboard() {
@@ -1673,24 +1668,21 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 dataset.forEach(faculty => {
                     let minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
                     
-                    /* OPTIMIZED MATRIX EVALUATIONS STRUCTURE */
-                    let meetsTarget = (faculty.units >= minAllowedUnits) && (faculty.hours >= 20);
-                    let badgeStyles = getDesignationBadgeStyles(faculty.designation);
-                    
                     let statusElement = "";
                     if (faculty.rank === "TBA") {
                         statusElement = `<div class="text-gray-400 font-extrabold text-center text-xs tracking-wider">EXCLUDED</div><div class="text-[10px] text-gray-400 font-medium text-center">(TBA Rank Parameter)</div>`;
                     } else {
-                        if (meetsTarget) {
-                            statusElement = `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-gray-500 font-medium text-center">(${minAllowedUnits}U Standard & $\\ge 20$h Met)</div>`;
+                        // Sequential check applied to Dashboard Matrix view
+                        if (faculty.units >= minAllowedUnits) {
+                            statusElement = `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-emerald-600 font-medium text-center">(Designation Target Met)</div>`;
+                        } else if (faculty.hours >= 20) {
+                            statusElement = `<div class="text-blue-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-blue-600 font-medium text-center">(${faculty.hours.toFixed(1)}h Hours Standard Met)</div>`;
                         } else {
-                            let issues = [];
-                            if (faculty.units < minAllowedUnits) issues.push(`Need ${minAllowedUnits}U`);
-                            if (faculty.hours < 20) issues.push(`Need 20h (Has ${faculty.hours.toFixed(1)}h)`);
-                            statusElement = `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">${issues.join('<br>')}</div>`;
+                            statusElement = `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">(Deficit: ${minAllowedUnits}U / under 20h)</div>`;
                         }
                     }
 
+                    let badgeStyles = getDesignationBadgeStyles(faculty.designation);
                     let listedSubjectsJoined = faculty.subjects.length > 0 ? [...new Set(faculty.subjects)].join("; ") : "No Course Segments Loaded";
 
                     matrixHeaderRows += `
@@ -1806,17 +1798,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 </tr>`;
             }).join('');
 
-            /* OPTIMIZED INDIVIDUAL SHEET VISUAL BADGE LOGIC */
+            /* Adaptive sheet validation styling badge rules */
             let statusBadge = "";
+            let isSheetCompliant = (uTot >= requiredMinUnits) || (hTot >= 20);
+
             if (facultyObj.rank === "TBA") {
                 statusBadge = `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-bold ml-2">⚙️ Standard Registry Review Pending</span>`;
-            } else if (uTot < requiredMinUnits || hTot < 20) {
-                let structuralDetails = [];
-                if (uTot < requiredMinUnits) structuralDetails.push(`Below Unit Benchmark (${requiredMinUnits} U Req.)`);
-                if (hTot < 20) structuralDetails.push(`Below Hours Standard (Requires at least 20h)`);
-                statusBadge = `<span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold ml-2">⚠️ Non-Compliant Layout (${structuralDetails.join(' & ')})</span>`;
+            } else if (isSheetCompliant) {
+                let checkMethod = uTot >= requiredMinUnits ? "Designation Units Cleared" : "Hours Standard Override Cleared";
+                statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold ml-2">✅ Compliance Verified (${checkMethod})</span>`;
             } else {
-                statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold ml-2">✅ Dual Metrics Compliance Verified</span>`;
+                statusBadge = `<span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold ml-2">⚠️ Below Structural Parameters (Fails Unit Benchmark & Under 20h)</span>`;
             }
 
             return `<div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm print-page">
@@ -1834,7 +1826,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     </div>
                 </div>
                 <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Unit/s</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
-                <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td class="text-blue-900 bg-blue-50/50">${uTot} Unit/s</td><td class="${hTot < 20 ? 'text-red-600 bg-red-50/50 font-extrabold' : 'text-emerald-700 bg-emerald-50/50'}">${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
+                <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td class="text-blue-900 bg-blue-50/50">${uTot} Unit/s</td><td class="${!isSheetCompliant ? 'text-red-600 bg-red-50/50 font-extrabold' : 'text-emerald-700 bg-emerald-50/50'}">${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
         }
 
         function renderWorkloads() {
@@ -1857,7 +1849,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             targetFacultyList.forEach(prof => {
                 let clList = sharedSchedules.filter(s => s.instructorName === prof);
                 if(clList.length === 0) return;
-                let classes = fontFacultyClassesChronologically(clList);
+                let classes = sortFacultyClassesChronologically(clList);
                 container.innerHTML += buildWorkloadHTML(prof, classes);
             });
         }
@@ -1936,7 +1928,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
                     if (matchesAdded > 0) doc.addPage(); matchesAdded++;
 
-                    let classes = fontFacultyClassesChronologically(clList);
+                    let classes = sortFacultyClassesChronologically(clList);
                     let preps = new Set(classes.map(c => c.subjectTitle)).size;
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
 
@@ -1962,7 +1954,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let wb = XLSX.utils.book_new();
                 packageItem.members.forEach(prof => {
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    let classes = fontFacultyClassesChronologically(clList);
+                    let classes = sortFacultyClassesChronologically(clList);
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     let matrixData = [
                         ["INDIVIDUAL FACULTY WORKLOAD SHEET"], ["Academic Year 2026 - 2027 Summary Allocation Blueprint"], [],
@@ -1990,7 +1982,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let sectionChildren = [];
                 packageItem.members.forEach(prof => {
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    let classes = fontFacultyClassesChronologically(clList);
+                    let classes = sortFacultyClassesChronologically(clList);
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     sectionChildren.push(
                         new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, size: 28 })] }),
@@ -2099,7 +2091,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let hexColor = getCollegeHexCode(colKey);
                 doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
                 
-                let dataRows = fontFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
+                let dataRows = sortFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
                 doc.autoTable({ startY: 22, head: [['Day', 'Time Bracket (12H)', 'Subject Title', 'Unit/s', 'Faculty Instructor', 'Room']], body: dataRows, theme: 'striped', headStyles: { fillColor: hexColor } });
             }); doc.save('Class_Schedules_Report.pdf');
         }
@@ -2110,7 +2102,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode] = key.split("::");
                 let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window (12H Format)", "Subject Description", "Unit/s", "Faculty Instructor", "Room Assignment"]];
-                fontFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
+                sortFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
                 let ws = XLSX.utils.aoa_to_sheet(sheetRows); let cleanSheetName = `${sectCode}`.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30); XLSX.utils.book_append_sheet(wb, ws, cleanSheetName);
             }); XLSX.writeFile(wb, "University_Class_Schedules.xlsx");
         }
