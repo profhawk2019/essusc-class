@@ -14,6 +14,8 @@
         @media print {
             .no-print { display: none !important; }
             .print-page { page-break-after: always; padding: 0 !important; margin: 0 !important; border: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-matrix-view { display: block !important; width: 100% !important; }
         }
         .code-added-highlight { background-color: rgba(254, 240, 138, 0.08); }
         
@@ -383,6 +385,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <button onclick="changeSummarySort('hours')" id="sort-hours-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-2.5 py-1.5 rounded-md border border-gray-300 cursor-pointer">Hours ⬇</button>
                     </div>
                     <div class="flex gap-1 border-l pl-3 border-gray-300">
+                        <button onclick="printWorkloadMatrixReport()" id="matrix-print-action-btn" class="bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold px-3 py-2 rounded-md hidden cursor-pointer flex items-center gap-1 shadow-xs">
+                            🖨 Print Matrix Report
+                        </button>
                         <button onclick="exportFacultySummaryPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-md cursor-pointer">📄 Export PDF</button>
                         <button onclick="exportFacultySummaryExcelGrouped()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer">📈 Export Grouped Excel</button>
                     </div>
@@ -391,6 +396,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             
             <div id="summaryDashboardDynamicContent" class="overflow-x-auto"></div>
         </section>
+
+        <!-- Hidden Specialized Print Wrapper strictly for Matrix Printing layouts -->
+        <div id="specializedMatrixPrintFrame" class="hidden print-matrix-view"></div>
 
         <section id="workload-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-gray-100 pb-4 mb-6 gap-4">
@@ -925,7 +933,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 totalAuditedFaculty++;
                 let minReq = designationUnitMinimums[f.designation] || 18;
                 
-                /* STEP-BY-STEP OVERRIDE LOGIC: Check Units first; if failed, check if hours are >= 20 */
                 let isCompliant = false;
                 if (f.units >= minReq) {
                     isCompliant = true;
@@ -1589,7 +1596,16 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
         function closeRegistryGlobalModal() { document.getElementById("registryGlobalModal").classList.add("hidden"); }
         function closeScheduleEditorModal() { document.getElementById("scheduleUpdateModal").classList.add("hidden"); }
-        function changeSummaryGrouping(mode) { currentSummaryGroupingMode = mode; changeSummarySort(currentSummarySortMetric); }
+        
+        function changeSummaryGrouping(mode) { 
+            currentSummaryGroupingMode = mode; 
+            const printBtn = document.getElementById("matrix-print-action-btn");
+            if(printBtn) {
+                printBtn.className = (mode === 'matrix-tab') ? "bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer shadow-xs animate-pulse" : "hidden";
+            }
+            changeSummarySort(currentSummarySortMetric); 
+        }
+        
         function changeSummarySort(m) { currentSummarySortMetric = m; renderSummaryDashboard(); }
 
         function getAggregatedFacultyMetricsList() {
@@ -1619,7 +1635,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }).filter(x => x.units > 0 || x.designation !== 'Without Designation');
         }
 
-        /* Adaptive sequential audit indicator function */
         function createSummaryComplianceBadgeHTML(units, hours, designation, rank) {
             if (rank === "TBA") {
                 return `<span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded ml-2"> Bypassed (TBA Rank)</span>`;
@@ -1627,16 +1642,96 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             
             let requiredUnits = designationUnitMinimums[designation] || 18;
             
-            // Check Units First
             if (units >= requiredUnits) {
                 return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Units Compliant)</span>`;
             } 
-            // Fallback to Hours check
             else if (hours >= 20) {
                 return `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Hours Override)</span>`;
             }
             
             return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U & under 20h)</span>`;
+        }
+
+        /* DYNAMIC PRINT FORMAT COMPILER FOR THE LOAD MATRIX */
+        function printWorkloadMatrixReport() {
+            let dataset = getAggregatedFacultyMetricsList();
+            if(dataset.length === 0) { alert("No data logs detected to create a matrix sheet print."); return; }
+            dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
+
+            const frame = document.getElementById("specializedMatrixPrintFrame");
+            if(!frame) return;
+
+            let rowsHtml = "";
+            dataset.forEach(faculty => {
+                let minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
+                let remarksText = "";
+                
+                if (faculty.rank === "TBA") {
+                    remarksText = "EXCLUDED\n(TBA Rank Parameter)";
+                } else {
+                    if (faculty.units >= minAllowedUnits) {
+                        remarksText = "COMPLIANT\n(Designation Target Met)";
+                    } else if (faculty.hours >= 20) {
+                        remarksText = "COMPLIANT\n(Hours Override Met)";
+                    } else {
+                        remarksText = `NON-COMPLIANT\n(Deficit: ${minAllowedUnits}U / Under 20h)`;
+                    }
+                }
+
+                let uniqSubjectsList = faculty.subjects.length > 0 ? [...new Set(faculty.subjects)].join("; ") : "Unassigned Channels";
+
+                rowsHtml += `
+                    <tr style="border-bottom: 1px solid #222; page-break-inside: avoid;">
+                        <td style="padding: 8px; font-weight: bold; font-size: 11px; vertical-align: top;">
+                            ${faculty.name}<br>
+                            <span style="font-size: 9px; font-weight: normal; color: #444; font-style: italic;">
+                                ${faculty.rank} | ${faculty.designation} (${faculty.homeCollege})
+                            </span>
+                        </td>
+                        <td style="padding: 8px; font-size: 10px; vertical-align: top; line-height: 1.3;">${uniqSubjectsList}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; font-weight: bold; vertical-align: top;">${faculty.units}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; font-family: monospace; vertical-align: top;">${faculty.hours.toFixed(1)}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; vertical-align: top;">${faculty.prepsCount}</td>
+                        <td style="padding: 8px; font-size: 9px; text-align: center; font-weight: bold; white-space: pre-line; vertical-align: middle; background-color: #fcfcfc;">${remarksText}</td>
+                    </tr>
+                `;
+            });
+
+            frame.innerHTML = `
+                <div style="padding: 20px; font-family: sans-serif; background: white; color: black;">
+                    <!-- Institutional Document Header Alignment -->
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h2 style="margin: 0; font-size: 16px; font-weight: 800; uppercase; letter-spacing: 0.5px;">Eastern Samar State University</h2>
+                        <h3 style="margin: 3px 0; font-size: 13px; font-weight: 600;">Salcedo Campus, Salcedo, Eastern Samar</h3>
+                        <h4 style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #111; letter-spacing: 0.2px;">GENERAL FACULTY INSTRUCTIONAL WORKLOAD MATRIX</h4>
+                        <div style="margin-top: 4px; font-size: 10px; font-weight: 500;">Academic Year: 2026 - 2027 | Consolidated Database Audit Roll</div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background: white; color: black;">
+                        <thead>
+                            <tr style="background-color: #111; color: white; font-size: 11px; border-bottom: 2px solid black;">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #333; width: 25%;">Name of Faculty</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid #333; width: 35%;">Subject/s Assigned</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Unit/s</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Hours</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Preparation</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 35px; font-size: 10px; display: flex; justify-content: space-between; border-t: 1px dotted #ccc; pt: 10px; page-break-inside: avoid;">
+                        <div>System Log Reference ID: SWS-v1-MATRIX-2026</div>
+                        <div>Generated Date Timestamp: ${new Date().toLocaleString()}</div>
+                        <div style="font-weight: bold; text-decoration: overline; margin-top: 15px;">Campus Dean / Vice President for Academic Affairs</div>
+                    </div>
+                </div>
+            `;
+
+            window.print();
         }
 
         function renderSummaryDashboard() {
@@ -1672,7 +1767,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     if (faculty.rank === "TBA") {
                         statusElement = `<div class="text-gray-400 font-extrabold text-center text-xs tracking-wider">EXCLUDED</div><div class="text-[10px] text-gray-400 font-medium text-center">(TBA Rank Parameter)</div>`;
                     } else {
-                        // Sequential check applied to Dashboard Matrix view
                         if (faculty.units >= minAllowedUnits) {
                             statusElement = `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-emerald-600 font-medium text-center">(Designation Target Met)</div>`;
                         } else if (faculty.hours >= 20) {
@@ -1798,7 +1892,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 </tr>`;
             }).join('');
 
-            /* Adaptive sheet validation styling badge rules */
             let statusBadge = "";
             let isSheetCompliant = (uTot >= requiredMinUnits) || (hTot >= 20);
 
