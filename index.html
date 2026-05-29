@@ -106,6 +106,7 @@
                 <p class="text-sm text-gray-500">Real-time summary tracking university loading balances, policy standard compliance ratios, and program structural distributions.</p>
             </div>
             
+            <!-- Academic Analytics Primary Row Metrics Layout Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase text-blue-600 tracking-wider">Total Schedules Listed</span>
@@ -125,6 +126,7 @@
                 </div>
             </div>
 
+            <!-- Upgraded Analytics Row 2: Undergraduate Courses Count & Classroom Asset Counts per Department -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="p-4 bg-slate-900 text-white rounded-xl flex flex-col justify-between shadow-xs md:col-span-1">
                     <div>
@@ -143,7 +145,9 @@
                             <span class="normal-case text-[10px] text-gray-400 font-medium">(Distinct physical rooms assigned per college schedule logs)</span>
                         </span>
                     </div>
-                    <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1"></div>
+                    <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+                        <!-- Dynamic room counts are populated here by the javascript engine state runtime -->
+                    </div>
                 </div>
             </div>
             
@@ -815,6 +819,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }
         }
 
+        let currentSummarySortMetric = 'units';
+        let currentSummaryGroupingMode = 'none';
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => { el.className = "tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer"; });
@@ -968,8 +975,15 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let nonCompliantCount = 0;
             let totalAuditedFaculty = 0;
 
+            // Dedicated Analytical States tracking Distinct Courses and College-bound Classroom Arrays
             let distinctUndergradCourses = new Set();
-            let classroomsPerCollege = { "COE": new Set(), "CCS": new Set(), "COEd": new Set(), "CANS": new Set(), "Graduate Studies": new Set() };
+            let classroomsPerCollege = {
+                "COE": new Set(),
+                "CCS": new Set(),
+                "COEd": new Set(),
+                "CANS": new Set(),
+                "Graduate Studies": new Set()
+            };
 
             let collegeAudit = {
                 "COE": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
@@ -979,16 +993,22 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 "Graduate Studies": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] }
             };
 
+            // Loop and compile schedule blocks to run dynamic calculations
             sharedSchedules.forEach(s => {
+                // Calculation 1: Extract courses, completely bypassing Graduate Studies channel
                 if (s.college !== "Graduate Studies" && s.subjectTitle) {
+                    // Extract subject code token up until first bracket or standard space division
                     let cleanCourseCode = s.subjectTitle.split('(')[0].trim();
                     distinctUndergradCourses.add(cleanCourseCode);
                 }
+
+                // Calculation 2: Store unique physical classroom names mapped directly per scheduling college division
                 if (s.college && classroomsPerCollege.hasOwnProperty(s.college) && s.roomNumber) {
                     classroomsPerCollege[s.college].add(s.roomNumber);
                 }
             });
 
+            // Flush counters straight into UI layout elements
             document.getElementById("kpi-undergrad-courses").textContent = distinctUndergradCourses.size;
             
             const classroomsDeckContainer = document.getElementById("dashboard-classrooms-college-deck");
@@ -1008,10 +1028,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             
             dataset.forEach(f => {
                 totalUnits += f.units;
+                
                 if (f.rank === "TBA") return;
                 
                 totalAuditedFaculty++;
                 let minReq = designationUnitMinimums[f.designation] || 18;
+                
                 let isCompliant = (f.units >= minReq) || (f.hours >= 20);
 
                 if (isCompliant) compliantCount++;
@@ -1021,7 +1043,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 if (collegeAudit.hasOwnProperty(homeColKey)) {
                     if (isCompliant) {
                         collegeAudit[homeColKey].compliant++;
-                        if (f.units > collegeAudit[homeColKey].maxUnits || (f.units === collegeAudit[homeColKey].maxUnits && f.hours > collegeAudit[homeColKey].maxHours)) {
+                        if (f.units > collegeAudit[homeColKey].maxUnits || 
+                           (f.units === collegeAudit[homeColKey].maxUnits && f.hours > collegeAudit[homeColKey].maxHours)) {
                             collegeAudit[homeColKey].maxUnits = f.units;
                             collegeAudit[homeColKey].maxHours = f.hours;
                             collegeAudit[homeColKey].topFaculty = f;
@@ -1029,7 +1052,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     } else {
                         collegeAudit[homeColKey].nonCompliant++;
                         collegeAudit[homeColKey].underloadedList.push({
-                            name: f.name, rank: f.rank, units: f.units, hours: f.hours, target: minReq, deficit: minReq - f.units
+                            name: f.name,
+                            rank: f.rank,
+                            units: f.units,
+                            hours: f.hours,
+                            target: minReq,
+                            deficit: minReq - f.units
                         });
                     }
                 }
@@ -1089,7 +1117,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 if (printedDeficiencies === 0) {
                     nonCompliantContainer.className = "block w-full text-center p-6 border border-dashed rounded-xl bg-emerald-50/10 text-emerald-700 font-bold text-xs";
-                    nonCompliantContainer.innerHTML = "✨ Complete Curricular Balance Verified!";
+                    nonCompliantContainer.innerHTML = "✨ Complete Curricular Balance Verified! All operational faculty profiles match designation standards or satisfy the secondary 20-hour load criteria.";
                 } else {
                     nonCompliantContainer.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full";
                 }
@@ -1112,6 +1140,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                 </div>
                             </div>
                         `;
+                    } else {
+                        performersGrid.innerHTML += `
+                            <div class="p-3 border border-dashed rounded-xl flex flex-col justify-center items-center text-center text-gray-400 bg-gray-50/20">
+                                <div class="text-[10px] font-bold uppercase tracking-wider">${col} Division</div>
+                                <div class="text-[11px] italic font-medium">No Compliant Record</div>
+                            </div>
+                        `;
                     }
                 });
             }
@@ -1126,23 +1161,30 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     type: 'doughnut',
                     data: {
                         labels: Object.keys(collegeCounts),
-                        datasets: [{ data: Object.values(collegeCounts), backgroundColor: ['#7f1d1d', '#6b21a8', '#1d4ed8', '#3f6212', '#075985'] }]
+                        datasets: [{
+                            data: Object.values(collegeCounts),
+                            backgroundColor: ['#7f1d1d', '#6b21a8', '#1d4ed8', '#3f6212', '#075985']
+                        }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
                 });
             }
             
             let sortedFaculty = [...dataset].sort((a, b) => b.units - a.units).slice(0, 10);
+            let facLabels = sortedFaculty.map(f => f.name.split(',')[0]); 
+            let facUnits = sortedFaculty.map(f => f.units);
+            let facHours = sortedFaculty.map(f => f.hours);
+            
             if (workloadChartInstance) workloadChartInstance.destroy();
             const ctx2 = document.getElementById("facultyWorkloadChart")?.getContext("2d");
             if (ctx2) {
                 workloadChartInstance = new Chart(ctx2, {
                     type: 'bar',
                     data: {
-                        labels: sortedFaculty.map(f => f.name.split(',')[0]),
+                        labels: facLabels,
                         datasets: [
-                            { label: 'Unit/s Load', data: sortedFaculty.map(f => f.units), backgroundColor: '#1e3a8a' },
-                            { label: 'Weekly Hours', data: sortedFaculty.map(f => f.hours), backgroundColor: '#10b981' }
+                            { label: 'Unit/s Load', data: facUnits, backgroundColor: '#1e3a8a' },
+                            { label: 'Weekly Hours', data: facHours, backgroundColor: '#10b981' }
                         ]
                     },
                     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 } } } }, plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } } }
@@ -1150,16 +1192,25 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }
         }
 
+        // BACKUP DATA MIGRATION: FACULTY EXPORT & RE-IMPORT CONSOLE HOOKS
         function exportFacultyRosterCSV() {
             if (registeredFaculty.length === 0) { alert("Roster dataset records are currently empty."); return; }
+            
             let csvLines = [["Faculty Full Name", "College Department", "Academic Rank", "Designation Role"].join(",")];
+            
             registeredFaculty.forEach(f => {
                 let cleanEscape = (str) => {
                     let text = String(str || '').replace(/"/g, '""').trim();
                     return text.includes(',') ? `"${text}"` : text;
                 };
-                csvLines.push([cleanEscape(f.name), cleanEscape(f.college), cleanEscape(f.rank), cleanEscape(f.designation)].join(","));
+                csvLines.push([
+                    cleanEscape(f.name),
+                    cleanEscape(f.college),
+                    cleanEscape(f.rank),
+                    cleanEscape(f.designation)
+                ].join(","));
             });
+
             let blob = new Blob([csvLines.join("\n")], { type: 'text/csv;charset=utf-8;' });
             let link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -1168,21 +1219,45 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         }
 
         function importFacultyRosterCSV(event) {
-            const file = event.target.files[0]; if (!file) return;
+            const file = event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                let rows = e.target.result.split(/\r?\n/);
-                rows.forEach(row => {
-                    let cells = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-                    if (cells.length >= 4 && !cells[0].toLowerCase().includes("name")) {
-                        let idx = registeredFaculty.findIndex(f => f.name.toLowerCase() === cells[0].toLowerCase());
-                        let model = { name: cells[0], college: cells[1], rank: cells[2], designation: cells[3] };
-                        if (idx !== -1) registeredFaculty[idx] = model; else registeredFaculty.push(model);
+                let rawText = e.target.result;
+                let rows = rawText.split(/\r?\n/);
+                let newlyLoadedFaculty = [];
+
+                for (let i = 0; i < rows.length; i++) {
+                    let cleanLine = rows[i].trim();
+                    if (!cleanLine) continue;
+
+                    let cells = cleanLine.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+                    if (cells.length >= 4) {
+                        let nameVal = cells[0];
+                        let collegeVal = cells[1];
+                        let rankVal = cells[2];
+                        let designationVal = cells[3];
+
+                        if (nameVal.toLowerCase().includes("faculty full name") || nameVal.toLowerCase().includes("name of faculty")) continue;
+
+                        let existingMatchIndex = registeredFaculty.findIndex(f => f.name.toLowerCase() === nameVal.toLowerCase());
+                        let profileModel = { name: nameVal, college: collegeVal, rank: rankVal, designation: designationVal };
+
+                        if (existingMatchIndex !== -1) {
+                            registeredFaculty[existingMatchIndex] = profileModel;
+                        } else {
+                            registeredFaculty.push(profileModel);
+                            newlyLoadedFaculty.push(nameVal);
+                        }
                     }
-                });
+                }
+
                 registeredFaculty.sort((a, b) => a.name.localeCompare(b.name));
-                saveSystemStateToLocalStorage(); executeRegistryDataSynchronization();
-                alert(`✅ Faculty Records Loaded Successfully.`); event.target.value = ""; 
+                saveSystemStateToLocalStorage();
+                executeRegistryDataSynchronization();
+                alert(`✅ Faculty Data Synchronization Finished!\nSuccessfully appended/updated registry records.`);
+                event.target.value = ""; 
             };
             reader.readAsText(file);
         }
@@ -1192,23 +1267,64 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             container.innerHTML = "";
             Object.keys(registeredPrograms).forEach(college => {
                 const recs = sharedSchedules.filter(s => s.college === college); if(recs.length === 0) return;
+                
                 let activeColorClass = getCollegeColorClass(college);
-                let rows = recs.map(r => `<tr class="border-b text-sm"><td class="p-3 font-semibold">${r.classSection}</td><td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-600 font-bold text-xs">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</span></td><td class="p-3">${r.subjectTitle}</td><td class="p-3 text-center font-bold">${r.unifiedUnits}</td><td class="p-3">${r.instructorName}</td><td class="p-3 font-mono text-center">${r.roomNumber}</td><td class="p-3 text-right no-print"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button></td></tr>`).join('');
-                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white"><div class="${activeColorClass} p-3 font-bold uppercase tracking-wide flex justify-between items-center"><span>${college} Division Matrix</span><button onclick="exportCollegeCSV('${college}')" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-md transition border border-white/30 no-print cursor-pointer">📤 Export CSV</button></div><table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Unit/s</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+                
+                let rows = recs.map(r => `<tr class="border-b text-sm">
+                    <td class="p-3 font-semibold">${r.classSection}</td>
+                    <td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-600 font-bold text-xs">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</span></td>
+                    <td class="p-3">${r.subjectTitle}</td><td class="p-3 text-center font-bold">${r.unifiedUnits}</td><td class="p-3">${r.instructorName}</td><td class="p-3 font-mono text-center">${r.roomNumber}</td>
+                    <td class="p-3 text-right no-print"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button></td>
+                </tr>`).join('');
+                
+                container.innerHTML += `<div class="border rounded-lg overflow-hidden bg-white">
+                    <div class="${activeColorClass} p-3 font-bold uppercase tracking-wide flex justify-between items-center">
+                        <span>${college} Division Matrix</span>
+                        <button onclick="exportCollegeCSV('${college}')" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-md transition border border-white/30 no-print cursor-pointer">
+                            📤 Export Ingestion CSV
+                        </button>
+                    </div>
+                    <table class="w-full text-left"><thead><tr class="bg-gray-100 text-xs font-bold uppercase text-gray-600 border-b"><th class="p-3">Section</th><th class="p-3">Day/Time</th><th class="p-3">Subject</th><th class="p-3 text-center">Unit/s</th><th class="p-3">Instructor</th><th class="p-3 text-center">Room</th><th class="p-3 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
         function exportCollegeCSV(collegeKey) {
-            const records = sharedSchedules.filter(s => s.college === collegeKey); if (records.length === 0) return;
-            let csvRows = records.map(r => [r.classSection, `${r.dayAssignment} (${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)})`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber].map(v => String(v).includes(',') ? `"${v}"` : v).join(','));
-            let blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.setAttribute("download", `Template_${collegeKey}.csv`);
+            const records = sharedSchedules.filter(s => s.college === collegeKey);
+            if (records.length === 0) { alert("No schedule records available to build a data package."); return; }
+
+            let csvRows = [];
+            records.forEach(r => {
+                let formattedDayTime = `${r.dayAssignment} (${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)})`;
+                
+                let escapeStr = (str) => {
+                    let cleaned = String(str || '').replace(/"/g, '""');
+                    return cleaned.includes(',') ? `"${cleaned}"` : cleaned;
+                };
+
+                csvRows.push([
+                    escapeStr(r.classSection),
+                    escapeStr(formattedDayTime),
+                    escapeStr(r.subjectTitle),
+                    r.unifiedUnits,
+                    escapeStr(r.instructorName),
+                    escapeStr(r.roomNumber)
+                ].join(','));
+            });
+
+            let csvContent = csvRows.join('\n');
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            let safeFileName = String(collegeKey).replace(/[^a-zA-Z0-9]/g, "_");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", `Ingestion_Template_${safeFileName}.csv`);
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
         function invokeScheduleRowDeletion(id) { 
             if(confirm("Permanently delete this schedule entry from database logs?")) { 
-                sharedSchedules = sharedSchedules.filter(s=>s.id!==id); saveSystemStateToLocalStorage(); executeRegistryDataSynchronization(); 
+                sharedSchedules = sharedSchedules.filter(s=>s.id!==id); 
+                saveSystemStateToLocalStorage();
+                executeRegistryDataSynchronization(); 
             } 
         }
         
@@ -1221,8 +1337,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             document.getElementById("modalStartTime").value = match.startTime;
             document.getElementById("modalEndTime").value = match.endTime;
 
-            const pSelect = document.getElementById("modalProgramSelect");
-            if (pSelect) {
+            const pSelect = document.getElementById("modalProgramSelect"); if (pSelect) {
                 pSelect.innerHTML = "";
                 Object.keys(registeredPrograms).forEach(colKey => {
                     registeredPrograms[colKey].forEach(pName => {
@@ -1231,13 +1346,18 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     });
                 });
             }
+
             populateModalSectionsDropdown(match.classSection);
+
             const fill = (elId, arr, active) => {
                 const el = document.getElementById(elId); if(!el) return; el.innerHTML = "";
                 arr.forEach(x => { let o = document.createElement("option"); o.value = x; o.textContent = x; if(x === active) o.selected = true; el.appendChild(o); });
             };
-            fill("modalInstructorSelect", registeredFaculty.map(f => f.name), match.instructorName);
+
+            const facultyNamesArray = registeredFaculty.map(f => f.name);
+            fill("modalInstructorSelect", facultyNamesArray, match.instructorName);
             fill("modalRoomSelect", registeredRooms, match.roomNumber);
+
             document.getElementById("scheduleUpdateModal").classList.remove("hidden");
         }
 
@@ -1245,33 +1365,56 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             const selectedProg = document.getElementById("modalProgramSelect").value;
             const sSelect = document.getElementById("modalSectionSelect"); if(!sSelect) return;
             sSelect.innerHTML = "";
+            
             let boundSections = registeredSections[selectedProg] || [];
             boundSections.sort().forEach(sectCode => {
                 let o = document.createElement("option"); o.value = sectCode; o.textContent = sectCode;
-                if(preSelectedValue && sectCode === preSelectedValue) o.selected = true; sSelect.appendChild(o);
+                if(preSelectedValue && sectCode === preSelectedValue) o.selected = true;
+                sSelect.appendChild(o);
             });
+            
+            if(sSelect.innerHTML === "") {
+                let o = document.createElement("option"); o.value = "General Section"; o.textContent = "General Section"; sSelect.appendChild(o);
+            }
         }
 
         function populateReportFilters() { populateReportProgramFilter(); }
+
         function populateReportProgramFilter() {
             const col = document.getElementById("reportCollegeFilter").value;
-            const progSelect = document.getElementById("reportProgramFilter"); if(!progSelect) return; progSelect.innerHTML = '<option value="ALL">All Programs</option>';
-            Object.keys(registeredPrograms).forEach(c => {
-                if (col === "ALL" || c === col) {
-                    registeredPrograms[c].forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; progSelect.appendChild(o); });
-                }
-            });
+            const progSelect = document.getElementById("reportProgramFilter"); if(!progSelect) return;
+            progSelect.innerHTML = '<option value="ALL">All Programs</option>';
+            
+            if(col === "ALL") {
+                Object.keys(registeredPrograms).forEach(c => {
+                    registeredPrograms[c].forEach(p => {
+                        let o = document.createElement("option"); o.value = p; o.textContent = p; progSelect.appendChild(o);
+                    });
+                });
+            } else if(registeredPrograms[col]) {
+                registeredPrograms[col].forEach(p => {
+                    let o = document.createElement("option"); o.value = p; o.textContent = p; progSelect.appendChild(o);
+                });
+            }
             populateReportSectionFilter();
         }
 
         function populateReportSectionFilter() {
             const prog = document.getElementById("reportProgramFilter").value;
-            const sectSelect = document.getElementById("reportSectionFilter"); if(!sectSelect) return; sectSelect.innerHTML = '<option value="ALL">All Sections</option>';
-            Object.keys(registeredSections).forEach(pKey => {
-                if (prog === "ALL" || pKey === prog) {
-                    registeredSections[pKey].sort().forEach(s => { let o = document.createElement("option"); o.value = s; o.textContent = s; sectSelect.appendChild(o); });
-                }
-            });
+            const sectSelect = document.getElementById("reportSectionFilter"); if(!sectSelect) return;
+            sectSelect.innerHTML = '<option value="ALL">All Sections</option>';
+
+            if(prog === "ALL") {
+                Object.keys(registeredSections).forEach(pKey => {
+                    registeredSections[pKey].forEach(s => {
+                        let o = document.createElement("option"); o.value = s; o.textContent = s; sectSelect.appendChild(o);
+                    });
+                });
+            } else if(registeredSections[prog]) {
+                registeredSections[prog].sort().forEach(s => {
+                    let o = document.createElement("option"); o.value = s; o.textContent = s; sectSelect.appendChild(o);
+                });
+            }
             renderProgramScheduleReport();
         }
 
@@ -1279,22 +1422,49 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             const cFilter = document.getElementById("reportCollegeFilter").value;
             const pFilter = document.getElementById("reportProgramFilter").value;
             const sFilter = document.getElementById("reportSectionFilter").value;
-            return sharedSchedules.filter(s => (cFilter === "ALL" || s.college === cFilter) && (pFilter === "ALL" || s.program === pFilter) && (sFilter === "ALL" || s.classSection === sFilter));
+
+            return sharedSchedules.filter(s => {
+                let mC = (cFilter === "ALL" || s.college === cFilter);
+                let mP = (pFilter === "ALL" || s.program === pFilter);
+                let mS = (sFilter === "ALL" || s.classSection === sFilter);
+                return mC && mP && mS;
+            });
         }
 
         function renderProgramScheduleReport() {
-            const container = document.getElementById("programScheduleReportContainer"); if(!container) return; container.innerHTML = "";
+            const container = document.getElementById("programScheduleReportContainer"); if(!container) return;
+            container.innerHTML = "";
             let filtered = getFilteredSchedules();
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No schedules layout match filter options.</div>`; return;
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No schedule entries found matching filters.</div>`;
+                return;
             }
-            let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}::${s.college}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
+
+            let grouped = {};
+            filtered.forEach(s => {
+                let key = `${s.program}::${s.classSection}::${s.college}`;
+                if(!grouped[key]) grouped[key] = []; grouped[key].push(s);
+            });
+
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode, colKey] = key.split("::");
                 let data = sortFacultyClassesChronologically(grouped[key]);
                 let activeColorClass = getCollegeColorClass(colKey);
-                let rows = data.map(r => `<tr class="border-b text-xs"><td class="p-2.5 font-semibold text-gray-700">${r.dayAssignment}</td><td class="p-2.5 font-mono font-medium text-blue-950">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</td><td class="p-2.5">${r.subjectTitle}</td><td class="p-2.5 text-center font-bold">${r.unifiedUnits}</td><td class="p-2.5">${r.instructorName}</td><td class="p-2.5 font-mono text-center bg-gray-50">${r.roomNumber}</td><td class="p-2.5 text-right no-print space-x-1 whitespace-nowrap"><button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-blue-100">Edit</button><button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-red-100">Delete</button></td></tr>`).join('');
-                container.innerHTML += `<div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white print-page"><div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode}</span></div><table class="w-full text-left table-auto"><thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Unit/s</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th><th class="p-2.5 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+
+                let rows = data.map(r => `<tr class="border-b text-xs">
+                    <td class="p-2.5 font-semibold text-gray-700">${r.dayAssignment}</td>
+                    <td class="p-2.5 font-mono font-medium text-blue-950">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</td>
+                    <td class="p-2.5">${r.subjectTitle}</td><td class="p-2.5 text-center font-bold">${r.unifiedUnits}</td>
+                    <td class="p-2.5">${r.instructorName}</td><td class="p-2.5 font-mono text-center bg-gray-50">${r.roomNumber}</td>
+                    <td class="p-2.5 text-right no-print space-x-1 whitespace-nowrap">
+                        <button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-blue-100">Edit Block</button>
+                        <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-red-100">Delete</button>
+                    </td>
+                </tr>`).join('');
+
+                container.innerHTML += `<div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white print-page">
+                    <div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode}</span></div>
+                    <table class="w-full text-left table-auto"><thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Unit/s</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th><th class="p-2.5 text-right no-print">Actions</th></tr></thead><tbody>${rows}</tbody></table></div>`;
             });
         }
 
@@ -1307,116 +1477,284 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     });
                 });
             }
+
             const sectTable = document.getElementById("regSectionsTableBody"); if(sectTable) {
                 sectTable.innerHTML = "";
                 Object.keys(registeredSections).sort().forEach(progKey => {
                     registeredSections[progKey].forEach((sectCode, idx) => {
-                        sectTable.innerHTML += `<tr class="text-xs border-b hover:bg-gray-50/50"><td class="p-3 font-medium text-indigo-950">${progKey}</td><td class="p-3 font-mono font-bold">${sectCode}</td><td class="p-3 text-right space-x-1"><button onclick="openRegistryEditModal('section', '${progKey}', ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button><button onclick="deleteRegistryRow('section', '${progKey}', ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button></td></tr>`;
+                        sectTable.innerHTML += `<tr class="text-xs border-b hover:bg-gray-50/50"><td class="p-3 font-medium text-indigo-950">${progKey}</td><td class="p-3 font-mono font-bold">${sectCode}</td><td class="p-3 text-right space-x-1"><button onclick="openRegistryEditModal('section', '${progKey}', ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit/Move</button><button onclick="deleteRegistryRow('section', '${progKey}', ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button></td></tr>`;
                     });
                 });
             }
-            const facultyGroupedContainer = document.getElementById("regFacultyGroupedContainer"); if (facultyGroupedContainer) {
+
+            const facultyGroupedContainer = document.getElementById("regFacultyGroupedContainer");
+            if (facultyGroupedContainer) {
                 facultyGroupedContainer.innerHTML = "";
-                ["COE", "CCS", "COEd", "CANS", "Graduate Studies"].forEach(colKey => {
-                    let matching = registeredFaculty.map((f, i) => ({ data: f, originalIndex: i })).filter(fItem => fItem.data.college === colKey);
-                    let tableContentHtml = matching.map(item => `
-                        <tr class="text-xs border-b hover:bg-gray-50/50">
-                            <td class="p-3 font-semibold text-gray-900 w-1/3">${item.data.name}</td>
-                            <td class="p-3 w-1/4"><span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-medium text-[11px]">${item.data.rank || 'Instructor I'}</span></td>
-                            <td class="p-3 w-1/4"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${getDesignationBadgeStyles(item.data.designation)}">${item.data.designation}</span></td>
-                            <td class="p-3 text-right space-x-1"><button onclick="openRegistryEditModal('faculty', null, ${item.originalIndex})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button><button onclick="deleteRegistryRow('faculty', null, ${item.originalIndex})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button></td>
-                        </tr>
-                    `).join('');
-                    if (matching.length > 0) {
-                        facultyGroupedContainer.innerHTML += `<div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-xs"><div class="${getCollegeColorClass(colKey)} px-3 py-2 text-xs font-bold uppercase tracking-wider">${colKey} Faculty Roster</div><table class="w-full text-left text-sm border-collapse"><thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600"><tr><th class="p-3">Instructor Full Name</th><th class="p-3">Academic Rank</th><th class="p-3">Designation Role</th><th class="p-3 text-right">Actions</th></tr></thead><tbody class="divide-y divide-gray-100">${tableContentHtml}</tbody></table></div>`;
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                
+                uniqueCollegesKeys.forEach(colKey => {
+                    let matchingFacultyRows = registeredFaculty
+                        .map((f, i) => ({ data: f, originalIndex: i }))
+                        .filter(fItem => fItem.data.college === colKey);
+                        
+                    let colorClass = getCollegeColorClass(colKey);
+                    
+                    let tableContentHtml = matchingFacultyRows.map(item => {
+                        let badgeStyles = getDesignationBadgeStyles(item.data.designation);
+                        return `
+                            <tr class="text-xs border-b hover:bg-gray-50/50">
+                                <td class="p-3 font-semibold text-gray-900 w-1/3">${item.data.name}</td>
+                                <td class="p-3 w-1/4"><span class="bg-gray-100 text-gray-800 px-2 py-0.5 rounded font-medium text-[11px]">${item.data.rank || 'Instructor I'}</span></td>
+                                <td class="p-3 w-1/4"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide ${badgeStyles}">${item.data.designation}</span></td>
+                                <td class="p-3 text-right space-x-1">
+                                    <button onclick="openRegistryEditModal('faculty', null, ${item.originalIndex})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button>
+                                    <button onclick="deleteRegistryRow('faculty', null, ${item.originalIndex})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    if (matchingFacultyRows.length > 0) {
+                        facultyGroupedContainer.innerHTML += `
+                            <div class="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-xs">
+                                <div class="${colorClass} px-3 py-2 text-xs font-bold uppercase tracking-wider">${colKey} Faculty Roster Division</div>
+                                <table class="w-full text-left text-sm border-collapse">
+                                    <thead class="bg-gray-50 border-b text-xs font-bold uppercase text-gray-600">
+                                        <tr>
+                                            <th class="p-3">Instructor Full Name</th>
+                                            <th class="p-3">Academic Rank</th>
+                                            <th class="p-3">Designation Role</th>
+                                            <th class="p-3 text-right">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">${tableContentHtml}</tbody>
+                                </table>
+                            </div>
+                        `;
                     }
                 });
             }
+
             const roomTable = document.getElementById("regRoomsTableBody"); if(roomTable) {
                 roomTable.innerHTML = registeredRooms.map((rCode, idx) => `<tr class="text-xs border-b hover:bg-gray-50/50"><td class="p-3 font-mono font-bold">${rCode}</td><td class="p-3 text-right space-x-1"><button onclick="openRegistryEditModal('room', null, ${idx})" class="text-blue-600 font-semibold text-[11px] px-2 py-0.5 bg-blue-50 rounded cursor-pointer">Edit</button><button onclick="deleteRegistryRow('room', null, ${idx})" class="text-red-600 font-semibold text-[11px] px-2 py-0.5 bg-red-50 rounded cursor-pointer">Delete</button></td></tr>`).join('');
             }
         }
 
         function openRegistryAddModal(mode) {
-            document.getElementById("registryGlobalForm").reset(); document.getElementById("regContextMode").value = mode; document.getElementById("regContextAction").value = "ADD"; document.getElementById("registryModalTitle").textContent = `Add New ${mode.toUpperCase()} Entry`;
-            document.getElementById("regWrapperFacultyCollege").className = (mode === 'faculty') ? "block" : "hidden"; document.getElementById("regWrapperCollege").className = (mode === 'program') ? "block" : "hidden"; document.getElementById("regWrapperProgram").className = (mode === 'section') ? "block" : "hidden"; document.getElementById("regWrapperRank").className = (mode === 'faculty') ? "block" : "hidden"; document.getElementById("regWrapperDesignation").className = (mode === 'faculty') ? "block" : "hidden"; document.getElementById("regLabelValue").textContent = `Enter ${mode} Label Reference:`;
+            document.getElementById("registryGlobalForm").reset();
+            document.getElementById("regContextMode").value = mode;
+            document.getElementById("regContextAction").value = "ADD";
+            document.getElementById("registryModalTitle").textContent = `Add New ${mode.toUpperCase()} Entry`;
+            
+            document.getElementById("regWrapperFacultyCollege").className = (mode === 'faculty') ? "block" : "hidden";
+            document.getElementById("regWrapperCollege").className = (mode === 'program') ? "block" : "hidden";
+            document.getElementById("regWrapperProgram").className = (mode === 'section') ? "block" : "hidden";
+            document.getElementById("regWrapperRank").className = (mode === 'faculty') ? "block" : "hidden";
+            document.getElementById("regWrapperDesignation").className = (mode === 'faculty') ? "block" : "hidden";
+            document.getElementById("regLabelValue").textContent = `Enter ${mode} Label Reference:`;
+
             if(mode === 'section') {
-                const progSelect = document.getElementById("regInputProgram"); if (progSelect) { progSelect.innerHTML = ""; Object.keys(registeredPrograms).forEach(c => registeredPrograms[c].forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; progSelect.appendChild(o); })); }
+                const progSelect = document.getElementById("regInputProgram"); if (progSelect) {
+                    progSelect.innerHTML = "";
+                    Object.keys(registeredPrograms).forEach(c => registeredPrograms[c].forEach(p => {
+                        let o = document.createElement("option"); o.value = p; o.textContent = p; progSelect.appendChild(o);
+                    }));
+                }
             }
             document.getElementById("registryGlobalModal").classList.remove("hidden");
         }
 
         function openRegistryEditModal(mode, parentKey, index) {
-            document.getElementById("regContextMode").value = mode; document.getElementById("regContextAction").value = "EDIT"; document.getElementById("regOldKey").value = parentKey; document.getElementById("regOldIndex").value = index; document.getElementById("registryModalTitle").textContent = `Edit ${mode.toUpperCase()} Config`;
-            document.getElementById("regWrapperFacultyCollege").className = "hidden"; document.getElementById("regWrapperCollege").className = "hidden"; document.getElementById("regWrapperProgram").className = "hidden"; document.getElementById("regWrapperRank").className = "hidden"; document.getElementById("regWrapperDesignation").className = "hidden";
+            document.getElementById("regContextMode").value = mode;
+            document.getElementById("regContextAction").value = "EDIT";
+            document.getElementById("regOldKey").value = parentKey;
+            document.getElementById("regOldIndex").value = index;
+            document.getElementById("registryModalTitle").textContent = `Edit ${mode.toUpperCase()} Config`;
+
+            document.getElementById("regWrapperFacultyCollege").className = "hidden";
+            document.getElementById("regWrapperCollege").className = "hidden";
+            document.getElementById("regWrapperProgram").className = "hidden";
+            document.getElementById("regWrapperRank").className = "hidden";
+            document.getElementById("regWrapperDesignation").className = "hidden";
+            document.getElementById("regLabelValue").textContent = `Modify ${mode} Label Value:`;
+
             let currentVal = "";
-            if(mode === 'program') { currentVal = registeredPrograms[parentKey][index]; }
-            else if(mode === 'section') {
-                currentVal = registeredSections[parentKey][index]; document.getElementById("regWrapperProgram").classList.remove("hidden");
-                const progSelect = document.getElementById("regInputProgram"); if (progSelect) { progSelect.innerHTML = ""; Object.keys(registeredPrograms).forEach(c => registeredPrograms[c].forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; if(p === parentKey) o.selected = true; progSelect.appendChild(o); })); }
+            if(mode === 'program') {
+                currentVal = registeredPrograms[parentKey][index];
+            } else if(mode === 'section') {
+                currentVal = registeredSections[parentKey][index];
+                document.getElementById("regWrapperProgram").classList.remove("hidden");
+                const progSelect = document.getElementById("regInputProgram"); if (progSelect) {
+                    progSelect.innerHTML = "";
+                    Object.keys(registeredPrograms).forEach(c => registeredPrograms[c].forEach(p => {
+                        let o = document.createElement("option"); o.value = p; o.textContent = p; if(p === parentKey) o.selected = true; progSelect.appendChild(o);
+                    }));
+                }
             } else if(mode === 'faculty') {
-                currentVal = registeredFaculty[index].name; document.getElementById("regWrapperFacultyCollege").classList.remove("hidden"); document.getElementById("regWrapperRank").classList.remove("hidden"); document.getElementById("regWrapperDesignation").classList.remove("hidden"); document.getElementById("regFacultyInputCollege").value = registeredFaculty[index].college || "COE"; document.getElementById("regInputRank").value = registeredFaculty[index].rank || "Instructor I"; document.getElementById("regInputDesignation").value = registeredFaculty[index].designation;
-            } else if(mode === 'room') { currentVal = registeredRooms[index]; }
-            document.getElementById("regInputValue").value = currentVal; document.getElementById("registryGlobalModal").classList.remove("hidden");
+                currentVal = registeredFaculty[index].name;
+                document.getElementById("regWrapperFacultyCollege").classList.remove("hidden");
+                document.getElementById("regWrapperRank").classList.remove("hidden");
+                document.getElementById("regWrapperDesignation").classList.remove("hidden");
+                document.getElementById("regFacultyInputCollege").value = registeredFaculty[index].college || "COE";
+                document.getElementById("regInputRank").value = registeredFaculty[index].rank || "Instructor I";
+                document.getElementById("regInputDesignation").value = registeredFaculty[index].designation;
+            } else if(mode === 'room') {
+                currentVal = registeredRooms[index];
+            }
+
+            document.getElementById("regInputValue").value = currentVal;
+            document.getElementById("registryGlobalModal").classList.remove("hidden");
         }
 
         document.getElementById("registryGlobalForm").addEventListener("submit", function(e) {
-            e.preventDefault(); const mode = document.getElementById("regContextMode").value; const action = document.getElementById("regContextAction").value; const inputVal = document.getElementById("regInputValue").value.trim(); if(!inputVal) return;
+            e.preventDefault();
+            const mode = document.getElementById("regContextMode").value;
+            const action = document.getElementById("regContextAction").value;
+            const inputVal = document.getElementById("regInputValue").value.trim();
+            if(!inputVal) return;
+
             if(action === "ADD") {
-                if(mode === 'faculty') { registeredFaculty.push({ name: inputVal, college: document.getElementById("regFacultyInputCollege").value, rank: document.getElementById("regInputRank").value, designation: document.getElementById("regInputDesignation").value }); }
+                if(mode === 'faculty') { 
+                    const collegeDeptVal = document.getElementById("regFacultyInputCollege").value;
+                    const rankVal = document.getElementById("regInputRank").value;
+                    const des = document.getElementById("regInputDesignation").value;
+                    if(!registeredFaculty.some(f => f.name === inputVal)) {
+                        registeredFaculty.push({ name: inputVal, college: collegeDeptVal, rank: rankVal, designation: des });
+                    } 
+                }
                 else if(mode === 'room') { if(!registeredRooms.includes(inputVal)) registeredRooms.push(inputVal); }
-                else if(mode === 'program') { let col = document.getElementById("regInputCollege").value; if(!registeredPrograms[col].includes(inputVal)) registeredPrograms[col].push(inputVal); }
-                else if(mode === 'section') { let prog = document.getElementById("regInputProgram").value; if(!registeredSections[prog]) registeredSections[prog] = []; registeredSections[prog].push(inputVal); }
+                else if(mode === 'program') {
+                    const col = document.getElementById("regInputCollege").value;
+                    if(!registeredPrograms[col].includes(inputVal)) registeredPrograms[col].push(inputVal);
+                } else if(mode === 'section') {
+                    const prog = document.getElementById("regInputProgram").value;
+                    if(!registeredSections[prog]) registeredSections[prog] = [];
+                    if(!registeredSections[prog].includes(inputVal)) registeredSections[prog].push(inputVal);
+                }
             } else if(action === "EDIT") {
-                const parentKey = document.getElementById("regOldKey").value; const index = parseInt(document.getElementById("regOldIndex").value);
+                const parentKey = document.getElementById("regOldKey").value;
+                const index = parseInt(document.getElementById("regOldIndex").value);
+
                 if(mode === 'faculty') {
-                    let oldName = registeredFaculty[index].name; registeredFaculty[index] = { name: inputVal, college: document.getElementById("regFacultyInputCollege").value, rank: document.getElementById("regInputRank").value, designation: document.getElementById("regInputDesignation").value };
+                    let oldName = registeredFaculty[index].name;
+                    const targetCollegeDept = document.getElementById("regFacultyInputCollege").value;
+                    const targetRank = document.getElementById("regInputRank").value;
+                    const targetDes = document.getElementById("regInputDesignation").value;
+                    
+                    registeredFaculty[index].name = inputVal;
+                    registeredFaculty[index].college = targetCollegeDept;
+                    registeredFaculty[index].rank = targetRank;
+                    registeredFaculty[index].designation = targetDes;
+                    
                     sharedSchedules.forEach(s => { if(s.instructorName === oldName) s.instructorName = inputVal; });
-                } else if(mode === 'room') { let oldRoom = registeredRooms[index]; registeredRooms[index] = inputVal; sharedSchedules.forEach(s => { if(s.roomNumber === oldRoom) s.roomNumber = inputVal; }); }
-                else if(mode === 'program') { let oldProg = registeredPrograms[parentKey][index]; registeredPrograms[parentKey][index] = inputVal; if(registeredSections[oldProg]) { registeredSections[inputVal] = registeredSections[oldProg]; delete registeredSections[oldProg]; } sharedSchedules.forEach(s => { if(s.program === oldProg) s.program = inputVal; }); }
-                else if(mode === 'section') { let oldSect = registeredSections[parentKey][index]; registeredSections[parentKey].splice(index, 1); let targetProg = document.getElementById("regInputProgram").value; if(!registeredSections[targetProg]) registeredSections[targetProg] = []; registeredSections[targetProg].push(inputVal); sharedSchedules.forEach(s => { if(s.program === parentKey && s.classSection === oldSect) { s.classSection = inputVal; s.program = targetProg; } }); }
+                } else if(mode === 'room') {
+                    let oldRoom = registeredRooms[index]; registeredRooms[index] = inputVal;
+                    sharedSchedules.forEach(s => { if(s.roomNumber === oldRoom) s.roomNumber = inputVal; });
+                } else if(mode === 'program') {
+                    let oldProg = registeredPrograms[parentKey][index]; registeredPrograms[parentKey][index] = inputVal;
+                    if(registeredSections[oldProg]) { registeredSections[inputVal] = registeredSections[oldProg]; delete registeredSections[oldProg]; }
+                    sharedSchedules.forEach(s => { if(s.program === oldProg) s.program = inputVal; });
+                } else if(mode === 'section') {
+                    let oldSect = registeredSections[parentKey][index];
+                    const targetProgKey = document.getElementById("regInputProgram").value;
+
+                    registeredSections[parentKey].splice(index, 1);
+                    if(!registeredSections[targetProgKey]) registeredSections[targetProgKey] = [];
+                    registeredSections[targetProgKey].push(inputVal);
+
+                    sharedSchedules.forEach(s => { 
+                        if(s.program === parentKey && s.classSection === oldSect) {
+                            s.classSection = inputVal;
+                            s.program = targetProgKey;
+                        }
+                    });
+                }
             }
-            registeredFaculty.sort((a,b) => a.name.localeCompare(b.name)); registeredRooms.sort(); saveSystemStateToLocalStorage(); closeRegistryGlobalModal(); executeRegistryDataSynchronization();
+
+            registeredFaculty.sort((a,b) => a.name.localeCompare(b.name)); 
+            registeredRooms.sort();
+            saveSystemStateToLocalStorage();
+            closeRegistryGlobalModal(); executeRegistryDataSynchronization();
         });
 
         function deleteRegistryRow(mode, parentKey, index) {
-            if(!confirm(`Delete selected row parameters?`)) return;
-            if(mode === 'faculty') registeredFaculty.splice(index, 1); else if(mode === 'room') registeredRooms.splice(index, 1); else if(mode === 'program') registeredPrograms[parentKey].splice(index, 1); else if(mode === 'section') registeredSections[parentKey].splice(index, 1);
-            saveSystemStateToLocalStorage(); executeRegistryDataSynchronization();
+            if(!confirm(`Are you sure you want to delete this ${mode} entry?`)) return;
+            
+            if(mode === 'faculty') registeredFaculty.splice(index, 1);
+            else if(mode === 'room') registeredRooms.splice(index, 1);
+            else if(mode === 'program') registeredPrograms[parentKey].splice(index, 1);
+            else if(mode === 'section') registeredSections[parentKey].splice(index, 1);
+
+            saveSystemStateToLocalStorage();
+            executeRegistryDataSynchronization();
         }
+
         function closeRegistryGlobalModal() { document.getElementById("registryGlobalModal").classList.add("hidden"); }
         function closeScheduleEditorModal() { document.getElementById("scheduleUpdateModal").classList.add("hidden"); }
         
         function changeSummaryGrouping(mode) { 
             currentSummaryGroupingMode = mode; 
             const printDeck = document.getElementById("matrix-printing-filter-deck");
-            if(printDeck) { if (mode === 'matrix-tab') printDeck.classList.remove("hidden"); else printDeck.classList.add("hidden"); }
+            if(printDeck) {
+                if (mode === 'matrix-tab') {
+                    printDeck.classList.remove("hidden");
+                } else {
+                    printDeck.classList.add("hidden");
+                }
+            }
             changeSummarySort(currentSummarySortMetric); 
         }
+        
         function changeSummarySort(m) { currentSummarySortMetric = m; renderSummaryDashboard(); }
 
         function getAggregatedFacultyMetricsList() {
             return registeredFaculty.map(p => {
-                const cl = sharedSchedules.filter(s => s.instructorName === p.name); let u = 0, h = 0, pr = new Set(), progs = new Set(), subjectsList = [];
-                cl.forEach(c => { u += c.unifiedUnits; h += calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); pr.add(c.subjectTitle); if(c.program) progs.add(c.program); subjectsList.push(c.subjectTitle); });
-                return { name: p.name, homeCollege: p.college || "COE", rank: p.rank || 'Instructor I', designation: p.designation || 'Without Designation', units: u, hours: h, prepsCount: pr.size, programs: Array.from(progs), subjects: subjectsList };
+                const cl = sharedSchedules.filter(s => s.instructorName === p.name); 
+                let u = 0, h = 0, pr = new Set(), progs = new Set(), subjectsList = [];
+                
+                cl.forEach(c => { 
+                    u += c.unifiedUnits; 
+                    h += calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); 
+                    pr.add(c.subjectTitle); 
+                    if(c.program) progs.add(c.program);
+                    subjectsList.push(c.subjectTitle);
+                });
+
+                return { 
+                    name: p.name, 
+                    homeCollege: p.college || "COE",
+                    rank: p.rank || 'Instructor I', 
+                    designation: p.designation || 'Without Designation', 
+                    units: u, 
+                    hours: h, 
+                    prepsCount: pr.size, 
+                    programs: Array.from(progs),
+                    subjects: subjectsList
+                };
             }).filter(x => x.units > 0 || x.designation !== 'Without Designation');
         }
 
         function createSummaryComplianceBadgeHTML(units, hours, designation, rank) {
-            if (rank === "TBA") return `<span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded ml-2">Bypassed</span>`;
-            let req = designationUnitMinimums[designation] || 18;
-            if (units >= req) return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ Units</span>`;
-            if (hours >= 20) return `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ Hours</span>`;
-            return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Shortfall</span>`;
+            if (rank === "TBA") {
+                return `<span class="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded ml-2"> Bypassed (TBA Rank)</span>`;
+            }
+            
+            let requiredUnits = designationUnitMinimums[designation] || 18;
+            
+            if (units >= requiredUnits) {
+                return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Units Compliant)</span>`;
+            } 
+            else if (hours >= 20) {
+                return `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Hours Override)</span>`;
+            }
+            
+            return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U & under 20h)</span>`;
         }
 
-        /* 
-           RECONCILED DYNAMIC GENERAL FACULTY WORKLOAD MATRIX PRINT ENGINE
-        */
+        /* DYNAMIC FILTERED PRINT LOG MATRIX OPERATION GENERATOR */
         function printWorkloadMatrixReport() {
             let dataset = getAggregatedFacultyMetricsList();
-            if(!dataset || dataset.length === 0) { alert("No data logs detected to create a matrix sheet print."); return; }
+            if(dataset.length === 0) { alert("No data logs detected to create a matrix sheet print."); return; }
             
             const targetCollege = document.getElementById("matrix-print-college-scope").value;
             const complianceTarget = document.getElementById("matrix-print-compliance-scope").value;
@@ -1439,97 +1777,587 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 });
             }
             
-            if(dataset.length === 0) { alert("The targeted filter criteria contains zero active workload records."); return; }
+            if(dataset.length === 0) { 
+                alert("The targeted filter criteria contains zero active workload records. Print job aborted."); 
+                return; 
+            }
+            
             dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
 
-            const frame = document.getElementById("specializedMatrixPrintFrame"); if(!frame) return;
-            let rowsHtml = dataset.map(faculty => {
-                let minAllowedUnits = designationUnitMinimums[faculty.designation] || 18; let remarksText = "";
-                if (faculty.rank === "TBA") remarksText = "EXCLUDED\n(TBA Rank Parameter)";
-                else if (faculty.units >= minAllowedUnits) remarksText = "COMPLIANT\n(Designation Target Met)";
-                else if (faculty.hours >= 20) remarksText = "COMPLIANT\n(Hours Override Met)";
-                else remarksText = `NON-COMPLIANT\n(Deficit: ${minAllowedUnits}U / Under 20h)`;
-                let uniqSubjectsList = faculty.subjects.length > 0 ? [...new Set(faculty.subjects)].join("; ") : "Unassigned";
-                return `<tr style="border-bottom: 1px solid #222; page-break-inside: avoid;"><td style="padding: 8px; font-weight: bold; font-size: 11px; vertical-align: top;">${faculty.name}<br><span style="font-size: 9px; font-weight: normal; color: #444; font-style: italic;">${faculty.rank} | ${faculty.designation}</span></td><td style="padding: 8px; font-size: 10px; vertical-align: top; line-height: 1.3;">${uniqSubjectsList}</td><td style="padding: 8px; font-size: 11px; text-align: center; font-weight: bold; vertical-align: top;">${faculty.units}</td><td style="padding: 8px; font-size: 11px; text-align: center; font-family: monospace; vertical-align: top;">${faculty.hours.toFixed(1)}</td><td style="padding: 8px; font-size: 11px; text-align: center; vertical-align: top;">${faculty.prepsCount}</td><td style="padding: 8px; font-size: 9px; text-align: center; font-weight: bold; white-space: pre-line; vertical-align: middle; background-color: #fcfcfc;">${remarksText}</td></tr>`;
-            }).join('');
+            const frame = document.getElementById("specializedMatrixPrintFrame");
+            if(!frame) return;
 
-            frame.innerHTML = `<div style="padding: 20px; font-family: sans-serif; background: white; color: black;"><div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid black; padding-bottom: 10px;"><h2 style="margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase;">Eastern Samar State University</h2><h3 style="margin: 3px 0; font-size: 13px; font-weight: 600;">Salcedo Campus, Salcedo, Eastern Samar</h3><h4 style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; text-transform: uppercase;">GENERAL FACULTY INSTRUCTIONAL WORKLOAD MATRIX</h4><div style="margin-top: 6px; font-size: 10px; font-weight: bold; background: #f0f0f0; padding: 4px; display: inline-block; border-radius: 4px;">Scope: ${targetCollege} | Status: ${complianceTarget}</div></div><table style="width: 100%; border-collapse: collapse; border: 2px solid black;"><thead><tr style="background-color: #111; color: white; font-size: 11px;"><th style="padding: 10px; text-align: left;">Name of Faculty</th><th style="padding: 10px; text-align: left; width: 35%;">Subject/s Assigned</th><th style="padding: 10px; text-align: center;">Units</th><th style="padding: 10px; text-align: center;">Hours</th><th style="padding: 10px; text-align: center;">Preps</th><th style="padding: 10px; text-align: center;">Remark</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+            let rowsHtml = "";
+            dataset.forEach(faculty => {
+                let minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
+                let remarksText = "";
+                
+                if (faculty.rank === "TBA") {
+                    remarksText = "EXCLUDED\n(TBA Rank Parameter)";
+                } else {
+                    if (faculty.units >= minAllowedUnits) {
+                        remarksText = "COMPLIANT\n(Designation Target Met)";
+                    } else if (faculty.hours >= 20) {
+                        remarksText = "COMPLIANT\n(Hours Override Met)";
+                    } else {
+                        remarksText = `NON-COMPLIANT\n(Deficit: ${minAllowedUnits}U / Under 20h)`;
+                    }
+                }
+
+                let uniqSubjectsList = faculty.subjects.length > 0 ? [...new Set(faculty.subjects)].join("; ") : "Unassigned Channels";
+
+                rowsHtml += `
+                    <tr style="border-bottom: 1px solid #222; page-break-inside: avoid;">
+                        <td style="padding: 8px; font-weight: bold; font-size: 11px; vertical-align: top;">
+                            ${faculty.name}<br>
+                            <span style="font-size: 9px; font-weight: normal; color: #444; font-style: italic;">
+                                ${faculty.rank} | ${faculty.designation} (${faculty.homeCollege})
+                            </span>
+                        </td>
+                        <td style="padding: 8px; font-size: 10px; vertical-align: top; line-height: 1.3;">${uniqSubjectsList}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; font-weight: bold; vertical-align: top;">${faculty.units}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; font-family: monospace; vertical-align: top;">${faculty.hours.toFixed(1)}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; vertical-align: top;">${faculty.prepsCount}</td>
+                        <td style="padding: 8px; font-size: 9px; text-align: center; font-weight: bold; white-space: pre-line; vertical-align: middle; background-color: #fcfcfc;">${remarksText}</td>
+                    </tr>
+                `;
+            });
+
+            let collegeMetaText = targetCollege === "ALL" ? "All Campus College Divisions" : `Department/College: ${targetCollege}`;
+            let complianceMetaText = "Roster Classification: Unfiltered Roster";
+            if (complianceTarget === "COMPLIANT") complianceMetaText = "Roster Classification: Verified Compliant Faculty Only";
+            if (complianceTarget === "NON_COMPLIANT") complianceMetaText = "Roster Classification: Operational Shortfalls / Underloaded Faculty Logs Only";
+
+            frame.innerHTML = `
+                <div style="padding: 20px; font-family: sans-serif; background: white; color: black;">
+                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid black; padding-bottom: 10px;">
+                        <h2 style="margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Eastern Samar State University</h2>
+                        <h3 style="margin: 3px 0; font-size: 13px; font-weight: 600;">Salcedo Campus, Salcedo, Eastern Samar</h3>
+                        <h4 style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #111; letter-spacing: 0.2px; text-transform: uppercase;">GENERAL FACULTY INSTRUCTIONAL WORKLOAD MATRIX</h4>
+                        <div style="margin-top: 6px; font-size: 10px; font-weight: bold; color: #333; background: #f0f0f0; padding: 4px; display: inline-block; border-radius: 4px;">
+                            ${collegeMetaText} &nbsp;|&nbsp; ${complianceMetaText}
+                        </div>
+                        <div style="margin-top: 4px; font-size: 9px; font-weight: 500; color: #555;">Academic Year: 2026 - 2027 | Audit Manifest</div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background: white; color: black;">
+                        <thead>
+                            <tr style="background-color: #111; color: white; font-size: 11px; border-bottom: 2px solid black;">
+                                <th style="padding: 10px; text-align: left; border: 1px solid #333; width: 25%;">Name of Faculty</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid #333; width: 35%;">Subject/s Assigned</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Unit/s</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Hours</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Preparation</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Remark</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 35px; font-size: 10px; display: flex; justify-content: space-between; border-top: 1px dotted #ccc; padding-top: 10px; page-break-inside: avoid;">
+                        <div>System Log Reference ID: SWS-v1-MATRIX-FILTERED</div>
+                        <div>Generated Date Timestamp: ${new Date().toLocaleString()}</div>
+                        <div style="font-weight: bold; text-decoration: overline; margin-top: 15px;">Campus Dean / Vice President for Academic Affairs</div>
+                    </div>
+                </div>
+            `;
+
             window.print();
         }
 
         function renderSummaryDashboard() {
-            const container = document.getElementById("summaryDashboardDynamicContent"); if(!container) return; container.innerHTML = "";
-            let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
+            const container = document.getElementById("summaryDashboardDynamicContent"); if(!container) return;
+            container.innerHTML = "";
+            let dataset = getAggregatedFacultyMetricsList(); 
+            if(dataset.length === 0) return;
+
             if (currentSummaryGroupingMode === 'matrix-tab') {
                 dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
-                let html = `<div class="p-4 bg-white border border-gray-200 rounded-xl space-y-4 shadow-sm mt-2"><table class="w-full text-xs border-collapse border border-gray-300"><thead><tr class="bg-gray-100 font-bold border-b text-gray-700"> <th class="border p-2 text-left">Name of Faculty</th> <th class="border p-2 text-left">Subjects Assigned</th> <th class="border p-2 text-center">Units</th> <th class="border p-2 text-center">Hours</th> <th class="border p-2 text-center">Preps</th> <th class="border p-2 text-center">Remarks</th></tr></thead><tbody>`;
-                dataset.forEach(f => {
-                    let req = designationUnitMinimums[f.designation] || 18; let rem = f.rank === "TBA" ? "EXCLUDED" : (f.units >= req ? "COMPLIANT (Units)" : (f.hours >= 20 ? "COMPLIANT (Hours)" : "NON-COMPLIANT"));
-                    html += `<tr class="border-b"><td class="p-2 font-bold">${f.name} <span class="text-xs text-gray-400">(${f.homeCollege})</span></td><td class="p-2 text-gray-600">${[...new Set(f.subjects)].join("; ")}</td><td class="p-2 text-center font-bold">${f.units}</td><td class="p-2 text-center font-mono">${f.hours.toFixed(1)}</td><td class="p-2 text-center">${f.prepsCount}</td><td class="p-2 text-center font-bold text-xs">${rem}</td></tr>`;
+                
+                let matrixHeaderRows = `
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl space-y-4 shadow-sm mt-2">
+                        <div class="text-center font-bold text-base border-b pb-2 tracking-wide text-gray-800 uppercase">General Faculty Workload Matrix</div>
+                        <table class="w-full text-xs border-collapse border border-gray-300 font-sans">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 font-bold text-center border-b border-gray-300">
+                                    <th class="border border-gray-300 p-2.5 text-left w-1/4">Name of Faculty</th>
+                                    <th class="border border-gray-300 p-2.5 text-left w-1/4">Subject</th>
+                                    <th class="border border-gray-300 p-2.5 text-center">Number of Unit/s</th>
+                                    <th class="border border-gray-300 p-2.5 text-center">Number of Hours</th>
+                                    <th class="border border-gray-300 p-2.5 text-center">Number of Preparation</th>
+                                    <th class="border border-gray-300 p-2.5 text-center w-1/5">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+
+                dataset.forEach(faculty => {
+                    let minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
+                    
+                    let statusElement = "";
+                    if (faculty.rank === "TBA") {
+                        statusElement = `<div class="text-gray-400 font-extrabold text-center text-xs tracking-wider">EXCLUDED</div><div class="text-[10px] text-gray-400 font-medium text-center">(TBA Rank Parameter)</div>`;
+                    } else {
+                        if (faculty.units >= minAllowedUnits) {
+                            statusElement = `<div class="text-emerald-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-emerald-600 font-medium text-center">(Designation Target Met)</div>`;
+                        } else if (faculty.hours >= 20) {
+                            statusElement = `<div class="text-blue-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-blue-600 font-medium text-center">(${faculty.hours.toFixed(1)}h Hours Standard Met)</div>`;
+                        } else {
+                            statusElement = `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">(Deficit: ${minAllowedUnits}U / under 20h)</div>`;
+                        }
+                    }
+
+                    let badgeStyles = getDesignationBadgeStyles(faculty.designation);
+                    let listedSubjectsJoined = faculty.subjects.length > 0 ? [...new Set(faculty.subjects)].join("; ") : "No Course Segments Loaded";
+
+                    matrixHeaderRows += `
+                        <tr class="border-t border-gray-300 text-gray-900 bg-white hover:bg-gray-50/40">
+                            <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800">${faculty.name} <span class="text-xs text-blue-900 font-medium">(${faculty.homeCollege})</span></td>
+                            <td class="border-r border-gray-300 p-2.5 leading-normal text-gray-600">${listedSubjectsJoined}</td>
+                            <td class="border-r border-gray-300 p-2.5 text-center font-bold text-gray-950 text-sm">${faculty.units}</td>
+                            <td class="border-r border-gray-300 p-2.5 text-center font-mono text-gray-700">${faculty.hours.toFixed(1)}</td>
+                            <td class="border-r border-gray-300 p-2.5 text-center font-medium">${faculty.prepsCount}</td>
+                            <td class="border-r border-gray-300 p-2.5 text-center align-middle bg-gray-50/40" rowspan="2">${statusElement}</td>
+                        </tr>
+                        <tr class="border-b border-gray-300 text-[11px] text-gray-500 bg-white/70">
+                            <td class="border-x border-b border-gray-300 p-2 px-3 italic bg-gray-50/10" colspan="5">
+                                Academic Rank: <span class="text-gray-950 font-bold mr-6 not-italic">${faculty.rank}</span> 
+                                Designation Role: <span class="px-2 py-0.5 rounded text-[11px] font-bold tracking-wide not-italic ${badgeStyles}">${faculty.designation}</span>
+                            </td>
+                        </tr>
+                    `;
                 });
-                container.innerHTML = html + "</tbody></table></div>"; return;
+
+                matrixHeaderRows += `</tbody></table></div>`;
+                container.innerHTML = matrixHeaderRows;
+                return;
             }
+
             if (currentSummaryGroupingMode === 'none') {
                 dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
-                container.innerHTML = `<table class="w-full text-left border bg-white"><thead><tr class="bg-gray-100 text-xs font-bold"><th class="p-3">Faculty Member</th><th class="p-3">Home College</th><th class="p-3 text-center">Unit/s Load</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr></thead><tbody>${dataset.map(r => `<tr class="border-b"><td class="p-3 font-semibold">${r.name}</td><td class="p-3 text-xs font-bold">${r.homeCollege}</td><td class="p-3 text-center font-bold">${r.units} U ${createSummaryComplianceBadgeHTML(r.units, r.hours, r.designation, r.rank)}</td><td class="p-3 text-center font-mono">${r.hours.toFixed(1)}</td><td class="p-3 text-center">${r.prepsCount}</td></tr>`).join('')}</tbody></table>`;
-            } else {
-                container.innerHTML = `<div class="p-4 text-gray-500">View layout rendering active in flat structure formats.</div>`;
+                container.innerHTML = `<table class="w-full text-left border bg-white"><thead><tr class="bg-gray-100 font-bold text-xs"><th class="p-3">Faculty Member</th><th class="p-3">Home College</th><th class="p-3">Academic Rank</th><th class="p-3">Designation Role</th><th class="p-3 text-center">Unit/s Load</th><th class="p-3 text-center">Hours</th><th class="p-3 text-center">Preps</th></tr></thead><tbody>
+                    ${dataset.map(r => {
+                        let badgeStyles = getDesignationBadgeStyles(r.designation);
+                        return `<tr class="border-b">
+                            <td class="p-3 font-semibold">${r.name}</td>
+                            <td class="p-3 text-xs font-bold text-indigo-950">${r.homeCollege}</td>
+                            <td class="p-3 text-xs text-gray-500 font-medium">${r.rank}</td>
+                            <td class="p-3 text-xs"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
+                            <td class="p-3 text-center font-bold bg-blue-50/10">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.hours, r.designation, r.rank)}</td>
+                            <td class="p-3 text-center font-mono">${r.hours.toFixed(1)} Hrs</td>
+                            <td class="p-3 text-center">${r.prepsCount} Preps</td>
+                        </tr>`;
+                    }).join('')}</tbody></table>`;
+            } else if (currentSummaryGroupingMode === 'college') {
+                const collegeListArray = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                collegeListArray.forEach(college => {
+                    let rows = dataset.filter(f => f.homeCollege === college); if(rows.length===0) return;
+                    let colorClass = getCollegeColorClass(college);
+                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Department Division</div><table class="w-full text-left text-sm">
+                        ${rows.map(r => {
+                            let badgeStyles = getDesignationBadgeStyles(r.designation);
+                            return `<tr class="border-b">
+                                <td class="p-3 font-semibold w-1/4">${r.name}</td>
+                                <td class="p-3 text-gray-400 text-xs w-1/5">${r.rank}</td>
+                                <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
+                                <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.hours, r.designation, r.rank)}</td>
+                                <td class="p-3 text-center">${r.hours.toFixed(1)} Hrs</td>
+                            </tr>`;
+                        }).join('')}</table></div>`;
+                });
+            } else if (currentSummaryGroupingMode === 'program') {
+                Object.keys(registeredPrograms).forEach(col => {
+                    registeredPrograms[col].forEach(p => {
+                        let rows = dataset.filter(f => f.programs.includes(p)); if(rows.length===0) return;
+                        let colorClass = getCollegeColorClass(col);
+                        container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 text-xs font-bold tracking-wide">${p}</div><table class="w-full text-left text-sm">
+                            ${rows.map(r => {
+                                let badgeStyles = getDesignationBadgeStyles(r.designation);
+                                return `<tr class="border-b">
+                                    <td class="p-3 font-semibold w-1/4">${r.name} <span class="text-xs text-gray-400">(${r.homeCollege})</span></td>
+                                    <td class="p-3 text-xs text-gray-400 w-1/5">${r.rank}</td>
+                                    <td class="p-3 text-xs w-1/5"><span class="px-2.5 py-1 rounded-md text-[11px] font-bold ${badgeStyles}">${r.designation}</span></td>
+                                    <td class="p-3 text-center font-bold">${r.units} Unit/s ${createSummaryComplianceBadgeHTML(r.units, r.hours, r.designation, r.rank)}</td>
+                                    <td class="p-3 text-center">${r.hours.toFixed(1)} H</td>
+                                </tr>`;
+                            }).join('')}</table></div>`;
+                    });
+                });
             }
         }
 
         function filterWorkloadFacultyDropdown() {
-            const scope = document.getElementById("facultyWorkloadCollegeScope").value;
+            const collegeScope = document.getElementById("facultyWorkloadCollegeScope").value;
             const el = document.getElementById("facultySelector"); if(!el) return;
-            let list = scope === "ALL" ? registeredFaculty.map(f => f.name) : registeredFaculty.filter(f => f.college === scope).map(f => f.name);
-            el.innerHTML = '<option value="ALL">Show All Faculty Sheets</option>';
-            list.sort().forEach(p => { let o = document.createElement("option"); o.value = p; o.textContent = p; el.appendChild(o); });
+            
+            let filteredProfs = [];
+            if(collegeScope === "ALL") {
+                filteredProfs = registeredFaculty.map(f => f.name).sort();
+            } else {
+                filteredProfs = registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort();
+            }
+
+            el.innerHTML = '<option value="ALL">Show All Faculty Sheets (Filtered Scope)</option>';
+            filteredProfs.forEach(p => {
+                let o = document.createElement("option"); o.value = p; o.textContent = p; el.appendChild(o);
+            });
+            
             renderWorkloads();
         }
-        function updateFacultySelector() { filterWorkloadFacultyDropdown(); }
+
+        function updateFacultySelector() {
+            filterWorkloadFacultyDropdown();
+        }
 
         function buildWorkloadHTML(prof, classes) {
             let uTot = 0, hTot = 0, pr = new Set();
-            let fObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
-            let rows = classes.map(c => { uTot += c.unifiedUnits; pr.add(c.subjectTitle); let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); hTot += hrs; return `<tr class="border-b text-xs text-center"><td>${c.dayAssignment} (${convert24To12Hour(c.startTime)}-${convert24To12Hour(c.endTime)})</td><td class="text-left p-2">${c.subjectTitle}</td><td>${c.unifiedUnits}</td><td>${hrs.toFixed(1)}</td><td>${c.classSection}</td><td>${c.roomNumber}</td></tr>`; }).join('');
-            return `<div class="bg-white border p-6 my-4 rounded-xl shadow-xs"> <div class="text-base font-bold">${prof} (${fObj.college})</div> <div class="text-xs text-gray-500">Rank: ${fObj.rank} | Designation: ${fObj.designation}</div> <table class="w-full text-xs mt-3 border"><thead><tr class="bg-gray-100 font-bold"><th>Schedule Schedule</th><th>Subject Description</th><th>Units</th><th>Hrs</th><th>Class</th><th>Room</th></tr></thead><tbody>${rows}<tr><td colspan="2" class="text-right font-bold">Totals:</td><td class="font-bold text-center">${uTot}</td><td class="font-bold text-center">${hTot.toFixed(1)}</td></tr></tbody></table></div>`;
+            
+            let facultyObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
+            let requiredMinUnits = designationUnitMinimums[facultyObj.designation] || 18;
+
+            let rows = classes.map(c => {
+                uTot += c.unifiedUnits; pr.add(c.subjectTitle); let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); hTot += hrs;
+                return `<tr class="border-b text-xs text-center code-added-highlight">
+                    <td class="p-3 text-left font-semibold">${c.dayAssignment}<br><span class="text-gray-500 font-mono text-[11px] font-bold">${convert24To12Hour(c.startTime)} - ${convert24To12Hour(c.endTime)}</span></td>
+                    <td class="p-3 text-left">${c.subjectTitle}</td><td class="p-3 font-bold">${c.unifiedUnits}</td><td class="p-3 font-mono">${hrs.toFixed(1)}</td><td class="p-3">${c.classSection}</td><td class="p-3 font-mono">${c.roomNumber}</td>
+                </tr>`;
+            }).join('');
+
+            let statusBadge = "";
+            let isSheetCompliant = (uTot >= requiredMinUnits) || (hTot >= 20);
+
+            if (facultyObj.rank === "TBA") {
+                statusBadge = `<span class="bg-gray-100 text-gray-600 text-xs px-3 py-1 rounded-full font-bold ml-2">⚙️ Standard Registry Review Pending</span>`;
+            } else if (isSheetCompliant) {
+                let checkMethod = uTot >= requiredMinUnits ? "Designation Units Cleared" : "Hours Standard Override Cleared";
+                statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-bold ml-2">✅ Compliance Verified (${checkMethod})</span>`;
+            } else {
+                statusBadge = `<span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold ml-2">⚠️ Below Structural Parameters (Fails Unit Benchmark & Under 20h)</span>`;
+            }
+
+            return `<div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm print-page">
+                <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">INDIVIDUAL FACULTY WORKLOAD SHEET</div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm mb-4 border-b pb-3 border-gray-100">
+                    <div>
+                        <div class="text-base font-bold text-blue-950">Faculty Member: ${prof}</div>
+                        <div class="text-xs text-gray-500 font-semibold mt-0.5">Academic Department Home: <span class="text-indigo-950 font-bold">${facultyObj.college}</span></div>
+                        <div class="text-xs text-gray-500 font-semibold mt-0.5">Academic Rank: <span class="text-gray-800 font-bold">${facultyObj.rank || 'Instructor I'}</span></div>
+                        <div class="text-xs text-gray-600 font-medium mt-0.5">Designation Track: <span class="underline font-bold text-gray-800">${facultyObj.designation}</span></div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        <span class="text-xs text-gray-500 font-semibold">Preparations: ${pr.size} | Total Weekly Hours: <strong class="text-gray-900">${hTot.toFixed(1)}h</strong></span>
+                        ${statusBadge}
+                    </div>
+                </div>
+                <table class="w-full text-xs border"><thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Unit/s</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead><tbody>${rows}
+                <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td class="text-blue-900 bg-blue-50/50">${uTot} Unit/s</td><td class="${!isSheetCompliant ? 'text-red-600 bg-red-50/50 font-extrabold' : 'text-emerald-700 bg-emerald-50/50'}">${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr></tbody></table></div>`;
         }
 
         function renderWorkloads() {
-            const container = document.getElementById("workloadSheetsContainer"); if(!container) return; container.innerHTML = "";
-            const scope = document.getElementById("facultyWorkloadCollegeScope").value;
-            const filter = document.getElementById("facultySelector").value;
-            let targetList = filter !== "ALL" ? [filter] : (scope === "ALL" ? registeredFaculty.map(f => f.name) : registeredFaculty.filter(f => f.college === scope).map(f => f.name));
-            targetList.sort().forEach(prof => {
-                let list = sharedSchedules.filter(s => s.instructorName === prof);
-                if(list.length > 0) container.innerHTML += buildWorkloadHTML(prof, sortFacultyClassesChronologically(list));
+            const container = document.getElementById("workloadSheetsContainer"); if(!container) return;
+            const collegeScope = document.getElementById("facultyWorkloadCollegeScope").value;
+            const facultyFilter = document.getElementById("facultySelector").value; 
+            container.innerHTML = "";
+
+            let targetFacultyList = [];
+            if(facultyFilter !== "ALL") {
+                targetFacultyList = [facultyFilter];
+            } else {
+                if(collegeScope === "ALL") {
+                    targetFacultyList = registeredFaculty.map(f => f.name).sort();
+                } else {
+                    targetFacultyList = registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort();
+                }
+            }
+
+            targetFacultyList.forEach(prof => {
+                let clList = sharedSchedules.filter(s => s.instructorName === prof);
+                if(clList.length === 0) return;
+                let classes = sortFacultyClassesChronologically(clList);
+                container.innerHTML += buildWorkloadHTML(prof, classes);
             });
         }
 
         function exportFacultySummaryExcelGrouped() {
             let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
             let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataset.map(f => ({ "Faculty": f.name, "College": f.homeCollege, "Units": f.units, "Hours": f.hours }))), "Summary Loading Log");
-            XLSX.writeFile(wb, "Faculty_Load_Summary.xlsx");
+
+            if (currentSummaryGroupingMode === 'none' || currentSummaryGroupingMode === 'matrix-tab') {
+                let dataRows = dataset.map(f => ({ "Faculty Name": f.name, "Department College": f.homeCollege, "Academic Rank": f.rank, "Designation Assignment": f.designation, "Total Workload Unit/s": f.units, "Weekly Committed Hours": f.hours, "Distinct Preparations Count": f.prepsCount }));
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataRows), "Flat Load List");
+            } else if (currentSummaryGroupingMode === 'college') {
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                uniqueCollegesKeys.forEach(college => {
+                    let rows = dataset.filter(f => f.homeCollege === college); if (rows.length === 0) return;
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(f => ({ "Instructor": f.name, "Rank": f.rank, "Designation": f.designation, "Assigned Unit/s": f.units, "Weekly Hours": f.hours }))), college.substring(0, 31));
+                });
+            } else if (currentSummaryGroupingMode === 'program') {
+                let indexCounter = 1;
+                Object.keys(registeredPrograms).forEach(col => {
+                    registeredPrograms[col].forEach(prog => {
+                        let rows = dataset.filter(f => f.programs.includes(prog)); if (rows.length === 0) return;
+                        let cleanName = prog.replace(/[^a-zA-Z0-9\s]/g, "").substring(0, 25);
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(f => ({ "Instructor Name": f.name, "Home College": f.homeCollege, "Rank": f.rank, "Designation": f.designation, "Unit/s": f.units, "Hours": f.hours }))), `${indexCounter++}-${cleanName}`);
+                    });
+                });
+            }
+            XLSX.writeFile(wb, `Faculty_Load_Summary_${currentSummaryGroupingMode}.xlsx`);
         }
 
         function triggerWorkloadExport(formatType) {
-            alert(`System compiling ${formatType.toUpperCase()} reports payload asset packages...`);
+            const targetScope = document.getElementById("workloadScopeSelector").value;
+            const singleSelectedFaculty = document.getElementById("facultySelector").value;
+            const collegeScope = document.getElementById("facultyWorkloadCollegeScope").value;
+
+            let workloadMap = []; 
+            let facultyScopeList = [];
+            
+            if(collegeScope === "ALL") {
+                facultyScopeList = registeredFaculty.map(f => f.name).sort();
+            } else {
+                facultyScopeList = registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort();
+            }
+
+            if (targetScope === "current") {
+                if(singleSelectedFaculty !== "ALL") facultyScopeList = [singleSelectedFaculty];
+                workloadMap.push({ titleId: "Selected_Workloads", members: facultyScopeList });
+            } else if (targetScope === "all") {
+                workloadMap.push({ titleId: "University_As_A_Whole_Workloads", members: facultyScopeList });
+            } else if (targetScope === "college") {
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                uniqueCollegesKeys.forEach(colKey => {
+                    let filteredMembers = registeredFaculty.filter(f => f.college === colKey).map(f => f.name);
+                    if(filteredMembers.length > 0) workloadMap.push({ titleId: `College_${colKey}_Workloads`, members: filteredMembers });
+                });
+            } else if (targetScope === "program") {
+                Object.keys(registeredPrograms).forEach(colKey => {
+                    registeredPrograms[colKey].forEach(progKey => {
+                        let filteredMembers = facultyScopeList.filter(fName => sharedSchedules.some(s => s.instructorName === fName && s.program === progKey));
+                        let safeProgName = progKey.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 30);
+                        if(filteredMembers.length > 0) workloadMap.push({ titleId: `Program_${safeProgName}`, members: filteredMembers });
+                    });
+                });
+            }
+
+            if (formatType === 'pdf') generateAutomatedWorkloadPDF(workloadMap);
+            if (formatType === 'xlsx') generateAutomatedWorkloadExcel(workloadMap);
+            if (formatType === 'docx') generateAutomatedWorkloadWord(workloadMap);
         }
-        function exportMasterProgramPDF() { alert("Building full institution runtime document vectors..."); }
-        function exportFacultySummaryPDF() { alert("Exporting layout configuration blueprints..."); }
-        function exportProgramSchedulePDF() { alert("Exporting curriculum reports..."); }
-        function exportProgramScheduleExcel() { alert("Compiling excel matrix maps..."); }
+
+        function generateAutomatedWorkloadPDF(workloadMap) {
+            const { jsPDF } = window.jspdf;
+            workloadMap.forEach(packageItem => {
+                const doc = new jsPDF('p', 'mm', 'a4'); let matchesAdded = 0;
+                packageItem.members.forEach(prof => {
+                    let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
+                    if (matchesAdded > 0) doc.addPage(); matchesAdded++;
+
+                    let classes = sortFacultyClassesChronologically(clList);
+                    let preps = new Set(classes.map(c => c.subjectTitle)).size;
+                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
+
+                    doc.setFontSize(14); doc.text("INDIVIDUAL FACULTY WORKLOAD SHEET", 105, 15, { align: "center" });
+                    doc.setFontSize(10); doc.text(`Faculty Member: ${prof} | Dept: ${facObj.college} | Rank: ${facObj.rank} | Role: ${facObj.designation} | Preparations: ${preps}`, 14, 23);
+
+                    let totU = 0, totH = 0;
+                    let tableBody = classes.map(c => {
+                        let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); totU += c.unifiedUnits; totH += hrs;
+                        let display12HTime = `${convert24To12Hour(c.startTime)}\n-${convert24To12Hour(c.endTime)}`;
+                        return [`${c.dayAssignment}\n(${display12HTime})`, c.subjectTitle, c.unifiedUnits, hrs.toFixed(1), c.classSection, c.roomNumber];
+                    });
+                    tableBody.push([{ text: 'Totals Compliance:', colSpan: 2, styles: { fontStyle: 'bold', halign: 'right' } }, '', totU, totH.toFixed(1), '', '']);
+
+                    doc.autoTable({ startY: 27, head: [['Day / Time Assignment', 'Subject Descriptive Title', 'Unit/s', 'Hrs/Wk', 'Class', 'Room']], body: tableBody, theme: 'grid', headStyles: { fillColor: [20, 30, 60] } });
+                });
+                if(matchesAdded > 0) doc.save(`${packageItem.titleId}.pdf`);
+            });
+        }
+
+        function generateAutomatedWorkloadExcel(workloadMap) {
+            workloadMap.forEach(packageItem => {
+                let wb = XLSX.utils.book_new();
+                packageItem.members.forEach(prof => {
+                    let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
+                    let classes = sortFacultyClassesChronologically(clList);
+                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
+                    let matrixData = [
+                        ["INDIVIDUAL FACULTY WORKLOAD SHEET"], ["Academic Year 2026 - 2027 Summary Allocation Blueprint"], [],
+                        ["Faculty Member Name:", prof, "Academic Rank:", facObj.rank, "Designation:", facObj.designation, "Department:", facObj.college], [],
+                        ["Day / Time Assignment", "Subject Code & Description", "Course Unit/s", "Hours per Week", "Section Block", "Room Layout"]
+                    ];
+                    let subUnits = 0, subHrs = 0;
+                    classes.forEach(c => {
+                        let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); subUnits += c.unifiedUnits; subHrs += hrs;
+                        let display12HTime = `${convert24To12Hour(c.startTime)} - ${convert24To12Hour(c.endTime)}`;
+                        matrixData.push([`${c.dayAssignment} (${display12HTime})`, c.subjectTitle, c.unifiedUnits, hrs, c.classSection, c.roomNumber]);
+                    });
+                    matrixData.push([], ["TOTALS:", "", subUnits, subHrs, "", ""]);
+                    let ws = XLSX.utils.aoa_to_sheet(matrixData);
+                    let cleanSheetName = prof.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30);
+                    XLSX.utils.book_append_sheet(wb, ws, cleanSheetName);
+                });
+                XLSX.writeFile(wb, `${packageItem.titleId}.xlsx`);
+            });
+        }
+
+        function generateAutomatedWorkloadWord(workloadMap) {
+            const { Document, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType } = window.docx;
+            workloadMap.forEach(packageItem => {
+                let sectionChildren = [];
+                packageItem.members.forEach(prof => {
+                    let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
+                    let classes = sortFacultyClassesChronologically(clList);
+                    let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
+                    sectionChildren.push(
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, size: 28 })] }),
+                        new Paragraph({ text: "" }), new Paragraph({ children: [new TextRun({ text: `Faculty Member: ${prof} | College Dept: ${facObj.college} | Rank: ${facObj.rank} | Designation: ${facObj.designation}`, bold: true })] }), new Paragraph({ text: "" })
+                    );
+                    let tableHeaderCells = ["Day / Time", "Subject Descriptive Title", "Unit/s", "Hrs/Wk", "Class Section", "Room"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "bold" })] }));
+                    let rowElementsList = [new TableRow({ children: tableHeaderCells })];
+                    let totalUnitsCount = 0, totalHoursCount = 0;
+
+                    classes.forEach(c => {
+                        let hrs = calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime); totalUnitsCount += c.unifiedUnits; totalHoursCount += hrs;
+                        let display12HTime = `${convert24To12Hour(c.startTime)} - ${convert24To12Hour(c.endTime)}`;
+                        rowElementsList.push(new TableRow({ children: [`${c.dayAssignment} (${display12HTime})`, c.subjectTitle, c.unifiedUnits.toString(), hrs.toFixed(1), c.classSection, c.roomNumber].map(val => new TableCell({ children: [new Paragraph(val)] })) }));
+                    });
+                    rowElementsList.push(new TableRow({ children: [new TableCell({ children: [new Paragraph({ text: "TOTAL COMPILATIONS:", style: "bold" })], columnSpan: 2 }), new TableCell({ children: [new Paragraph(totalUnitsCount.toString())] }), new TableCell({ children: [new Paragraph(totalHoursCount.toFixed(1))] }), new TableCell({ children: [], columnSpan: 2 })] }));
+                    sectionChildren.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: rowElementsList }));
+                    sectionChildren.push(new Paragraph({ text: "", pageBreakBefore: true }));
+                });
+                if(sectionChildren.length === 0) return; sectionChildren.pop();
+                let doc = new Document({ sections: [{ children: sectionChildren }] });
+                window.docx.Packer.toBlob(doc).then(blob => {
+                    let link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${packageItem.titleId}.docx`; link.click();
+                });
+            });
+        }
+
+        function rebuildStateStructuralRegistriesFromSchedules() {
+            sharedSchedules.forEach(s => {
+                if(s.college && s.program) {
+                    if(!registeredPrograms[s.college]) registeredPrograms[s.college] = [];
+                    if(!registeredPrograms[s.college].includes(s.program)) {
+                        registeredPrograms[s.college].push(s.program);
+                    }
+                }
+                if(s.program && s.classSection) {
+                    if(!registeredSections[s.program]) registeredSections[s.program] = [];
+                    if(!registeredSections[s.program].includes(s.classSection)) {
+                        registeredSections[s.program].push(s.classSection);
+                    }
+                }
+                if(s.instructorName) {
+                    if(!registeredFaculty.some(f => f.name === s.instructorName)) {
+                        registeredFaculty.push({ name: s.instructorName, college: s.college || "COE", rank: "TBA", designation: "Without Designation" });
+                    }
+                }
+                if(s.roomNumber) {
+                    if(!registeredRooms.includes(s.roomNumber)) {
+                        registeredRooms.push(s.roomNumber);
+                    }
+                }
+            });
+        }
+
+        function executeRegistryDataSynchronization() {
+            rebuildStateStructuralRegistriesFromSchedules();
+            refreshFormSelectors(); 
+            renderRegistryManagement(); 
+            renderMasterSchedule(); 
+            renderSummaryDashboard(); 
+            updateFacultySelector(); 
+            renderWorkloads();
+            
+            if(!document.getElementById("program-schedule-view").classList.contains("hidden")) {
+                populateReportFilters();
+                renderProgramScheduleReport();
+            }
+            if(!document.getElementById("dashboard-view").classList.contains("hidden")) {
+                renderDashboardCharts();
+            }
+        }
+
+        function exportMasterProgramPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); let first = true;
+            Object.keys(registeredPrograms).forEach(college => {
+                const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
+                if (!first) doc.addPage(); first = false;
+                
+                let hexColor = getCollegeHexCode(college);
+                doc.setFontSize(12); doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 15);
+                
+                doc.autoTable({ 
+                    startY: 20, 
+                    head: [['Section', 'Day/Time (12H Format)', 'Subject', 'Unit/s', 'Instructor', 'Room']], 
+                    body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]),
+                    headStyles: { fillColor: hexColor }
+                });
+            }); doc.save('Master_Class_Program.pdf');
+        }
+
+        function exportFacultySummaryPDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
+            let dataset = getAggregatedFacultyMetricsList();
+            doc.autoTable({ startY: 25, head: [['Instructor', 'Home College', 'Academic Rank', 'Designation', 'Unit/s Load', 'Hours Load']], body: dataset.map(f => [f.name, f.homeCollege, f.rank, f.designation, `${f.units} Unit/s`, `${f.hours.toFixed(1)} Hrs`]) });
+            doc.save('Faculty_Load_Summary.pdf');
+        }
+
+        function exportProgramSchedulePDF() {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
+            let filtered = getFilteredSchedules(); if(filtered.length === 0) return;
+            let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}::${s.college}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
+            let first = true;
+            Object.keys(grouped).forEach(key => {
+                let [progName, sectCode, colKey] = key.split("::");
+                if(!first) doc.addPage(); first = false;
+                
+                let hexColor = getCollegeHexCode(colKey);
+                doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
+                
+                let dataRows = sortFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
+                doc.autoTable({ startY: 22, head: [['Day', 'Time Bracket (12H)', 'Subject Title', 'Unit/s', 'Faculty Instructor', 'Room']], body: dataRows, theme: 'striped', headStyles: { fillColor: hexColor } });
+            }); doc.save('Class_Schedules_Report.pdf');
+        }
+
+        function exportProgramScheduleExcel() {
+            let filtered = getFilteredSchedules(); if(filtered.length === 0) return; let wb = XLSX.utils.book_new();
+            let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
+            Object.keys(grouped).forEach(key => {
+                let [progName, sectCode] = key.split("::");
+                let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window (12H Format)", "Subject Description", "Unit/s", "Faculty Instructor", "Room Assignment"]];
+                sortFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
+                let ws = XLSX.utils.aoa_to_sheet(sheetRows); let cleanSheetName = `${sectCode}`.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30); XLSX.utils.book_append_sheet(wb, ws, cleanSheetName);
+            }); XLSX.writeFile(wb, "University_Class_Schedules.xlsx");
+        }
+
         function clearIngestionConsole() { document.getElementById("rawSchedulePasteInput").value = ""; }
 
         function convertTo24Hour(t) {
-            t = t.trim().toUpperCase(); let pm = t.includes("PM"), am = t.includes("AM"), cl = t.replace("AM","").replace("PM","").trim();
-            let [h, m] = cl.split(':').map(Number); m = m || 0; if(!am && !pm && h >= 1 && h < 7) pm = true; if (pm && h < 12) h += 12; if (am && h === 12) h = 0;
+            t = t.trim().toUpperCase(); 
+            let pm = t.includes("PM"), am = t.includes("AM"), cl = t.replace("AM","").replace("PM","").trim();
+            let [h, m] = cl.split(':').map(Number); m = m || 0; 
+            if(!am && !pm && h >= 1 && h < 7) pm = true; 
+            if (pm && h < 12) h += 12; 
+            if (am && h === 12) h = 0;
             return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
         }
 
         document.getElementById("modalEditForm").addEventListener("submit", function(e) {
             e.preventDefault(); const id = parseFloat(document.getElementById("modalRecordId").value);
             const idx = sharedSchedules.findIndex(s => s.id === id); if(idx === -1) return;
+            
+            const selectedProg = document.getElementById("modalProgramSelect").value;
+            let resolvedCollegeKey = "COE";
+            Object.keys(registeredPrograms).forEach(colKey => {
+                if(registeredPrograms[colKey].includes(selectedProg)) resolvedCollegeKey = colKey;
+            });
+
+            sharedSchedules[idx].program = selectedProg;
+            sharedSchedules[idx].college = resolvedCollegeKey;
+            sharedSchedules[idx].classSection = document.getElementById("modalSectionSelect").value;
             sharedSchedules[idx].subjectTitle = document.getElementById("modalSubjectTitle").value;
             sharedSchedules[idx].unifiedUnits = parseInt(document.getElementById("modalUnifiedUnits").value);
             sharedSchedules[idx].dayAssignment = document.getElementById("modalDayAssignment").value;
@@ -1537,33 +2365,31 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             sharedSchedules[idx].endTime = document.getElementById("modalEndTime").value;
             sharedSchedules[idx].instructorName = document.getElementById("modalInstructorSelect").value;
             sharedSchedules[idx].roomNumber = document.getElementById("modalRoomSelect").value;
-            saveSystemStateToLocalStorage(); closeScheduleEditorModal(); executeRegistryDataSynchronization();
+            
+            saveSystemStateToLocalStorage();
+            closeScheduleEditorModal(); 
+            executeRegistryDataSynchronization();
         });
 
         document.getElementById("scheduleForm").addEventListener("submit", function(e) {
             e.preventDefault();
             sharedSchedules.push({
-                id: Date.now(), college: document.getElementById("collegeSelect").value, program: document.getElementById("programSelect").value, classSection: document.getElementById("classSectionSelect").value, subjectTitle: document.getElementById("subjectTitle").value, unifiedUnits: parseInt(document.getElementById("unifiedUnits").value) || 3, instructorName: document.getElementById("instructorSelect").value, dayAssignment: document.getElementById("dayAssignment").value, startTime: document.getElementById("startTime").value, endTime: document.getElementById("endTime").value, roomNumber: document.getElementById("roomSelect").value
+                id: Date.now(), college: document.getElementById("collegeSelect").value, program: document.getElementById("programSelect").value,
+                classSection: document.getElementById("classSectionSelect").value, subjectTitle: document.getElementById("subjectTitle").value,
+                unifiedUnits: parseInt(document.getElementById("unifiedUnits").value) || 3, instructorName: document.getElementById("instructorSelect").value,
+                dayAssignment: document.getElementById("dayAssignment").value, startTime: document.getElementById("startTime").value,
+                endTime: document.getElementById("endTime").value, roomNumber: document.getElementById("roomSelect").value
             });
-            this.reset(); saveSystemStateToLocalStorage(); executeRegistryDataSynchronization(); switchTab('schedule-view');
+            this.reset(); 
+            saveSystemStateToLocalStorage();
+            executeRegistryDataSynchronization(); switchTab('schedule-view');
         });
 
-        function rebuildStateStructuralRegistriesFromSchedules() {
-            sharedSchedules.forEach(s => {
-                if(s.college && s.program) { if(!registeredPrograms[s.college]) registeredPrograms[s.college] = []; if(!registeredPrograms[s.college].includes(s.program)) registeredPrograms[s.college].push(s.program); }
-                if(s.program && s.classSection) { if(!registeredSections[s.program]) registeredSections[s.program] = []; if(!registeredSections[s.program].includes(s.classSection)) registeredSections[s.program].push(s.classSection); }
-                if(s.instructorName && !registeredFaculty.some(f => f.name === s.instructorName)) registeredFaculty.push({ name: s.instructorName, college: s.college || "COE", rank: "TBA", designation: "Without Designation" });
-                if(s.roomNumber && !registeredRooms.includes(s.roomNumber)) registeredRooms.push(s.roomNumber);
-            });
-        }
-
-        function executeRegistryDataSynchronization() {
-            rebuildStateStructuralRegistriesFromSchedules(); refreshFormSelectors(); renderRegistryManagement(); renderMasterSchedule(); renderSummaryDashboard(); updateFacultySelector(); renderWorkloads();
-            if(!document.getElementById("program-schedule-view").classList.contains("hidden")) { populateReportFilters(); }
-            if(!document.getElementById("dashboard-view").classList.contains("hidden")) { renderDashboardCharts(); }
-        }
-
-        window.onload = function() { initializeSystemStateHydration(); executeRegistryDataSynchronization(); switchTab('dashboard-view'); };
+        window.onload = function() { 
+            initializeSystemStateHydration(); 
+            executeRegistryDataSynchronization(); 
+            switchTab('dashboard-view');
+        };
     </script>
 </body>
 </html>
