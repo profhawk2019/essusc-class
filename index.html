@@ -12,10 +12,32 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @media print {
-            .no-print { display: none !important; }
-            .print-page { page-break-after: always; padding: 0 !important; margin: 0 !important; border: none !important; }
-            body { background: white !important; color: black !important; }
-            .print-matrix-view { display: block !important; width: 100% !important; }
+            body, main, header, section, div, table {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .print-page { 
+                page-break-after: always; 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                border: none !important; 
+            }
+            /* When printing the workload matrix, hide the general app layout completely */
+            body:has(.printing-matrix-active) main,
+            body:has(.printing-matrix-active) header {
+                display: none !important;
+            }
+            .print-matrix-view { 
+                display: block !important; 
+                width: 100% !important; 
+            }
+            @page {
+                size: auto;
+                margin: 15mm 10mm 15mm 10mm;
+            }
         }
         .code-added-highlight { background-color: rgba(254, 240, 138, 0.08); }
         
@@ -106,7 +128,6 @@
                 <p class="text-sm text-gray-500">Real-time summary tracking university loading balances, policy standard compliance ratios, and program structural distributions.</p>
             </div>
             
-            <!-- Academic Analytics Primary Row Metrics Layout Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase text-blue-600 tracking-wider">Total Schedules Listed</span>
@@ -126,7 +147,6 @@
                 </div>
             </div>
 
-            <!-- Upgraded Analytics Row 2: Undergraduate Courses Count & Classroom Asset Counts per Department -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="p-4 bg-slate-900 text-white rounded-xl flex flex-col justify-between shadow-xs md:col-span-1">
                     <div>
@@ -146,8 +166,7 @@
                         </span>
                     </div>
                     <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
-                        <!-- Dynamic room counts are populated here by the javascript engine state runtime -->
-                    </div>
+                        </div>
                 </div>
             </div>
             
@@ -417,7 +436,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 </div>
             </div>
 
-            <!-- Contextual Operational Printing Panel for Workload Matrix Slicing -->
             <div id="matrix-printing-filter-deck" class="hidden p-4 bg-slate-900 text-white border border-slate-800 rounded-xl space-y-3 shadow-xs">
                 <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
                     <span class="text-lg">🖨️</span>
@@ -429,7 +447,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="flex flex-wrap items-center gap-4 pt-1">
                     <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">1. Filter College Department</label>
-                        <select id="matrix-print-college-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
+                        <select id="matrix-print-college-scope" class="bg-slate-880 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
                             <option value="ALL">All Campus Colleges (Combined)</option>
                             <option value="COE">College of Engineering (COE)</option>
                             <option value="CCS">College of Computer Studies (CCS)</option>
@@ -440,7 +458,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">2. Compliance Registry Audit Target</label>
-                        <select id="matrix-print-compliance-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
+                        <select id="matrix-print-compliance-scope" class="bg-slate-880 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
                             <option value="ALL">Show Whole Roster (Unfiltered)</option>
                             <option value="COMPLIANT">Compliant Profiles Only</option>
                             <option value="NON_COMPLIANT">Non-Compliant Deficiencies Only</option>
@@ -455,7 +473,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div id="summaryDashboardDynamicContent" class="overflow-x-auto"></div>
         </section>
 
-        <!-- Hidden Specialized Print Wrapper strictly for Matrix Printing layouts -->
         <div id="specializedMatrixPrintFrame" class="hidden print-matrix-view"></div>
 
         <section id="workload-view" class="hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 tab-content">
@@ -823,6 +840,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         let currentSummaryGroupingMode = 'none';
 
         function switchTab(tabId) {
+            document.body.classList.remove('printing-matrix-active');
+            document.getElementById('specializedMatrixPrintFrame').innerHTML = "";
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => { el.className = "tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer"; });
             document.getElementById(tabId).classList.remove('hidden');
@@ -960,7 +979,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             switchTab('dashboard-view');
         }
 
-        function sortFacultyClassesChronologically(list) {
+        function fontFacultyClassesChronologically(list) {
             const weights = { "monday": 1, "tuesday": 2, "wednesday": 3, "thursday": 4, "friday": 5, "saturday": 6, "monday and wednesday": 1.5, "tuesday and thursday": 2.5 };
             return list.sort((a, b) => (weights[a.dayAssignment.toLowerCase()] || 7) - (weights[b.dayAssignment.toLowerCase()] || 7) || toMins(a.startTime) - toMins(b.startTime));
         }
@@ -1311,8 +1330,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 ].join(','));
             });
 
-            let csvContent = csvRows.join('\n');
-            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             let link = document.createElement("a");
             let safeFileName = String(collegeKey).replace(/[^a-zA-Z0-9]/g, "_");
             link.href = URL.createObjectURL(blob);
@@ -1448,7 +1466,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode, colKey] = key.split("::");
-                let data = sortFacultyClassesChronologically(grouped[key]);
+                let data = fontFacultyClassesChronologically(grouped[key]);
                 let activeColorClass = getCollegeColorClass(colKey);
 
                 let rows = data.map(r => `<tr class="border-b text-xs">
@@ -1864,6 +1882,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 </div>
             `;
 
+            // Active full state printing flag class configuration overlay triggers
+            document.body.classList.add('printing-matrix-active');
             window.print();
         }
 
@@ -2075,7 +2095,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             targetFacultyList.forEach(prof => {
                 let clList = sharedSchedules.filter(s => s.instructorName === prof);
                 if(clList.length === 0) return;
-                let classes = sortFacultyClassesChronologically(clList);
+                let classes = fontFacultyClassesChronologically(clList);
                 container.innerHTML += buildWorkloadHTML(prof, classes);
             });
         }
@@ -2154,7 +2174,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
                     if (matchesAdded > 0) doc.addPage(); matchesAdded++;
 
-                    let classes = sortFacultyClassesChronologically(clList);
+                    let classes = fontFacultyClassesChronologically(clList);
                     let preps = new Set(classes.map(c => c.subjectTitle)).size;
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
 
@@ -2180,7 +2200,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let wb = XLSX.utils.book_new();
                 packageItem.members.forEach(prof => {
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    let classes = sortFacultyClassesChronologically(clList);
+                    let classes = fontFacultyClassesChronologically(clList);
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     let matrixData = [
                         ["INDIVIDUAL FACULTY WORKLOAD SHEET"], ["Academic Year 2026 - 2027 Summary Allocation Blueprint"], [],
@@ -2208,7 +2228,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let sectionChildren = [];
                 packageItem.members.forEach(prof => {
                     let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    let classes = sortFacultyClassesChronologically(clList);
+                    let classes = fontFacultyClassesChronologically(clList);
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     sectionChildren.push(
                         new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, size: 28 })] }),
@@ -2317,7 +2337,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let hexColor = getCollegeHexCode(colKey);
                 doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
                 
-                let dataRows = sortFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
+                let dataRows = fontFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
                 doc.autoTable({ startY: 22, head: [['Day', 'Time Bracket (12H)', 'Subject Title', 'Unit/s', 'Faculty Instructor', 'Room']], body: dataRows, theme: 'striped', headStyles: { fillColor: hexColor } });
             }); doc.save('Class_Schedules_Report.pdf');
         }
@@ -2328,7 +2348,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode] = key.split("::");
                 let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window (12H Format)", "Subject Description", "Unit/s", "Faculty Instructor", "Room Assignment"]];
-                sortFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
+                fontFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
                 let ws = XLSX.utils.aoa_to_sheet(sheetRows); let cleanSheetName = `${sectCode}`.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30); XLSX.utils.book_append_sheet(wb, ws, cleanSheetName);
             }); XLSX.writeFile(wb, "University_Class_Schedules.xlsx");
         }
