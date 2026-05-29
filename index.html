@@ -372,7 +372,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <p class="text-sm text-gray-500">Aggregated load summary indices with reactive designation and hour cascading checks.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-4 no-print bg-gray-50 p-3 rounded-xl border border-gray-200">
-                    <div class="flex items-center gap-1">
+                    <div class="flex flex-wrap items-center gap-2">
                         <span class="text-xs font-bold uppercase text-gray-500 mr-1">Group View:</span>
                         <button onclick="changeSummaryGrouping('none')" id="group-none-btn" class="bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer">Flat List</button>
                         <button onclick="changeSummaryGrouping('college')" id="group-college-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By College</button>
@@ -384,13 +384,45 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <button onclick="changeSummarySort('units')" id="sort-units-btn" class="bg-blue-50 text-blue-950 font-bold text-xs px-2.5 py-1.5 rounded-md border border-blue-200 cursor-pointer">Unit/s ⬇</button>
                         <button onclick="changeSummarySort('hours')" id="sort-hours-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-2.5 py-1.5 rounded-md border border-gray-300 cursor-pointer">Hours ⬇</button>
                     </div>
-                    <div class="flex gap-1 border-l pl-3 border-gray-300">
-                        <button onclick="printWorkloadMatrixReport()" id="matrix-print-action-btn" class="bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold px-3 py-2 rounded-md hidden cursor-pointer flex items-center gap-1 shadow-xs">
-                            🖨 Print Matrix Report
-                        </button>
+                    <div class="flex gap-1 border-l pl-3 border-gray-300 ml-auto lg:ml-0">
                         <button onclick="exportFacultySummaryPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-md cursor-pointer">📄 Export PDF</button>
                         <button onclick="exportFacultySummaryExcelGrouped()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer">📈 Export Grouped Excel</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Contextual Operational Printing Panel for Workload Matrix Slicing -->
+            <div id="matrix-printing-filter-deck" class="hidden p-4 bg-slate-900 text-white border border-slate-800 rounded-xl space-y-3 shadow-xs">
+                <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+                    <span class="text-lg">🖨️</span>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-200">General Faculty Workload Matrix Printing Controls</h4>
+                        <p class="text-[11px] text-slate-400">Deploy structural page cuts or isolate compliance registers for institutional audits.</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 pt-1">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">1. Filter College Department</label>
+                        <select id="matrix-print-college-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
+                            <option value="ALL">All Campus Colleges (Combined)</option>
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">2. Compliance Registry Audit Target</label>
+                        <select id="matrix-print-compliance-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
+                            <option value="ALL">Show Whole Roster (Unfiltered)</option>
+                            <option value="COMPLIANT">Compliant Profiles Only</option>
+                            <option value="NON_COMPLIANT">Non-Compliant Deficiencies Only</option>
+                        </select>
+                    </div>
+                    <button onclick="printWorkloadMatrixReport()" class="mt-auto bg-blue-600 hover:bg-blue-500 font-bold text-xs px-5 py-2 rounded-md shadow-xs flex items-center gap-1.5 transition active:scale-95 cursor-pointer text-white">
+                        🖨️ Execute Print Operations
+                    </button>
                 </div>
             </div>
             
@@ -933,12 +965,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 totalAuditedFaculty++;
                 let minReq = designationUnitMinimums[f.designation] || 18;
                 
-                let isCompliant = false;
-                if (f.units >= minReq) {
-                    isCompliant = true;
-                } else if (f.hours >= 20) {
-                    isCompliant = true;
-                }
+                let isCompliant = (f.units >= minReq) || (f.hours >= 20);
 
                 if (isCompliant) compliantCount++;
                 else nonCompliantCount++;
@@ -1131,7 +1158,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let rawText = e.target.result;
                 let rows = rawText.split(/\r?\n/);
                 let newlyLoadedFaculty = [];
-                let duplicateSkipped = 0;
 
                 for (let i = 0; i < rows.length; i++) {
                     let cleanLine = rows[i].trim();
@@ -1599,9 +1625,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         
         function changeSummaryGrouping(mode) { 
             currentSummaryGroupingMode = mode; 
-            const printBtn = document.getElementById("matrix-print-action-btn");
-            if(printBtn) {
-                printBtn.className = (mode === 'matrix-tab') ? "bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer shadow-xs animate-pulse" : "hidden";
+            const printDeck = document.getElementById("matrix-printing-filter-deck");
+            if(printDeck) {
+                if (mode === 'matrix-tab') {
+                    printDeck.classList.remove("hidden");
+                } else {
+                    printDeck.classList.add("hidden");
+                }
             }
             changeSummarySort(currentSummarySortMetric); 
         }
@@ -1652,10 +1682,46 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U & under 20h)</span>`;
         }
 
-        /* DYNAMIC PRINT FORMAT COMPILER FOR THE LOAD MATRIX */
+        /* 
+           DYNAMIC PRINT GENERATOR FOR GENERAL FACULTY WORKLOAD MATRIX
+           Supports Isolation Slicing by:
+           1. Target College Dept (COE, CCS, COEd, CANS, GS, or ALL)
+           2. Compliance Track Filter (COMPLIANT Only, NON_COMPLIANT Only, or ALL Roster)
+        */
         function printWorkloadMatrixReport() {
             let dataset = getAggregatedFacultyMetricsList();
             if(dataset.length === 0) { alert("No data logs detected to create a matrix sheet print."); return; }
+            
+            // Extract selected print-engine modifiers from the deck selectors
+            const targetCollege = document.getElementById("matrix-print-college-scope").value;
+            const complianceTarget = document.getElementById("matrix-print-compliance-scope").value;
+            
+            // Step 1: Filter per specified College Assignment
+            if (targetCollege !== "ALL") {
+                dataset = dataset.filter(f => f.homeCollege === targetCollege);
+            }
+            
+            // Step 2: Filter by specific Compliance track criteria
+            if (complianceTarget === "COMPLIANT") {
+                dataset = dataset.filter(f => {
+                    if (f.rank === "TBA") return false; // TBA rank is marked pending review, not strictly verified compliant
+                    let minAllowedUnits = designationUnitMinimums[f.designation] || 18;
+                    return (f.units >= minAllowedUnits) || (f.hours >= 20);
+                });
+            } else if (complianceTarget === "NON_COMPLIANT") {
+                dataset = dataset.filter(f => {
+                    if (f.rank === "TBA") return false; // Exclude from non-compliance as it bypasses checks
+                    let minAllowedUnits = designationUnitMinimums[f.designation] || 18;
+                    return (f.units < minAllowedUnits) && (f.hours < 20);
+                });
+            }
+            
+            if(dataset.length === 0) { 
+                alert("The targeted filter criteria contains zero active workload records. Print job aborted."); 
+                return; 
+            }
+            
+            // Arrange layout order prioritizing sorting preferences selected on workspace
             dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
 
             const frame = document.getElementById("specializedMatrixPrintFrame");
@@ -1697,14 +1763,23 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 `;
             });
 
+            // Meta indicators text showing applied scoping attributes inside printed institutional header block
+            let collegeMetaText = targetCollege === "ALL" ? "All Campus College Divisions" : `Department/College: ${targetCollege}`;
+            let complianceMetaText = "Roster Classification: Unfiltered Roster";
+            if (complianceTarget === "COMPLIANT") complianceMetaText = "Roster Classification: Verified Compliant Faculty Only";
+            if (complianceTarget === "NON_COMPLIANT") complianceMetaText = "Roster Classification: Operational Shortfalls / Underloaded Faculty Logs Only";
+
             frame.innerHTML = `
                 <div style="padding: 20px; font-family: sans-serif; background: white; color: black;">
                     <!-- Institutional Document Header Alignment -->
                     <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid black; padding-bottom: 10px;">
-                        <h2 style="margin: 0; font-size: 16px; font-weight: 800; uppercase; letter-spacing: 0.5px;">Eastern Samar State University</h2>
+                        <h2 style="margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Eastern Samar State University</h2>
                         <h3 style="margin: 3px 0; font-size: 13px; font-weight: 600;">Salcedo Campus, Salcedo, Eastern Samar</h3>
-                        <h4 style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #111; letter-spacing: 0.2px;">GENERAL FACULTY INSTRUCTIONAL WORKLOAD MATRIX</h4>
-                        <div style="margin-top: 4px; font-size: 10px; font-weight: 500;">Academic Year: 2026 - 2027 | Consolidated Database Audit Roll</div>
+                        <h4 style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; color: #111; letter-spacing: 0.2px; text-transform: uppercase;">GENERAL FACULTY INSTRUCTIONAL WORKLOAD MATRIX</h4>
+                        <div style="margin-top: 6px; font-size: 10px; font-weight: bold; color: #333; background: #f0f0f0; padding: 4px; display: inline-block; border-radius: 4px;">
+                            ${collegeMetaText} &nbsp;|&nbsp; ${complianceMetaText}
+                        </div>
+                        <div style="margin-top: 4px; font-size: 9px; font-weight: 500; color: #555;">Academic Year: 2026 - 2027 | Audit Manifest</div>
                     </div>
                     
                     <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background: white; color: black;">
@@ -1723,8 +1798,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         </tbody>
                     </table>
 
-                    <div style="margin-top: 35px; font-size: 10px; display: flex; justify-content: space-between; border-t: 1px dotted #ccc; pt: 10px; page-break-inside: avoid;">
-                        <div>System Log Reference ID: SWS-v1-MATRIX-2026</div>
+                    <div style="margin-top: 35px; font-size: 10px; display: flex; justify-content: space-between; border-top: 1px dotted #ccc; padding-top: 10px; page-break-inside: avoid;">
+                        <div>System Log Reference ID: SWS-v1-MATRIX-FILTERED</div>
                         <div>Generated Date Timestamp: ${new Date().toLocaleString()}</div>
                         <div style="font-weight: bold; text-decoration: overline; margin-top: 15px;">Campus Dean / Vice President for Academic Affairs</div>
                     </div>
@@ -1744,7 +1819,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                 
                 let matrixHeaderRows = `
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl space-y-4">
+                    <div class="p-4 bg-white border border-gray-200 rounded-xl space-y-4 shadow-sm mt-2">
                         <div class="text-center font-bold text-base border-b pb-2 tracking-wide text-gray-800 uppercase">General Faculty Workload Matrix</div>
                         <table class="w-full text-xs border-collapse border border-gray-300 font-sans">
                             <thead>
