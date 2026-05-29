@@ -447,7 +447,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 <div class="flex flex-wrap items-center gap-4 pt-1">
                     <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">1. Filter College Department</label>
-                        <select id="matrix-print-college-scope" class="bg-slate-880 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
+                        <select id="matrix-print-college-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
                             <option value="ALL">All Campus Colleges (Combined)</option>
                             <option value="COE">College of Engineering (COE)</option>
                             <option value="CCS">College of Computer Studies (CCS)</option>
@@ -458,7 +458,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     </div>
                     <div class="flex flex-col gap-1">
                         <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">2. Compliance Registry Audit Target</label>
-                        <select id="matrix-print-compliance-scope" class="bg-slate-880 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
+                        <select id="matrix-print-compliance-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
                             <option value="ALL">Show Whole Roster (Unfiltered)</option>
                             <option value="COMPLIANT">Compliant Profiles Only</option>
                             <option value="NON_COMPLIANT">Non-Compliant Deficiencies Only</option>
@@ -571,7 +571,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
-                    <h3 class="text-lg font-bold text-gray-900">✏  Edit Class Schedule Block</h3>
+                    <h3 class="text-lg font-bold text-gray-900">✏  Edit Class Schedule Block</h3>
                     <button onclick="closeScheduleEditorModal()" class="text-gray-400 text-xl font-bold">&times;</button>
                 </div>
                 <form id="modalEditForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -994,7 +994,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let nonCompliantCount = 0;
             let totalAuditedFaculty = 0;
 
-            // Dedicated Analytical States tracking Distinct Courses and College-bound Classroom Arrays
             let distinctUndergradCourses = new Set();
             let classroomsPerCollege = {
                 "COE": new Set(),
@@ -1012,22 +1011,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 "Graduate Studies": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] }
             };
 
-            // Loop and compile schedule blocks to run dynamic calculations
             sharedSchedules.forEach(s => {
-                // Calculation 1: Extract courses, completely bypassing Graduate Studies channel
                 if (s.college !== "Graduate Studies" && s.subjectTitle) {
-                    // Extract subject code token up until first bracket or standard space division
                     let cleanCourseCode = s.subjectTitle.split('(')[0].trim();
                     distinctUndergradCourses.add(cleanCourseCode);
                 }
 
-                // Calculation 2: Store unique physical classroom names mapped directly per scheduling college division
                 if (s.college && classroomsPerCollege.hasOwnProperty(s.college) && s.roomNumber) {
                     classroomsPerCollege[s.college].add(s.roomNumber);
                 }
             });
 
-            // Flush counters straight into UI layout elements
             document.getElementById("kpi-undergrad-courses").textContent = distinctUndergradCourses.size;
             
             const classroomsDeckContainer = document.getElementById("dashboard-classrooms-college-deck");
@@ -1211,7 +1205,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             }
         }
 
-        // BACKUP DATA MIGRATION: FACULTY EXPORT & RE-IMPORT CONSOLE HOOKS
         function exportFacultyRosterCSV() {
             if (registeredFaculty.length === 0) { alert("Roster dataset records are currently empty."); return; }
             
@@ -1800,6 +1793,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 return; 
             }
             
+            // Fixed: Respect the active sorting choices when generating the layout view bounds
             dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
 
             const frame = document.getElementById("specializedMatrixPrintFrame");
@@ -1818,7 +1812,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     } else if (faculty.hours >= 20) {
                         remarksText = "COMPLIANT\n(Hours Override Met)";
                     } else {
-                        remarksText = `NON-COMPLIANT\n(Deficit: ${minAllowedUnits}U / Under 20h)`;
+                        remarksText = `NON-COMPLIANT\n(Deficit: -${minAllowedUnits - faculty.units}U / Under 20h)`;
                     }
                 }
 
@@ -1826,17 +1820,17 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 rowsHtml += `
                     <tr style="border-bottom: 1px solid #222; page-break-inside: avoid;">
-                        <td style="padding: 8px; font-weight: bold; font-size: 11px; vertical-align: top;">
+                        <td style="padding: 8px; font-weight: bold; font-size: 11px; vertical-align: top; border: 1px solid black;">
                             ${faculty.name}<br>
                             <span style="font-size: 9px; font-weight: normal; color: #444; font-style: italic;">
                                 ${faculty.rank} | ${faculty.designation} (${faculty.homeCollege})
                             </span>
                         </td>
-                        <td style="padding: 8px; font-size: 10px; vertical-align: top; line-height: 1.3;">${uniqSubjectsList}</td>
-                        <td style="padding: 8px; font-size: 11px; text-align: center; font-weight: bold; vertical-align: top;">${faculty.units}</td>
-                        <td style="padding: 8px; font-size: 11px; text-align: center; font-family: monospace; vertical-align: top;">${faculty.hours.toFixed(1)}</td>
-                        <td style="padding: 8px; font-size: 11px; text-align: center; vertical-align: top;">${faculty.prepsCount}</td>
-                        <td style="padding: 8px; font-size: 9px; text-align: center; font-weight: bold; white-space: pre-line; vertical-align: middle; background-color: #fcfcfc;">${remarksText}</td>
+                        <td style="padding: 8px; font-size: 10px; vertical-align: top; line-height: 1.3; border: 1px solid black;">${uniqSubjectsList}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; font-weight: bold; vertical-align: top; border: 1px solid black;">${faculty.units}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; font-family: monospace; vertical-align: top; border: 1px solid black;">${faculty.hours.toFixed(1)}</td>
+                        <td style="padding: 8px; font-size: 11px; text-align: center; vertical-align: top; border: 1px solid black;">${faculty.prepsCount}</td>
+                        <td style="padding: 8px; font-size: 9px; text-align: center; font-weight: bold; white-space: pre-line; vertical-align: middle; background-color: #fcfcfc; border: 1px solid black;">${remarksText}</td>
                     </tr>
                 `;
             });
@@ -1861,12 +1855,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <table style="width: 100%; border-collapse: collapse; border: 2px solid black; background: white; color: black;">
                         <thead>
                             <tr style="background-color: #111; color: white; font-size: 11px; border-bottom: 2px solid black;">
-                                <th style="padding: 10px; text-align: left; border: 1px solid #333; width: 25%;">Name of Faculty</th>
-                                <th style="padding: 10px; text-align: left; border: 1px solid #333; width: 35%;">Subject/s Assigned</th>
-                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Unit/s</th>
-                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Hours</th>
-                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Number of Preparation</th>
-                                <th style="padding: 10px; text-align: center; border: 1px solid #333; width: 10%;">Remark</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid black; width: 25%;">Name of Faculty</th>
+                                <th style="padding: 10px; text-align: left; border: 1px solid black; width: 35%;">Subject/s Assigned</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid black; width: 10%;">Number of Unit/s</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid black; width: 10%;">Number of Hours</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid black; width: 10%;">Number of Preparation</th>
+                                <th style="padding: 10px; text-align: center; border: 1px solid black; width: 10%;">Remark</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1882,7 +1876,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 </div>
             `;
 
-            // Active full state printing flag class configuration overlay triggers
             document.body.classList.add('printing-matrix-active');
             window.print();
         }
@@ -1909,7 +1902,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                     <th class="border border-gray-300 p-2.5 text-center">Number of Preparation</th>
                                     <th class="border border-gray-300 p-2.5 text-center w-1/5">Remarks</th>
                                 </tr>
-                            </thead>
+                            </tbody>
                             <tbody>
                 `;
 
@@ -1925,7 +1918,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         } else if (faculty.hours >= 20) {
                             statusElement = `<div class="text-blue-700 font-extrabold text-center text-xs tracking-wider">COMPLIANT</div><div class="text-[10px] text-blue-600 font-medium text-center">(${faculty.hours.toFixed(1)}h Hours Standard Met)</div>`;
                         } else {
-                            statusElement = `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">(Deficit: ${minAllowedUnits}U / under 20h)</div>`;
+                            statusElement = `<div class="text-red-600 font-extrabold text-center text-xs tracking-wider">NON-COMPLIANT</div><div class="text-[10px] text-red-500 font-medium text-center">(Deficit: -${minAllowedUnits - faculty.units}U / under 20h)</div>`;
                         }
                     }
 
@@ -1974,6 +1967,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 const collegeListArray = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
                 collegeListArray.forEach(college => {
                     let rows = dataset.filter(f => f.homeCollege === college); if(rows.length===0) return;
+                    rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                     let colorClass = getCollegeColorClass(college);
                     container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Department Division</div><table class="w-full text-left text-sm">
                         ${rows.map(r => {
@@ -1991,6 +1985,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 Object.keys(registeredPrograms).forEach(col => {
                     registeredPrograms[col].forEach(p => {
                         let rows = dataset.filter(f => f.programs.includes(p)); if(rows.length===0) return;
+                        rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                         let colorClass = getCollegeColorClass(col);
                         container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 text-xs font-bold tracking-wide">${p}</div><table class="w-full text-left text-sm">
                             ${rows.map(r => {
