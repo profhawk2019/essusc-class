@@ -106,6 +106,7 @@
                 <p class="text-sm text-gray-500">Real-time summary tracking university loading balances, policy standard compliance ratios, and program structural distributions.</p>
             </div>
             
+            <!-- Academic Analytics Primary Row Metrics Layout Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase text-blue-600 tracking-wider">Total Schedules Listed</span>
@@ -122,6 +123,31 @@
                 <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col justify-between">
                     <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Audited Compliance Rate</span>
                     <span id="kpi-compliance-rate" class="text-3xl font-extrabold text-amber-950 mt-2">100%</span>
+                </div>
+            </div>
+
+            <!-- Upgraded Analytics Row 2: Undergraduate Courses Count & Classroom Asset Counts per Department -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-slate-900 text-white rounded-xl flex flex-col justify-between shadow-xs md:col-span-1">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">🎓</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Undergraduate Courses Running</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Total distinct course scopes active (strictly excluding Graduate Studies channels).</p>
+                    </div>
+                    <span id="kpi-undergrad-courses" class="text-4xl font-black text-sky-400 mt-4">0</span>
+                </div>
+                <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-xs md:col-span-2 space-y-2">
+                    <div class="border-b pb-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
+                            <span>🏢 Active Classroom Assets Matrix</span>
+                            <span class="normal-case text-[10px] text-gray-400 font-medium">(Distinct physical rooms assigned per college schedule logs)</span>
+                        </span>
+                    </div>
+                    <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+                        <!-- Dynamic room counts are populated here by the javascript engine state runtime -->
+                    </div>
                 </div>
             </div>
             
@@ -949,6 +975,16 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let nonCompliantCount = 0;
             let totalAuditedFaculty = 0;
 
+            // Dedicated Analytical States tracking Distinct Courses and College-bound Classroom Arrays
+            let distinctUndergradCourses = new Set();
+            let classroomsPerCollege = {
+                "COE": new Set(),
+                "CCS": new Set(),
+                "COEd": new Set(),
+                "CANS": new Set(),
+                "Graduate Studies": new Set()
+            };
+
             let collegeAudit = {
                 "COE": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
                 "CCS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
@@ -956,6 +992,39 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 "CANS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
                 "Graduate Studies": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] }
             };
+
+            // Loop and compile schedule blocks to run dynamic calculations
+            sharedSchedules.forEach(s => {
+                // Calculation 1: Extract courses, completely bypassing Graduate Studies channel
+                if (s.college !== "Graduate Studies" && s.subjectTitle) {
+                    // Extract subject code token up until first bracket or standard space division
+                    let cleanCourseCode = s.subjectTitle.split('(')[0].trim();
+                    distinctUndergradCourses.add(cleanCourseCode);
+                }
+
+                // Calculation 2: Store unique physical classroom names mapped directly per scheduling college division
+                if (s.college && classroomsPerCollege.hasOwnProperty(s.college) && s.roomNumber) {
+                    classroomsPerCollege[s.college].add(s.roomNumber);
+                }
+            });
+
+            // Flush counters straight into UI layout elements
+            document.getElementById("kpi-undergrad-courses").textContent = distinctUndergradCourses.size;
+            
+            const classroomsDeckContainer = document.getElementById("dashboard-classrooms-college-deck");
+            if (classroomsDeckContainer) {
+                classroomsDeckContainer.innerHTML = "";
+                Object.keys(classroomsPerCollege).forEach(colKey => {
+                    let styleKey = getCollegeNormalizedStyleKey(colKey);
+                    let count = classroomsPerCollege[colKey].size;
+                    classroomsDeckContainer.innerHTML += `
+                        <div class="p-2 border border-gray-100 rounded-lg bg-${styleKey}-soft text-center flex flex-col justify-center">
+                            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide truncate block">${colKey}</span>
+                            <span class="text-lg font-black text-${styleKey} mt-0.5">${count} <span class="text-[10px] font-medium text-gray-400">Rms</span></span>
+                        </div>
+                    `;
+                });
+            }
             
             dataset.forEach(f => {
                 totalUnits += f.units;
@@ -1682,35 +1751,27 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U & under 20h)</span>`;
         }
 
-        /* 
-           DYNAMIC PRINT GENERATOR FOR GENERAL FACULTY WORKLOAD MATRIX
-           Supports Isolation Slicing by:
-           1. Target College Dept (COE, CCS, COEd, CANS, GS, or ALL)
-           2. Compliance Track Filter (COMPLIANT Only, NON_COMPLIANT Only, or ALL Roster)
-        */
+        /* DYNAMIC FILTERED PRINT LOG MATRIX OPERATION GENERATOR */
         function printWorkloadMatrixReport() {
             let dataset = getAggregatedFacultyMetricsList();
             if(dataset.length === 0) { alert("No data logs detected to create a matrix sheet print."); return; }
             
-            // Extract selected print-engine modifiers from the deck selectors
             const targetCollege = document.getElementById("matrix-print-college-scope").value;
             const complianceTarget = document.getElementById("matrix-print-compliance-scope").value;
             
-            // Step 1: Filter per specified College Assignment
             if (targetCollege !== "ALL") {
                 dataset = dataset.filter(f => f.homeCollege === targetCollege);
             }
             
-            // Step 2: Filter by specific Compliance track criteria
             if (complianceTarget === "COMPLIANT") {
                 dataset = dataset.filter(f => {
-                    if (f.rank === "TBA") return false; // TBA rank is marked pending review, not strictly verified compliant
+                    if (f.rank === "TBA") return false;
                     let minAllowedUnits = designationUnitMinimums[f.designation] || 18;
                     return (f.units >= minAllowedUnits) || (f.hours >= 20);
                 });
             } else if (complianceTarget === "NON_COMPLIANT") {
                 dataset = dataset.filter(f => {
-                    if (f.rank === "TBA") return false; // Exclude from non-compliance as it bypasses checks
+                    if (f.rank === "TBA") return false;
                     let minAllowedUnits = designationUnitMinimums[f.designation] || 18;
                     return (f.units < minAllowedUnits) && (f.hours < 20);
                 });
@@ -1721,7 +1782,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 return; 
             }
             
-            // Arrange layout order prioritizing sorting preferences selected on workspace
             dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
 
             const frame = document.getElementById("specializedMatrixPrintFrame");
@@ -1763,7 +1823,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 `;
             });
 
-            // Meta indicators text showing applied scoping attributes inside printed institutional header block
             let collegeMetaText = targetCollege === "ALL" ? "All Campus College Divisions" : `Department/College: ${targetCollege}`;
             let complianceMetaText = "Roster Classification: Unfiltered Roster";
             if (complianceTarget === "COMPLIANT") complianceMetaText = "Roster Classification: Verified Compliant Faculty Only";
@@ -1771,7 +1830,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             frame.innerHTML = `
                 <div style="padding: 20px; font-family: sans-serif; background: white; color: black;">
-                    <!-- Institutional Document Header Alignment -->
                     <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid black; padding-bottom: 10px;">
                         <h2 style="margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Eastern Samar State University</h2>
                         <h3 style="margin: 3px 0; font-size: 13px; font-weight: 600;">Salcedo Campus, Salcedo, Eastern Samar</h3>
