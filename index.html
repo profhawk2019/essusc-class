@@ -286,7 +286,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Degree Course/Program</label>
-                    <select id="programSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="populateEncoderSections()" required>
+                    <select id="programSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="populateEncoderPrograms()" required>
                         <option value="">Select a Course</option>
                     </select>
                 </div>
@@ -429,40 +429,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <button onclick="exportFacultySummaryPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-md cursor-pointer">📄 Export PDF</button>
                         <button onclick="exportFacultySummaryExcelGrouped()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer">📈 Export Grouped Excel</button>
                     </div>
-                </div>
-            </div>
-
-            <div id="matrix-printing-filter-deck" class="hidden p-4 bg-slate-900 text-white border border-slate-800 rounded-xl space-y-3 shadow-sm mt-2">
-                <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
-                    <span class="text-lg">🖨️</span>
-                    <div>
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-200">General Faculty Workload Matrix Printing Controls</h4>
-                        <p class="text-[11px] text-slate-400">Deploy structural page cuts or isolate compliance registers for institutional audits.</p>
-                    </div>
-                </div>
-                <div class="flex flex-wrap items-center gap-4 pt-1">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">1. Filter College Department</label>
-                        <select id="matrix-print-college-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
-                            <option value="ALL">All Campus Colleges (Combined)</option>
-                            <option value="COE">College of Engineering (COE)</option>
-                            <option value="CCS">College of Computer Studies (CCS)</option>
-                            <option value="COEd">College of Education (COEd)</option>
-                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
-                            <option value="Graduate Studies">Graduate Studies</option>
-                        </select>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[10px] font-bold uppercase text-slate-400 tracking-wide">2. Compliance Registry Audit Target</label>
-                        <select id="matrix-print-compliance-scope" class="bg-slate-800 text-white text-xs px-3 py-1.5 rounded-md outline-none border border-slate-700 font-medium">
-                            <option value="ALL">Show Whole Roster (Unfiltered)</option>
-                            <option value="COMPLIANT">Compliant Profiles Only</option>
-                            <option value="NON_COMPLIANT">Non-Compliant Deficiencies Only</option>
-                        </select>
-                    </div>
-                    <button onclick="printWorkloadMatrixReport()" class="mt-auto bg-blue-600 hover:bg-blue-500 font-bold text-xs px-5 py-2 rounded-md shadow-sm flex items-center gap-1.5 transition active:scale-95 cursor-pointer text-white">
-                        🖨️ Execute Print Operations
-                    </button>
                 </div>
             </div>
             
@@ -949,7 +915,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             const lines = txt.split(/\r?\n/);
             let parsedCount = 0;
             
-            // Generate faculty map lookup cache to speed up scanning routines optimization
             const facultyMapCache = new Map(registeredFaculty.map(f => [f.name.toLowerCase(), f]));
 
             for(let i=0; i < lines.length; i++) {
@@ -1646,8 +1611,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         
         function changeSummaryGrouping(mode) { 
             currentSummaryGroupingMode = mode; 
-            const printDeck = document.getElementById("matrix-printing-filter-deck");
-            if(printDeck) printDeck.className = (mode === 'matrix-tab') ? "p-4 bg-slate-900 text-white border border-slate-800 rounded-xl space-y-3 shadow-sm mt-2" : "hidden";
             changeSummarySort(currentSummarySortMetric); 
         }
         
@@ -1679,60 +1642,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (units >= requiredUnits) return `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Units Compliant)</span>`;
             if (hours >= 20) return `<span class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">✓ OK (Hours Override)</span>`;
             return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U)</span>`;
-        }
-
-        function printWorkloadMatrixReport() {
-            let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) { alert("No data logs detected."); return; }
-            
-            const targetCollege = document.getElementById("matrix-print-college-scope").value;
-            const complianceTarget = document.getElementById("matrix-print-compliance-scope").value;
-            
-            if (targetCollege !== "ALL") dataset = dataset.filter(f => f.homeCollege === targetCollege);
-            if (complianceTarget === "COMPLIANT") {
-                dataset = dataset.filter(f => f.rank !== "TBA" && (f.units >= (designationUnitMinimums[f.designation] || 18) || f.hours >= 20));
-            } else if (complianceTarget === "NON_COMPLIANT") {
-                dataset = dataset.filter(f => f.rank !== "TBA" && f.units < (designationUnitMinimums[f.designation] || 18) && f.hours < 20);
-            }
-            
-            if(dataset.length === 0) { alert("Targeted filter criteria contains zero active workload records."); return; }
-            dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
-
-            const frame = document.getElementById("specializedMatrixPrintFrame"); if(!frame) return;
-
-            const rowsHtml = dataset.map(faculty => {
-                const minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
-                let remarksText = faculty.rank === "TBA" ? "EXCLUDED\n(TBA Rank Parameter)" : 
-                                  (faculty.units >= minAllowedUnits ? "COMPLIANT\n(Designation Target Met)" : 
-                                  (faculty.hours >= 20 ? "COMPLIANT\n(Hours Override Met)" : `NON-COMPLIANT\n(Deficit: -${minAllowedUnits - faculty.units}U)`));
-
-                return `
-                    <tr style="border-bottom: 1px solid #222; page-break-inside: avoid;">
-                        <td style="padding: 8px; font-weight: bold; font-size: 11px; vertical-align: top; border: 1px solid black;">${faculty.name}<br><span style="font-size: 9px; font-weight: normal; color: #444; font-style: italic;">${faculty.rank} | ${faculty.designation}</span></td>
-                        <td style="padding: 8px; font-size: 10px; vertical-align: top; line-height: 1.3; border: 1px solid black;">${[...new Set(faculty.subjects)].join("; ")}</td>
-                        <td style="padding: 8px; font-size: 11px; text-align: center; font-weight: bold; vertical-align: top; border: 1px solid black;">${faculty.units}</td>
-                        <td style="padding: 8px; font-size: 11px; text-align: center; font-family: monospace; vertical-align: top; border: 1px solid black;">${faculty.hours.toFixed(1)}</td>
-                        <td style="padding: 8px; font-size: 11px; text-align: center; vertical-align: top; border: 1px solid black;">${faculty.prepsCount}</td>
-                        <td style="padding: 8px; font-size: 9px; text-align: center; font-weight: bold; white-space: pre-line; vertical-align: middle; background-color: #fcfcfc; border: 1px solid black;">${remarksText}</td>
-                    </tr>`;
-            }).join('');
-
-            frame.innerHTML = `
-                <div style="padding: 20px; font-family: sans-serif; background: white; color: black;">
-                    <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid black; padding-bottom: 10px;">
-                        <h2 style="margin: 0; font-size: 16px; font-weight: 800; text-transform: uppercase;">Eastern Samar State University</h2>
-                        <h3 style="margin: 3px 0; font-size: 13px; font-weight: 600;">Salcedo Campus, Salcedo, Eastern Samar</h3>
-                        <h4 style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold; text-transform: uppercase;">GENERAL FACULTY INSTRUCTIONAL WORKLOAD MATRIX</h4>
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; border: 2px solid black;">
-                        <thead>
-                            <tr style="background-color: #111; color: white; font-size: 11px;"><th style="padding: 10px; text-align: left; border: 1px solid black;">Name of Faculty</th><th style="padding: 10px; text-align: left; border: 1px solid black; width: 35%;">Subject/s Assigned</th><th style="padding: 10px; text-align: center; border: 1px solid black;">Units</th><th style="padding: 10px; text-align: center; border: 1px solid black;">Hours</th><th style="padding: 10px; text-align: center; border: 1px solid black;">Preparations</th><th style="padding: 10px; text-align: center; border: 1px solid black;">Remark</th></tr>
-                        </thead>
-                        <tbody>${rowsHtml}</tbody>
-                    </table>
-                </div>`;
-
-            document.body.classList.add('printing-matrix-active');
-            window.print();
         }
 
         function renderSummaryDashboard() {
