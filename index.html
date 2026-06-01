@@ -20,9 +20,10 @@
                 display: none !important; 
             }
             .print-page { 
-                page-break-after: always; 
+                page-break-after: always !important; 
+                break-after: page !important;
                 padding: 0 !important; 
-                margin: 0 !important; 
+                margin: 0 0 10mm 0 !important; 
                 border: none !important; 
             }
             /* When printing the workload matrix, hide the general app layout completely */
@@ -470,7 +471,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 </div>
             </div>
             
-            <div id="summaryDashboardDynamicContent" class="overflow-x-auto"></div>
+            <div id="summaryDashboardDynamicContent" class="overflow-x-auto space-y-6"></div>
         </section>
 
         <div id="specializedMatrixPrintFrame" class="hidden print-matrix-view"></div>
@@ -1762,7 +1763,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U & under 20h)</span>`;
         }
 
-        /* DYNAMIC FILTERED PRINT LOG MATRIX OPERATION GENERATOR */
+        /* DYNAMIC FACULTY MATRIX SHEET PRINT OPERATIONS */
         function printWorkloadMatrixReport() {
             let dataset = getAggregatedFacultyMetricsList();
             if(dataset.length === 0) { alert("No data logs detected to create a matrix sheet print."); return; }
@@ -1793,7 +1794,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 return; 
             }
             
-            // Fixed: Respect the active sorting choices when generating the layout view bounds
             dataset.sort((a,b) => currentSummarySortMetric === 'units' ? b.units - a.units : b.hours - a.hours);
 
             const frame = document.getElementById("specializedMatrixPrintFrame");
@@ -1902,7 +1902,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                     <th class="border border-gray-300 p-2.5 text-center">Number of Preparation</th>
                                     <th class="border border-gray-300 p-2.5 text-center w-1/5">Remarks</th>
                                 </tr>
-                            </tbody>
+                            </thead>
                             <tbody>
                 `;
 
@@ -1969,7 +1969,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let rows = dataset.filter(f => f.homeCollege === college); if(rows.length===0) return;
                     rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                     let colorClass = getCollegeColorClass(college);
-                    container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Department Division</div><table class="w-full text-left text-sm">
+                    container.innerHTML += `<div class="border bg-white print-page print:page-break-after-always break-after-page"><div class="${colorClass} p-2 font-bold uppercase text-xs tracking-wider">${college} Department Division</div><table class="w-full text-left text-sm">
                         ${rows.map(r => {
                             let badgeStyles = getDesignationBadgeStyles(r.designation);
                             return `<tr class="border-b">
@@ -1987,7 +1987,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         let rows = dataset.filter(f => f.programs.includes(p)); if(rows.length===0) return;
                         rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                         let colorClass = getCollegeColorClass(col);
-                        container.innerHTML += `<div class="mb-6 border bg-white"><div class="${colorClass} p-2 text-xs font-bold tracking-wide">${p}</div><table class="w-full text-left text-sm">
+                        container.innerHTML += `<div class="border bg-white print-page print:page-break-after-always break-after-page"><div class="${colorClass} p-2 text-xs font-bold tracking-wide">${p}</div><table class="w-full text-left text-sm">
                             ${rows.map(r => {
                                 let badgeStyles = getDesignationBadgeStyles(r.designation);
                                 return `<tr class="border-b">
