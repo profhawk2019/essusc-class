@@ -431,6 +431,23 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     </div>
                 </div>
             </div>
+
+            <div id="matrixPrintingControlsPanel" class="hidden no-print p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-3 shadow-md">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-slate-400 text-sm">📋</span>
+                        <h4 class="text-xs font-extrabold uppercase text-slate-200 tracking-wider">General Faculty Matrix Filtering Systems</h4>
+                    </div>
+                    <span class="bg-indigo-950 text-indigo-400 text-[10px] font-mono px-2 py-0.5 rounded font-bold border border-indigo-900/60">Active Framework Scope</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <button onclick="filterMatrixView('college')" id="matrix-filter-college" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-bold border border-slate-700 transition cursor-pointer">Group by College</button>
+                    <button onclick="filterMatrixView('program')" id="matrix-filter-program" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-bold border border-slate-700 transition cursor-pointer">Group by Program</button>
+                    <button onclick="filterMatrixView('compliant')" id="matrix-filter-compliant" class="bg-emerald-950 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/40 px-3 py-1.5 rounded font-bold transition cursor-pointer">Show Compliant Only</button>
+                    <button onclick="filterMatrixView('non-compliant')" id="matrix-filter-noncompliant" class="bg-red-950 text-red-400 border border-red-900/50 hover:bg-red-900/40 px-3 py-1.5 rounded font-bold transition cursor-pointer">Show Non-Compliant Only</button>
+                    <button onclick="filterMatrixView('all')" id="matrix-filter-all" class="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded transition cursor-pointer shadow-sm">Reset Filters</button>
+                </div>
+            </div>
             
             <div id="summaryDashboardDynamicContent" class="overflow-x-auto space-y-6"></div>
         </section>
@@ -659,6 +676,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         let collegeShareChartInstance = null;
         let workloadChartInstance = null;
 
+        let matrixFilterScope = 'all';
+
         const defaultPrograms = {
             "COE": ["Bachelor of Science in Agricultural and Biosystems Engineering", "Bachelor of Science in Computer Engineering"],
             "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
@@ -799,10 +818,19 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             document.getElementById(tabId).classList.remove('hidden');
             document.getElementById('tab-' + tabId).className = "tab-btn border-b-2 border-blue-950 text-blue-950 font-bold pb-4 text-sm px-1 cursor-pointer";
             
+            // Manage custom matrix filtration board elements rendering
+            const matrixPanel = document.getElementById("matrixPrintingControlsPanel");
+            if(matrixPanel) matrixPanel.classList.add("hidden");
+
             if(tabId === 'dashboard-view') renderDashboardCharts();
             if(tabId === 'program-schedule-view') { populateReportFilters(); renderProgramScheduleReport(); }
             if(tabId === 'workload-view') filterWorkloadFacultyDropdown();
-            if(tabId === 'summary-view') renderSummaryDashboard();
+            if(tabId === 'summary-view') {
+                if (currentSummaryGroupingMode === 'matrix-tab') {
+                    matrixPanel.classList.remove("hidden");
+                }
+                renderSummaryDashboard();
+            }
             if(tabId === 'management-view') renderRegistryManagement();
         }
 
@@ -1611,10 +1639,39 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         
         function changeSummaryGrouping(mode) { 
             currentSummaryGroupingMode = mode; 
+            
+            const printingPanel = document.getElementById("matrixPrintingControlsPanel");
+            if (printingPanel) {
+                if (mode === 'matrix-tab') printingPanel.classList.remove("hidden");
+                else printingPanel.classList.add("hidden");
+            }
+
             changeSummarySort(currentSummarySortMetric); 
         }
         
         function changeSummarySort(m) { currentSummarySortMetric = m; renderSummaryDashboard(); }
+
+        function filterMatrixView(scopeType) {
+            matrixFilterScope = scopeType;
+            
+            // Highlight current button states inside the printing control deck
+            const buttonsMap = {
+                'college': 'matrix-filter-college', 'program': 'matrix-filter-program',
+                'compliant': 'matrix-filter-compliant', 'non-compliant': 'matrix-filter-noncompliant', 'all': 'matrix-filter-all'
+            };
+            
+            Object.keys(buttonsMap).forEach(k => {
+                const btn = document.getElementById(buttonsMap[k]);
+                if(!btn) return;
+                if(k === scopeType) {
+                    btn.classList.add("ring-2", "ring-indigo-400", "bg-slate-700");
+                } else {
+                    btn.classList.remove("ring-2", "ring-indigo-400", "bg-slate-700");
+                }
+            });
+
+            renderSummaryDashboard();
+        }
 
         function getAggregatedFacultyMetricsList() {
             return registeredFaculty.map(p => {
@@ -1647,10 +1704,23 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         function renderSummaryDashboard() {
             const container = document.getElementById("summaryDashboardDynamicContent"); if(!container) return;
             container.innerHTML = "";
-            const dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
+            let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
 
             if (currentSummaryGroupingMode === 'matrix-tab') {
-                dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
+                // Apply matrix contextual group view logic adjustments dynamically
+                if (matrixFilterScope === 'compliant') {
+                    dataset = dataset.filter(f => (f.units >= (designationUnitMinimums[f.designation] || 18)) || f.hours >= 20 || f.rank === "TBA");
+                } else if (matrixFilterScope === 'non-compliant') {
+                    dataset = dataset.filter(f => f.rank !== "TBA" && (f.units < (designationUnitMinimums[f.designation] || 18)) && f.hours < 20);
+                }
+
+                if (matrixFilterScope === 'college') {
+                    dataset.sort((a,b) => a.homeCollege.localeCompare(b.homeCollege) || b.units - a.units);
+                } else if (matrixFilterScope === 'program') {
+                    dataset.sort((a,b) => (a.programs[0] || '').localeCompare(b.programs[0] || '') || b.units - a.units);
+                } else {
+                    dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
+                }
                 
                 let matrixRows = dataset.map(faculty => {
                     const minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
@@ -1776,7 +1846,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                 `<span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold ml-2">⚠️ Below Parameters</span>`);
 
             return `
-                <div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm print-page">
+                <div class="bg-white border-2 border-gray-880 rounded-lg p-6 my-4 shadow-sm print-page">
                     <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">ABSOLUTE FACULTY INSTRUCTIONAL WORKLOAD SHEET</div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm mb-4 border-b pb-3 border-gray-100">
                         <div>
