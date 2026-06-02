@@ -183,7 +183,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="p-5 border border-gray-200 rounded-xl bg-white space-y-3 lg:col-span-1 shadow-sm flex flex-col justify-between">
+                <div class="p-5 border border-gray-200 rounded-xl bg-white shadow-sm flex flex-col justify-between lg:col-span-1">
                     <div>
                         <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2 mb-2">⚖️ Compliance Audit Per College <span class="normal-case text-[10px] text-gray-400 font-medium">(Excluding TBA)</span></h3>
                         <div class="overflow-x-auto">
@@ -201,7 +201,7 @@
                     </div>
                 </div>
 
-                <div class="p-5 border border-gray-200 rounded-xl bg-white space-y-3 lg:col-span-2 shadow-sm">
+                <div class="p-5 border border-gray-200 rounded-xl bg-white shadow-sm lg:col-span-2">
                     <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider border-b pb-2">⭐ Top Compliance Workload Per Division</h3>
                     <div id="dashboard-top-performers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
                 </div>
@@ -418,7 +418,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <button onclick="changeSummaryGrouping('none')" id="group-none-btn" class="bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer">Flat List</button>
                         <button onclick="changeSummaryGrouping('college')" id="group-college-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By College</button>
                         <button onclick="changeSummaryGrouping('program')" id="group-program-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By Program</button>
-                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 border font-medium text-xs px-3 py-1.5 rounded-md border-gray-200 cursor-pointer">📋 General Workload Matrix</button>
+                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 border font-medium text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer font-bold">📋 General Workload Matrix</button>
                     </div>
                     <div id="sortingControlsContainer" class="flex items-center gap-1 border-l pl-3 border-gray-300">
                         <span class="text-xs font-bold uppercase text-gray-500 mr-1">Sort Metrics:</span>
@@ -441,7 +441,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     <span class="bg-indigo-950 text-indigo-400 text-[10px] font-mono px-2 py-0.5 rounded font-bold border border-indigo-900/60">Active Framework Scope</span>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <button onclick="filterMatrixView('college')" id="matrix-filter-college" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-bold border border-slate-700 transition cursor-pointer">Group by College</button>
+                    <button onclick="filterMatrixView('college')" id="matrix-filter-college" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-bold border border-slate-700 transition cursor-pointer">Group by College Status</button>
                     <button onclick="filterMatrixView('program')" id="matrix-filter-program" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded font-bold border border-slate-700 transition cursor-pointer">Group by Program</button>
                     <button onclick="filterMatrixView('compliant')" id="matrix-filter-compliant" class="bg-emerald-950 text-emerald-400 border border-emerald-900/50 hover:bg-emerald-900/40 px-3 py-1.5 rounded font-bold transition cursor-pointer">Show Compliant Only</button>
                     <button onclick="filterMatrixView('non-compliant')" id="matrix-filter-noncompliant" class="bg-red-950 text-red-400 border border-red-900/50 hover:bg-red-900/40 px-3 py-1.5 rounded font-bold transition cursor-pointer">Show Non-Compliant Only</button>
@@ -818,7 +818,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             document.getElementById(tabId).classList.remove('hidden');
             document.getElementById('tab-' + tabId).className = "tab-btn border-b-2 border-blue-950 text-blue-950 font-bold pb-4 text-sm px-1 cursor-pointer";
             
-            // Manage custom matrix filtration board elements rendering
             const matrixPanel = document.getElementById("matrixPrintingControlsPanel");
             if(matrixPanel) matrixPanel.classList.add("hidden");
 
@@ -1654,7 +1653,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         function filterMatrixView(scopeType) {
             matrixFilterScope = scopeType;
             
-            // Highlight current button states inside the printing control deck
             const buttonsMap = {
                 'college': 'matrix-filter-college', 'program': 'matrix-filter-program',
                 'compliant': 'matrix-filter-compliant', 'non-compliant': 'matrix-filter-noncompliant', 'all': 'matrix-filter-all'
@@ -1701,56 +1699,115 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             return `<span class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded ml-2">⚠️ Standard Shortfall (-${requiredUnits - units} U)</span>`;
         }
 
+        function buildMatrixTableHTML(facultyList) {
+            if (facultyList.length === 0) {
+                return `<tr><td colspan="6" class="p-4 text-center text-gray-400 italic bg-gray-50/50">No matching faculty logs running in this operational tier.</td></tr>`;
+            }
+
+            return facultyList.map(faculty => {
+                const minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
+                const statusElement = faculty.rank === "TBA" ? `<div class="text-gray-400 font-extrabold text-center text-xs">EXCLUDED</div>` : 
+                                      (faculty.units >= minAllowedUnits ? `<div class="text-emerald-700 font-extrabold text-center text-xs">COMPLIANT</div>` : 
+                                      (faculty.hours >= 20 ? `<div class="text-blue-700 font-extrabold text-center text-xs">COMPLIANT</div>` : `<div class="text-red-600 font-extrabold text-center text-xs">NON-COMPLIANT</div>`));
+
+                return `
+                    <tr class="border-t border-gray-300 text-gray-900 bg-white hover:bg-gray-50/40">
+                        <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800">${faculty.name}</td>
+                        <td class="border-r border-gray-300 p-2.5 text-gray-600">${[...new Set(faculty.subjects)].join("; ") || '<span class="text-gray-300 italic">No schedules running</span>'}</td>
+                        <td class="border-r border-gray-300 p-2.5 text-center font-bold text-sm">${faculty.units}</td>
+                        <td class="border-r border-gray-300 p-2.5 text-center font-mono">${faculty.hours.toFixed(1)}</td>
+                        <td class="border-r border-gray-300 p-2.5 text-center">${faculty.prepsCount}</td>
+                        <td class="border-r border-gray-300 p-2.5 text-center align-middle bg-gray-50/40" rowspan="2">${statusElement}</td>
+                    </tr>
+                    <tr class="border-b border-gray-300 text-[11px] text-gray-500 bg-white/70">
+                        <td class="border-x border-b border-gray-300 p-2 px-3 italic" colspan="5">Rank: <strong>${faculty.rank}</strong> | Role: <span class="${getDesignationBadgeStyles(faculty.designation)} px-2 py-0.5 rounded text-[10px]">${faculty.designation}</span></td>
+                    </tr>`;
+            }).join('');
+        }
+
         function renderSummaryDashboard() {
             const container = document.getElementById("summaryDashboardDynamicContent"); if(!container) return;
             container.innerHTML = "";
             let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
 
             if (currentSummaryGroupingMode === 'matrix-tab') {
-                // Apply matrix contextual group view logic adjustments dynamically
-                if (matrixFilterScope === 'compliant') {
-                    dataset = dataset.filter(f => (f.units >= (designationUnitMinimums[f.designation] || 18)) || f.hours >= 20 || f.rank === "TBA");
-                } else if (matrixFilterScope === 'non-compliant') {
-                    dataset = dataset.filter(f => f.rank !== "TBA" && (f.units < (designationUnitMinimums[f.designation] || 18)) && f.hours < 20);
-                }
+                const collegesList = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                let htmlMatrixBuffer = "";
 
-                if (matrixFilterScope === 'college') {
-                    dataset.sort((a,b) => a.homeCollege.localeCompare(b.homeCollege) || b.units - a.units);
-                } else if (matrixFilterScope === 'program') {
-                    dataset.sort((a,b) => (a.programs[0] || '').localeCompare(b.programs[0] || '') || b.units - a.units);
-                } else {
-                    dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
-                }
-                
-                let matrixRows = dataset.map(faculty => {
-                    const minAllowedUnits = designationUnitMinimums[faculty.designation] || 18;
-                    const statusElement = faculty.rank === "TBA" ? `<div class="text-gray-400 font-extrabold text-center text-xs">EXCLUDED</div>` : 
-                                          (faculty.units >= minAllowedUnits ? `<div class="text-emerald-700 font-extrabold text-center text-xs">COMPLIANT</div>` : 
-                                          (faculty.hours >= 20 ? `<div class="text-blue-700 font-extrabold text-center text-xs">COMPLIANT</div>` : `<div class="text-red-600 font-extrabold text-center text-xs">NON-COMPLIANT</div>`));
+                // Apply master sorting rules before branching structures
+                dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
 
-                    return `
-                        <tr class="border-t border-gray-300 text-gray-900 bg-white hover:bg-gray-50/40">
-                            <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800">${faculty.name} <span class="text-xs text-blue-900 font-medium">(${faculty.homeCollege})</span></td>
-                            <td class="border-r border-gray-300 p-2.5 text-gray-600">${[...new Set(faculty.subjects)].join("; ")}</td>
-                            <td class="border-r border-gray-300 p-2.5 text-center font-bold text-sm">${faculty.units}</td>
-                            <td class="border-r border-gray-300 p-2.5 text-center font-mono">${faculty.hours.toFixed(1)}</td>
-                            <td class="border-r border-gray-300 p-2.5 text-center">${faculty.prepsCount}</td>
-                            <td class="border-r border-gray-300 p-2.5 text-center align-middle bg-gray-50/40" rowspan="2">${statusElement}</td>
-                        </tr>
-                        <tr class="border-b border-gray-300 text-[11px] text-gray-500 bg-white/70">
-                            <td class="border-x border-b border-gray-300 p-2 px-3 italic" colspan="5">Rank: <strong>${faculty.rank}</strong> | Role: <span class="${getDesignationBadgeStyles(faculty.designation)} px-2 py-0.5 rounded text-[10px]">${faculty.designation}</span></td>
-                        </tr>`;
-                }).join('');
+                collegesList.forEach(collegeKey => {
+                    let collegeFaculty = dataset.filter(f => f.homeCollege === collegeKey);
+                    if (collegeFaculty.length === 0) return;
 
-                container.innerHTML = `
-                    <div class="p-4 bg-white border border-gray-200 rounded-xl space-y-4 shadow-sm mt-2">
-                        <table class="w-full text-xs border-collapse border border-gray-300">
-                            <thead>
-                                <tr class="bg-gray-100 font-bold border-b border-gray-300"><th class="p-2.5 text-left">Faculty Name</th><th class="p-2.5 text-left">Subjects</th><th class="p-2.5 text-center">Units</th><th class="p-2.5 text-center">Hours</th><th class="p-2.5 text-center">Preparations</th><th class="p-2.5 text-center">Remarks</th></tr>
-                            </thead>
-                            <tbody>${matrixRows}</tbody>
-                        </table>
-                    </div>`;
+                    const colorStyleKey = getCollegeNormalizedStyleKey(collegeKey);
+
+                    // Separate lists based on state compliance calculation models
+                    let compliantFaculty = collegeFaculty.filter(f => (f.units >= (designationUnitMinimums[f.designation] || 18)) || f.hours >= 20 || f.rank === "TBA");
+                    let nonCompliantFaculty = collegeFaculty.filter(f => f.rank !== "TBA" && (f.units < (designationUnitMinimums[f.designation] || 18)) && f.hours < 20);
+
+                    // Apply layout filters requested by the administrative widget triggers
+                    if (matrixFilterScope === 'compliant') {
+                        nonCompliantFaculty = [];
+                        if (compliantFaculty.length === 0) return;
+                    } else if (matrixFilterScope === 'non-compliant') {
+                        compliantFaculty = [];
+                        if (nonCompliantFaculty.length === 0) return;
+                    } else if (matrixFilterScope === 'program') {
+                        // Additional alphabetical sub-sort by program assignment key requested
+                        collegeFaculty.sort((a,b) => (a.programs[0] || '').localeCompare(b.programs[0] || ''));
+                        compliantFaculty = collegeFaculty.filter(f => (f.units >= (designationUnitMinimums[f.designation] || 18)) || f.hours >= 20 || f.rank === "TBA");
+                        nonCompliantFaculty = collegeFaculty.filter(f => f.rank !== "TBA" && (f.units < (designationUnitMinimums[f.designation] || 18)) && f.hours < 20);
+                    }
+
+                    let structuralTablesHtml = "";
+
+                    // 1. Build Compliant Section if requested/available
+                    if (matrixFilterScope !== 'non-compliant') {
+                        structuralTablesHtml += `
+                            <div class="space-y-2">
+                                <div class="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded border border-emerald-100 flex justify-between items-center">
+                                    <span>🟢 COMPLIANT FACULTY ALLOCATIONS</span>
+                                    <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded shadow-xs">Count: ${compliantFaculty.length}</span>
+                                </div>
+                                <table class="w-full text-xs border-collapse border border-gray-300">
+                                    <thead>
+                                        <tr class="bg-gray-50 text-gray-600 font-bold border-b border-gray-300"><th class="p-2.5 text-left w-1/4">Faculty Name</th><th class="p-2.5 text-left">Assigned Subjects</th><th class="p-2.5 text-center w-12">Units</th><th class="p-2.5 text-center w-12">Hours</th><th class="p-2.5 text-center w-12">Preps</th><th class="p-2.5 text-center w-28">Remarks</th></tr>
+                                    </thead>
+                                    <tbody>${buildMatrixTableHTML(compliantFaculty)}</tbody>
+                                </table>
+                            </div>`;
+                    }
+
+                    // 2. Build Non-Compliant Section if requested/available
+                    if (matrixFilterScope !== 'compliant') {
+                        structuralTablesHtml += `
+                            <div class="space-y-2 pt-2">
+                                <div class="text-xs font-bold text-red-700 bg-red-50 px-3 py-1 rounded border border-red-100 flex justify-between items-center">
+                                    <span>🔴 NON-COMPLIANT STRATEGIC PARAMETERS</span>
+                                    <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded shadow-xs">Count: ${nonCompliantFaculty.length}</span>
+                                </div>
+                                <table class="w-full text-xs border-collapse border border-gray-300">
+                                    <thead>
+                                        <tr class="bg-gray-50 text-gray-600 font-bold border-b border-gray-300"><th class="p-2.5 text-left w-1/4">Faculty Name</th><th class="p-2.5 text-left">Assigned Subjects</th><th class="p-2.5 text-center w-12">Units</th><th class="p-2.5 text-center w-12">Hours</th><th class="p-2.5 text-center w-12">Preps</th><th class="p-2.5 text-center w-28">Remarks</th></tr>
+                                    </thead>
+                                    <tbody>${buildMatrixTableHTML(nonCompliantFaculty)}</tbody>
+                                </table>
+                            </div>`;
+                    }
+
+                    htmlMatrixBuffer += `
+                        <div class="p-5 bg-white border-t-4 border rounded-xl space-y-4 shadow-sm border-${colorStyleKey} print-page">
+                            <div class="flex items-center justify-between border-b pb-2">
+                                <h3 class="text-sm font-black text-gray-900 tracking-wide uppercase">${collegeKey} DEPARTMENT MATRIX ANALYSIS</h3>
+                                <span class="text-[10px] uppercase text-white font-extrabold px-2 py-0.5 rounded header-${colorStyleKey}">${collegeKey}</span>
+                            </div>
+                            <div class="space-y-4 divide-y divide-dashed divide-gray-200">${structuralTablesHtml}</div>
+                        </div>`;
+                });
+
+                container.innerHTML = htmlMatrixBuffer || `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No structural metrics found matching active dashboard filters.</div>`;
                 return;
             }
 
