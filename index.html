@@ -195,11 +195,12 @@
                 </div>
             </div>
 
+            <!-- Pipeline TBA Block Monitor Section -->
             <div class="p-5 border border-red-200 bg-red-50/10 rounded-xl shadow-sm space-y-4">
                 <div class="border-b border-red-100 pb-2">
                     <h3 class="text-sm font-bold text-red-950 uppercase tracking-wide flex items-center gap-2">
-                        <span>📋 Unassigned Curricular Tracks Pipeline (TBA Courses)</span>
-                        <span class="text-xs normal-case font-medium text-red-600">(Course schedules structurally registered without an assigned instructor profile)</span>
+                        <span>📋 Unassigned Curricular Tracks Pipeline (TBA Faculty List)</span>
+                        <span class="text-xs normal-case font-medium text-red-600">(Course schedules structurally registered without an active professor, featuring track rank attributes)</span>
                     </h3>
                 </div>
                 <div id="dashboard-tba-courses-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
@@ -1025,9 +1026,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 if (s.instructorName === "TBA") {
                     tbaSchedulesCount++;
                     let styleKey = getCollegeNormalizedStyleKey(s.college);
+                    
+                    // Look up corresponding track rank properties inside the structural roster database
+                    let tbaProfileMatch = registeredFaculty.find(f => f.name === "TBA") || { rank: "TBA" };
+                    let retrievedRankValue = tbaProfileMatch.rank || "TBA";
+
                     if(tbaContainer) {
                         tbaContainer.innerHTML += `
-                            <div class="p-3 border-l-4 border bg-white rounded-xl shadow-xs border-red-50 bg-red-50/5 flex flex-col justify-between space-y-2">
+                            <div class="p-3 border-l-4 border bg-white rounded-xl shadow-xs border-red-200 bg-red-50/5 flex flex-col justify-between space-y-2">
                                 <div>
                                     <div class="flex justify-between items-center">
                                         <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded text-white header-${styleKey}">${s.college}</span>
@@ -1035,6 +1041,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                     </div>
                                     <div class="text-xs font-bold text-gray-900 mt-2 truncate">${s.subjectTitle}</div>
                                     <div class="text-[10px] text-gray-500 truncate mt-0.5">Section: <strong>${s.classSection}</strong></div>
+                                    <div class="text-[10px] text-red-700 font-semibold mt-0.5 bg-red-50 px-1.5 py-0.5 rounded inline-block border border-red-100">Rank: ${retrievedRankValue}</div>
                                 </div>
                                 <div class="bg-gray-50 border border-gray-100 rounded-lg px-2 py-1.5 flex flex-col gap-0.5 text-[10px] font-medium mt-1">
                                     <span class="text-gray-600">📅 ${s.dayAssignment}</span>
@@ -1099,7 +1106,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     if (isCompliant) {
                         collegeAudit[homeColKey].compliant++;
                         if (f.units > collegeAudit[homeColKey].maxUnits || 
-                           (f.units === collegeAudit[homeColKey].maxUnits && f.hours > collegeAudit[homeColKey].maxHours)) {
+                           (f.units === collegeAudit[collegeAudit].maxUnits && f.hours > collegeAudit[homeColKey].maxHours)) {
                             collegeAudit[homeColKey].maxUnits = f.units;
                             collegeAudit[homeColKey].maxHours = f.hours;
                             collegeAudit[homeColKey].topFaculty = f;
@@ -1528,7 +1535,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 }));
             } else if(mode === 'faculty') {
                 val = registeredFaculty[index].name;
-                if(val === "TBA") { alert("The system template placeholder model target cannot be manipulated."); return; }
+                // Allow TBA ranking properties modification to enable customizable override profiles
                 document.getElementById("regWrapperFacultyCollege").classList.remove("hidden");
                 document.getElementById("regWrapperRank").classList.remove("hidden");
                 document.getElementById("regWrapperDesignation").classList.remove("hidden");
