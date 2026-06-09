@@ -721,7 +721,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         const defaultSchedules = [
             { id: 3001, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "Math 111 (Mathematics in the Modern World)", unifiedUnits: 3, instructorName: "Bolito, Cherlowen A.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
             { id: 3002, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE-3" },
-            { id: 3003, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE IV-1", subjectTitle: "CpE 412 (Embedded Systems)", unifiedUnits: 3, instructorName: "TBA", dayAssignment: "Tuesday and Thursday", startTime: "09:00", endTime: "10:30", roomNumber: "COE-5" }
+            { id: 3003, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE IV-1", subjectTitle: "CpE 412 (Embedded Systems Technology)", unifiedUnits: 3, instructorName: "TBA", dayAssignment: "Tuesday and Thursday", startTime: "09:00", endTime: "10:30", roomNumber: "COE-5" }
         ];
 
         const designationUnitMinimums = {
@@ -795,6 +795,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 registeredRooms = JSON.parse(localStorage.getItem("hub_registeredRooms")) || defaultRooms;
                 sharedSchedules = JSON.parse(localStorage.getItem("hub_sharedSchedules")) || defaultSchedules;
 
+                // Enforce TBA base profile configuration logic tracking criteria
                 if (!registeredFaculty.some(f => f.name === "TBA")) {
                     registeredFaculty.unshift({ name: "TBA", college: "COE", rank: "TBA", designation: "Without Designation" });
                 }
@@ -1020,6 +1021,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if(tbaContainer) tbaContainer.innerHTML = "";
 
             sharedSchedules.forEach(s => {
+                // Reactive processing and execution pipeline for TBA entries
                 if (s.instructorName === "TBA") {
                     tbaSchedulesCount++;
                     let styleKey = getCollegeNormalizedStyleKey(s.college);
@@ -1029,7 +1031,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                 <div>
                                     <div class="flex justify-between items-center">
                                         <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded text-white header-${styleKey}">${s.college}</span>
-                                        <span class="text-[10px] font-mono font-bold text-red-900 bg-red-100 px-1.5 py-0.5 rounded border border-red-200">${s.unifiedUnits} Unit/s</span>
+                                        <span class="text-[10px] font-mono font-bold text-red-950 bg-red-100 px-1.5 py-0.5 rounded border border-red-200">${s.unifiedUnits} Unit/s</span>
                                     </div>
                                     <div class="text-xs font-bold text-gray-900 mt-2 truncate">${s.subjectTitle}</div>
                                     <div class="text-[10px] text-gray-500 truncate mt-0.5">Section: <strong>${s.classSection}</strong></div>
@@ -1055,8 +1057,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             document.getElementById("kpi-total-tba").textContent = tbaSchedulesCount;
             if (tbaSchedulesCount === 0 && tbaContainer) {
-                tbaContainer.className = "block w-full text-center p-6 border border-dashed rounded-xl bg-emerald-50/10 text-emerald-800 font-bold text-xs border-emerald-200";
-                tbaContainer.innerHTML = "✨ Perfect Staffing Alignment! Zero unassigned scheduling lines detected inside the active registries.";
+                tbaContainer.className = "block w-full text-center p-6 border border-dashed rounded-xl bg-emerald-50/10 text-emerald-700 font-bold text-xs border-emerald-200";
+                tbaContainer.innerHTML = "✨ Perfect Staffing Alignment! Zero unassigned scheduling lines detected inside active registries.";
             } else if (tbaContainer) {
                 tbaContainer.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full";
             }
@@ -1526,7 +1528,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 }));
             } else if(mode === 'faculty') {
                 val = registeredFaculty[index].name;
-                if(val === "TBA") { alert("The institutional TBA system model target cannot be edited."); return; }
+                if(val === "TBA") { alert("The system template placeholder model target cannot be manipulated."); return; }
                 document.getElementById("regWrapperFacultyCollege").classList.remove("hidden");
                 document.getElementById("regWrapperRank").classList.remove("hidden");
                 document.getElementById("regWrapperDesignation").classList.remove("hidden");
@@ -1795,68 +1797,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             });
         }
 
-        function exportFacultySummaryExcelGrouped() {
-            let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
-            let wb = XLSX.utils.book_new();
-            let dataRows = dataset.map(f => ({ "Faculty Name": f.name, "Department": f.homeCollege, "Rank": f.rank, "Designation": f.designation, "Total Units": f.units, "Hours": f.hours }));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataRows), "Roster Load Blueprint");
-            XLSX.writeFile(wb, `Faculty_Load_Summary.xlsx`);
-        }
-
-        function triggerWorkloadExport(formatType) {
-            const singleSelectedFaculty = document.getElementById("facultySelector").value;
-            let list = singleSelectedFaculty !== "ALL" ? [singleSelectedFaculty] : registeredFaculty.map(f => f.name).filter(n => n !== "TBA").sort();
-            let workloadMap = [{ titleId: "Instructional_Workload_Manifest", members: list }];
-            if (formatType === 'pdf') generateAutomatedWorkloadPDF(workloadMap);
-            if (formatType === 'xlsx') generateAutomatedWorkloadExcel(workloadMap);
-            if (formatType === 'docx') generateAutomatedWorkloadWord(workloadMap);
-        }
-
-        function generateAutomatedWorkloadPDF(workloadMap) {
-            const { jsPDF } = window.jspdf;
-            workloadMap.forEach(packageItem => {
-                const doc = new jsPDF('p', 'mm', 'a4'); let added = 0;
-                packageItem.members.forEach(prof => {
-                    let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    if (added > 0) doc.addPage(); added++;
-                    let classes = sortFacultyClassesChronologically(clList);
-                    let fObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
-                    doc.setFontSize(14); doc.text("INDIVIDUAL FACULTY WORKLOAD SHEET", 105, 15, { align: "center" });
-                    let body = classes.map(c => [c.dayAssignment, c.subjectTitle, c.unifiedUnits, calculateWeeklyHours(c.dayAssignment, c.startTime, c.endTime).toFixed(1), c.classSection, c.roomNumber]);
-                    doc.autoTable({ startY: 27, head: [['Day/Time Bracket', 'Subject Title', 'Units', 'Hrs/Wk', 'Class block', 'Room']], body: body });
-                });
-                if(added > 0) doc.save(`${packageItem.titleId}.pdf`);
-            });
-        }
-
-        function generateAutomatedWorkloadExcel(workloadMap) {
-            workloadMap.forEach(packageItem => {
-                let wb = XLSX.utils.book_new();
-                packageItem.members.forEach(prof => {
-                    let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    let matrixData = [["INDIVIDUAL FACULTY WORKLOAD SHEET"], [prof], ["Day/Time", "Subject Title", "Units", "Room"]];
-                    sortFacultyClassesChronologically(clList).forEach(c => matrixData.push([c.dayAssignment, c.subjectTitle, c.unifiedUnits, c.roomNumber]));
-                    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(matrixData), prof.substring(0,30));
-                });
-                XLSX.writeFile(wb, `${packageItem.titleId}.xlsx`);
-            });
-        }
-
-        function generateAutomatedWorkloadWord(workloadMap) {
-            const { Document, Paragraph, Packer, Table, TableRow, TableCell } = window.docx;
-            workloadMap.forEach(packageItem => {
-                let sectionChildren = [];
-                packageItem.members.forEach(prof => {
-                    let clList = sharedSchedules.filter(s => s.instructorName === prof); if (clList.length === 0) return;
-                    sectionChildren.push(new Paragraph({ text: `FACULTY WORKLOAD SHEET: ${prof}`, bold: true }));
-                    let tRows = sortFacultyClassesChronologically(clList).map(c => new TableRow({ children: [new TableCell({ children: [new Paragraph(c.subjectTitle)] })] }));
-                    sectionChildren.push(new Table({ rows: tRows }));
-                });
-                let doc = new Document({ sections: [{ children: sectionChildren }] });
-                Packer.toBlob(doc).then(b => { let l = document.createElement("a"); l.href = URL.createObjectURL(b); l.download = "Workloads.docx"; l.click(); });
-            });
-        }
-
+        // Structural pipeline configurations for system aggregations
         function rebuildStateStructuralRegistriesFromSchedules() {
             sharedSchedules.forEach(s => {
                 if(s.college && s.program) {
