@@ -719,8 +719,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         const defaultRooms = ["COE-1", "COE-3", "COE-4", "COE-5", "COE-8", "COE-9", "COE-11", "COE-12", "CCS-1", "CCS-15", "CCS-16"].sort();
         
         const defaultSchedules = [
-            { id: 3001, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "Math 111 (Mathematics in the Modern World)", unifiedUnits: 3, instructorName: "Bolito, Cherlowen A.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
-            { id: 3002, college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE-3" }
+            { id: "3001", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "Math 111 (Mathematics in the Modern World)", unifiedUnits: 3, instructorName: "Bolito, Cherlowen A.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
+            { id: "3002", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE-3" }
         ];
 
         const designationUnitMinimums = {
@@ -1009,7 +1009,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     if(!registeredRooms.includes(room)) registeredRooms.push(room);
 
                     sharedSchedules.push({
-                        id: Date.now() + Math.random(), college: selectedCollege, program: assignedProgram, classSection: section,
+                        id: `sched-${Date.now()}-${Math.floor(Math.random() * 100000)}`, college: selectedCollege, program: assignedProgram, classSection: section,
                         subjectTitle: subjectTitle, unifiedUnits: units, instructorName: matchFacultyName, dayAssignment: dayAssignment,
                         startTime: startTime, endTime: endTime, roomNumber: room
                     });
@@ -1260,8 +1260,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-600 font-bold text-xs">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</span></td>
                         <td class="p-3">${r.subjectTitle}</td><td class="p-3 text-center font-bold">${r.unifiedUnits}</td><td class="p-3">${r.instructorName}</td><td class="p-3 font-mono text-center">${r.roomNumber}</td>
                         <td class="p-3 text-right no-print">
-                            <button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> 
-                            <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button>
+                            <button onclick="invokeScheduleRowEditor('${r.id}')" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs cursor-pointer">Edit</button> 
+                            <button onclick="invokeScheduleRowDeletion('${r.id}')" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button>
                         </td>
                     </tr>
                 `).join('');
@@ -1301,13 +1301,13 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
         function invokeScheduleRowDeletion(id) { 
             if(confirm("Permanently delete this schedule entry from database logs?")) { 
-                sharedSchedules = sharedSchedules.filter(s=>s.id!==id); 
+                sharedSchedules = sharedSchedules.filter(s => String(s.id) !== String(id)); 
                 saveSystemStateToLocalStorage(); executeRegistryDataSynchronization(); 
             } 
         }
         
         function invokeScheduleRowEditor(id) {
-            const match = sharedSchedules.find(s => s.id === id); if(!match) return;
+            const match = sharedSchedules.find(s => String(s.id) === String(id)); if(!match) return;
             document.getElementById("modalRecordId").value = match.id;
             document.getElementById("modalSubjectTitle").value = match.subjectTitle;
             document.getElementById("modalUnifiedUnits").value = match.unifiedUnits;
@@ -1413,51 +1413,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <td class="p-2.5">${r.subjectTitle}</td><td class="p-2.5 text-center font-bold">${r.unifiedUnits}</td>
                         <td class="p-2.5">${r.instructorName}</td><td class="p-2.5 font-mono text-center bg-gray-50">${r.roomNumber}</td>
                         <td class="p-2.5 text-right no-print space-x-1 whitespace-nowrap">
-                            <button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-blue-100">Edit Block</button>
-                            <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-red-100">Delete</button>
-                        </td>
-                    </tr>
-                `).join('');
-
-                return `
-                    <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white print-page">
-                        <div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode}</span></div>
-                        <table class="w-full text-left table-auto">
-                            <thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Unit/s</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th><th class="p-2.5 text-right no-print">Actions</th></tr></thead>
-                            <tbody>${tableRows}</tbody>
-                        </table>
-                    </div>`;
-            }).join('');
-        }
-
-        function renderProgramScheduleReport() {
-            const container = document.getElementById("programScheduleReportContainer"); if(!container) return;
-            const filtered = getFilteredSchedules();
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No schedule entries found matching filters.</div>`;
-                return;
-            }
-
-            const grouped = {};
-            filtered.forEach(s => {
-                const key = `${s.program}::${s.classSection}::${s.college}`;
-                if(!grouped[key]) grouped[key] = []; grouped[key].push(s);
-            });
-
-            container.innerHTML = Object.keys(grouped).map(key => {
-                const [progName, sectCode, colKey] = key.split("::");
-                const data = fontFacultyClassesChronologically(grouped[key]);
-                const activeColorClass = getCollegeColorClass(colKey);
-
-                const tableRows = data.map(r => `
-                    <tr class="border-b text-xs">
-                        <td class="p-2.5 font-semibold text-gray-700">${r.dayAssignment}</td>
-                        <td class="p-2.5 font-mono font-medium text-blue-950">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</td>
-                        <td class="p-2.5">${r.subjectTitle}</td><td class="p-2.5 text-center font-bold">${r.unifiedUnits}</td>
-                        <td class="p-2.5">${r.instructorName}</td><td class="p-2.5 font-mono text-center bg-gray-50">${r.roomNumber}</td>
-                        <td class="p-2.5 text-right no-print space-x-1 whitespace-nowrap">
-                            <button onclick="invokeScheduleRowEditor(${r.id})" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-blue-100">Edit Block</button>
-                            <button onclick="invokeScheduleRowDeletion(${r.id})" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-red-100">Delete</button>
+                            <button onclick="invokeScheduleRowEditor('${r.id}')" class="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-blue-100">Edit Block</button>
+                            <button onclick="invokeScheduleRowDeletion('${r.id}')" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-[11px] cursor-pointer hover:bg-red-100">Delete</button>
                         </td>
                     </tr>
                 `).join('');
@@ -1783,17 +1740,21 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                       (faculty.hours >= 20 ? `<div class="text-blue-700 font-extrabold text-center text-xs">COMPLIANT</div>` : `<div class="text-red-600 font-extrabold text-center text-xs">NON-COMPLIANT</div>`));
 
                 return `
-                    <tr class="border-t border-gray-300 text-gray-900 bg-white hover:bg-gray-50/40">
-                        <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800">${faculty.name}</td>
-                        <td class="border-r border-gray-300 p-2.5 text-gray-600">${[...new Set(faculty.subjects)].join("; ") || '<span class="text-gray-300 italic">No schedules running</span>'}</td>
-                        <td class="border-r border-gray-300 p-2.5 text-center font-bold text-sm">${faculty.units}</td>
-                        <td class="border-r border-gray-300 p-2.5 text-center font-mono">${faculty.hours.toFixed(1)}</td>
-                        <td class="border-r border-gray-300 p-2.5 text-center">${faculty.prepsCount}</td>
-                        <td class="border-r border-gray-300 p-2.5 text-center align-middle bg-gray-50/40" rowspan="2">${statusElement}</td>
-                    </tr>
-                    <tr class="border-b border-gray-300 text-[11px] text-gray-500 bg-white/70">
-                        <td class="border-x border-b border-gray-300 p-2 px-3 italic" colspan="5">Rank: <strong>${faculty.rank}</strong> | Role: <span class="${getDesignationBadgeStyles(faculty.designation)} px-2 py-0.5 rounded text-[10px]">${faculty.designation}</span></td>
-                    </tr>`;
+                    <div class="border border-gray-300 my-1">
+                        <table class="w-full text-xs">
+                            <tr class="border-t border-gray-300 text-gray-900 bg-white hover:bg-gray-50/40">
+                                <td class="border-x border-gray-300 p-2.5 font-bold text-gray-800 w-1/4">${faculty.name}</td>
+                                <td class="border-r border-gray-300 p-2.5 text-gray-600">${[...new Set(faculty.subjects)].join("; ") || '<span class="text-gray-300 italic">No schedules running</span>'}</td>
+                                <td class="border-r border-gray-300 p-2.5 text-center font-bold text-sm w-12">${faculty.units}</td>
+                                <td class="border-r border-gray-300 p-2.5 text-center font-mono w-12">${faculty.hours.toFixed(1)}</td>
+                                <td class="border-r border-gray-300 p-2.5 text-center w-12">${faculty.prepsCount}</td>
+                                <td class="border-r border-gray-300 p-2.5 text-center align-middle bg-gray-50/40 w-28" rowspan="2">${statusElement}</td>
+                            </tr>
+                            <tr class="border-b border-gray-300 text-[11px] text-gray-500 bg-white/70">
+                                <td class="border-x border-b border-gray-300 p-2 px-3 italic" colspan="5">Rank: <strong>${faculty.rank}</strong> | Role: <span class="${getDesignationBadgeStyles(faculty.designation)} px-2 py-0.5 rounded text-[10px]">${faculty.designation}</span></td>
+                            </tr>
+                        </table>
+                    </div>`;
             }).join('');
         }
 
@@ -1845,12 +1806,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                     <span>🟢 COMPLIANT FACULTY ALLOCATIONS</span>
                                     <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded shadow-xs">Count: ${compliantFaculty.length}</span>
                                 </div>
-                                <table class="w-full text-xs border-collapse border border-gray-300">
-                                    <thead>
-                                        <tr class="bg-gray-50 text-gray-600 font-bold border-b border-gray-300"><th class="p-2.5 text-left w-1/4">Faculty Name</th><th class="p-2.5 text-left">Assigned Subjects</th><th class="p-2.5 text-center w-12">Units</th><th class="p-2.5 text-center w-12">Hours</th><th class="p-2.5 text-center w-12">Preps</th><th class="p-2.5 text-center w-28">Remarks</th></tr>
-                                    </thead>
-                                    <tbody>${buildMatrixTableHTML(compliantFaculty)}</tbody>
-                                </table>
+                                <div class="w-full text-xs border border-gray-300">
+                                    <div class="bg-gray-50 text-gray-600 font-bold border-b border-gray-300 flex p-2.5"><div class="w-1/4">Faculty Name</div><div class="flex-1 px-2">Assigned Subjects</div><div class="w-12 text-center">Units</div><div class="w-12 text-center">Hours</div><div class="w-12 text-center">Preps</div><div class="w-28 text-center">Remarks</div></div>
+                                    ${buildMatrixTableHTML(compliantFaculty)}
+                                </div>
                             </div>`;
                     }
 
@@ -1861,12 +1820,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                                     <span>🔴 NON-COMPLIANT STRATEGIC PARAMETERS</span>
                                     <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded shadow-xs">Count: ${nonCompliantFaculty.length}</span>
                                 </div>
-                                <table class="w-full text-xs border-collapse border border-gray-300">
-                                    <thead>
-                                        <tr class="bg-gray-50 text-gray-600 font-bold border-b border-gray-300"><th class="p-2.5 text-left w-1/4">Faculty Name</th><th class="p-2.5 text-left">Assigned Subjects</th><th class="p-2.5 text-center w-12">Units</th><th class="p-2.5 text-center w-12">Hours</th><th class="p-2.5 text-center w-12">Preps</th><th class="p-2.5 text-center w-28">Remarks</th></tr>
-                                    </thead>
-                                    <tbody>${buildMatrixTableHTML(nonCompliantFaculty)}</tbody>
-                                </table>
+                                <div class="w-full text-xs border border-gray-300">
+                                    <div class="bg-gray-50 text-gray-600 font-bold border-b border-gray-300 flex p-2.5"><div class="w-1/4">Faculty Name</div><div class="flex-1 px-2">Assigned Subjects</div><div class="w-12 text-center">Units</div><div class="w-12 text-center">Hours</div><div class="w-12 text-center">Preps</div><div class="w-28 text-center">Remarks</div></div>
+                                    ${buildMatrixTableHTML(nonCompliantFaculty)}
+                                </div>
                             </div>`;
                     }
 
@@ -2063,6 +2020,16 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (formatType === 'docx') generateAutomatedWorkloadWord(workloadMap);
         }
 
+        function docAutoTableShim(doc, options) {
+            if (typeof doc.autoTable === 'function') {
+                doc.autoTable(options);
+            } else if (window.jspdf && window.jspdf.jsPDF && typeof window.jspdf.jsPDF.API.autoTable === 'function') {
+                doc.autoTable(options);
+            } else {
+                console.error("jsPDF autotable plugin is missing or incorrectly mapped.");
+            }
+        }
+
         function generateAutomatedWorkloadPDF(workloadMap) {
             const { jsPDF } = window.jspdf;
             workloadMap.forEach(packageItem => {
@@ -2084,7 +2051,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         return [`${c.dayAssignment}\n(${convert24To12Hour(c.startTime)}\n-${convert24To12Hour(c.endTime)})`, c.subjectTitle, c.unifiedUnits, hrs.toFixed(1), c.classSection, c.roomNumber];
                     });
                     tableBody.push([{ text: 'Totals Compliance:', colSpan: 2, styles: { fontStyle: 'bold', halign: 'right' } }, '', totU, totH.toFixed(1), '', '']);
-                    doc.autoTable({ startY: 27, head: [['Day / Time Assignment', 'Subject Descriptive Title', 'Unit/s', 'Hrs/Wk', 'Class', 'Room']], body: tableBody, theme: 'grid', headStyles: { fillColor: [20, 30, 60] } });
+                    docAutoTableShim(doc, { startY: 27, head: [['Day / Time Assignment', 'Subject Descriptive Title', 'Unit/s', 'Hrs/Wk', 'Class', 'Room']], body: tableBody, theme: 'grid', headStyles: { fillColor: [20, 30, 60] } });
                 });
                 if(matchesAdded > 0) doc.save(`${packageItem.titleId}.pdf`);
             });
@@ -2177,14 +2144,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
                 if (!first) doc.addPage(); first = false;
                 doc.setFontSize(12); doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 15);
-                doc.autoTable({ startY: 20, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]), headStyles: { fillColor: getCollegeHexCode(college) } });
+                docAutoTableShim(doc, { startY: 20, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]), headStyles: { fillColor: getCollegeHexCode(college) } });
             }); doc.save('Master_Class_Program.pdf');
         }
 
         function exportFacultySummaryPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
             let dataset = getAggregatedFacultyMetricsList();
-            doc.autoTable({ startY: 25, head: [['Instructor', 'Home College', 'Rank', 'Designation', 'Units', 'Hours']], body: dataset.map(f => [f.name, f.homeCollege, f.rank, f.designation, `${f.units} Unit/s`, `${f.hours.toFixed(1)} Hrs`]) });
+            docAutoTableShim(doc, { startY: 25, head: [['Instructor', 'Home College', 'Rank', 'Designation', 'Units', 'Hours']], body: dataset.map(f => [f.name, f.homeCollege, f.rank, f.designation, `${f.units} Unit/s`, `${f.hours.toFixed(1)} Hrs`]) });
             doc.save('Faculty_Load_Summary.pdf');
         }
 
@@ -2197,7 +2164,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let [progName, sectCode, colKey] = key.split("::"); if(!first) doc.addPage(); first = false;
                 doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
                 let dataRows = fontFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
-                doc.autoTable({ startY: 22, head: [['Day', 'Time Bracket (12H)', 'Subject Title', 'Unit/s', 'Faculty Instructor', 'Room']], body: dataRows, headStyles: { fillColor: getCollegeHexCode(colKey) } });
+                docAutoTableShim(doc, { startY: 22, head: [['Day', 'Time Bracket (12H)', 'Subject Title', 'Unit/s', 'Faculty Instructor', 'Room']], body: dataRows, headStyles: { fillColor: getCollegeHexCode(colKey) } });
             }); doc.save('Class_Schedules_Report.pdf');
         }
 
@@ -2222,8 +2189,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         }
 
         document.getElementById("modalEditForm").addEventListener("submit", function(e) {
-            e.preventDefault(); const id = parseFloat(document.getElementById("modalRecordId").value);
-            const idx = sharedSchedules.findIndex(s => s.id === id); if(idx === -1) return;
+            e.preventDefault(); 
+            const id = document.getElementById("modalRecordId").value;
+            const idx = sharedSchedules.findIndex(s => String(s.id) === String(id)); if(idx === -1) return;
             const selectedProg = document.getElementById("modalProgramSelect").value;
             let resolvedCollegeKey = "COE";
             Object.keys(registeredPrograms).forEach(colKey => { if(registeredPrograms[colKey].includes(selectedProg)) resolvedCollegeKey = colKey; });
@@ -2244,7 +2212,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         document.getElementById("scheduleForm").addEventListener("submit", function(e) {
             e.preventDefault();
             sharedSchedules.push({
-                id: Date.now(), college: document.getElementById("collegeSelect").value, program: document.getElementById("programSelect").value,
+                id: `sched-${Date.now()}`, college: document.getElementById("collegeSelect").value, program: document.getElementById("programSelect").value,
                 classSection: document.getElementById("classSectionSelect").value, subjectTitle: document.getElementById("subjectTitle").value,
                 unifiedUnits: parseInt(document.getElementById("unifiedUnits").value) || 3, instructorName: document.getElementById("instructorSelect").value,
                 dayAssignment: document.getElementById("dayAssignment").value, startTime: document.getElementById("startTime").value,
