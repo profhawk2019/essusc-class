@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESSU Salcedo - SET Results & Reports Portal</title>
+  <!-- Tailwind CSS & Chart.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS for processing and exporting Excel (.xlsx) files -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    @media print {
+      header, nav, #dropzone, .no-print { display: none !important; }
+      body { background: white; color: black; }
+      main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+      .print-shadow-none { shadow: none !important; border: 1px solid #cbd5e1 !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-emerald-900 text-white shadow-md border-b border-emerald-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="bg-amber-400 text-emerald-950 p-2.5 rounded-xl font-extrabold text-xl shadow-inner">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight leading-none">Eastern Samar State University - Salcedo</h1>
+          <p class="text-emerald-200 text-xs mt-1">Faculty Teaching Effectiveness Evaluation & Reports Hub</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <label for="excelFileInput" class="cursor-pointer bg-amber-400 hover:bg-amber-500 text-emerald-950 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 shadow-sm">
+          <i class="fa-solid fa-file-excel text-base"></i> Update Dataset (.xlsx)
+        </label>
+        <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleFileUpload(event)">
+        
+        <div class="flex items-center gap-2 bg-emerald-950/80 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-200 border border-emerald-800">
+          <i class="fa-solid fa-database text-amber-400"></i> <span id="recordCountLabel">0 Responses</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs Bar -->
+    <nav class="bg-emerald-950/90 border-t border-emerald-800/80 px-6 no-print">
+      <div class="max-w-7xl mx-auto flex gap-2 overflow-x-auto">
+        <button id="navDashboardBtn" onclick="switchMainTab('dashboard')" class="px-5 py-2.5 text-xs font-bold border-b-2 border-amber-400 text-amber-300 flex items-center gap-2 transition whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i> Analytics Dashboard
+        </button>
+        <button id="navStudentsBtn" onclick="switchMainTab('students')" class="px-5 py-2.5 text-xs font-bold border-b-2 border-transparent text-emerald-200 hover:text-white flex items-center gap-2 transition whitespace-nowrap">
+          <i class="fa-solid fa-id-card font-bold"></i> Faculty Student List
+        </button>
+        <button id="navCommentsBtn" onclick="switchMainTab('comments')" class="px-5 py-2.5 text-xs font-bold border-b-2 border-transparent text-emerald-200 hover:text-white flex items-center gap-2 transition whitespace-nowrap">
+          <i class="fa-solid fa-comments"></i> Qualitative Feedback Log
+        </button>
+        <button id="navFullTableBtn" onclick="switchMainTab('fulltable')" class="px-5 py-2.5 text-xs font-bold border-b-2 border-transparent text-emerald-200 hover:text-white flex items-center gap-2 transition whitespace-nowrap">
+          <i class="fa-solid fa-table"></i> Full SET Raw Dataset
+        </button>
+        <button id="navReportsBtn" onclick="switchMainTab('reports')" class="px-5 py-2.5 text-xs font-bold border-b-2 border-transparent text-emerald-200 hover:text-white flex items-center gap-2 transition whitespace-nowrap">
+          <i class="fa-solid fa-file-contract"></i> Official Reports & Excel Summary
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-6 py-8 flex-1 w-full space-y-8">
+
+    <!-- File Upload Dropzone -->
+    <div id="dropzone" class="border-2 border-dashed border-emerald-400 bg-emerald-50/60 hover:bg-emerald-100/50 rounded-2xl p-4 text-center transition flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+      <div class="flex items-center gap-3 text-left">
+        <div class="w-10 h-10 bg-emerald-800 text-amber-300 rounded-xl flex items-center justify-center text-lg font-bold shadow-sm">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-emerald-950">Update SET Excel File (.xlsx)</h4>
+          <p class="text-xs text-emerald-800">Upload evaluation responses to dynamically update reports, domain calculations, student lists, raw datasets, and teacher improvement points.</p>
+        </div>
+      </div>
+      <span class="text-xs font-bold text-emerald-900 bg-emerald-200/80 px-3 py-1.5 rounded-lg border border-emerald-300">
+        <i class="fa-solid fa-shield-halved text-xs mr-1"></i> ESSU SET Guidelines Compliant
+      </span>
+    </div>
+
+    <!-- TAB 1: ANALYTICS DASHBOARD -->
+    <div id="tabDashboard" class="space-y-8">
+      <!-- KPI Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-bold uppercase tracking-wider">Total Evaluators</span>
+            <i class="fa-solid fa-users text-blue-500 text-lg"></i>
+          </div>
+          <div class="mt-3">
+            <h3 class="text-3xl font-extrabold text-slate-900" id="kpiTotalEvaluators">0</h3>
+            <p class="text-[11px] font-medium text-emerald-600 mt-1"><i class="fa-solid fa-check-circle"></i> Student Submissions</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-bold uppercase tracking-wider">Total Faculty</span>
+            <i class="fa-solid fa-chalkboard-user text-purple-500 text-lg"></i>
+          </div>
+          <div class="mt-3">
+            <h3 class="text-3xl font-extrabold text-slate-900" id="kpiTotalFaculty">0</h3>
+            <p class="text-[11px] font-medium text-purple-600 mt-1"><i class="fa-solid fa-user-check"></i> Evaluated Instructors</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-bold uppercase tracking-wider">Overall SET Mean</span>
+            <i class="fa-solid fa-star text-amber-400 text-lg"></i>
+          </div>
+          <div class="mt-3">
+            <h3 class="text-3xl font-extrabold text-emerald-600"><span id="kpiMeanRating">0.0</span>%</h3>
+            <p class="text-[11px] font-semibold text-emerald-700 mt-1" id="kpiQualitativeLabel">No Data</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-bold uppercase tracking-wider">Top Degree Program</span>
+            <i class="fa-solid fa-graduation-cap text-indigo-500 text-lg"></i>
+          </div>
+          <div class="mt-3">
+            <h3 class="text-base font-bold text-slate-800 truncate" id="kpiTopCourse">N/A</h3>
+            <p class="text-[11px] font-medium text-indigo-600 mt-1" id="kpiTopCourseCount">0 Evaluators</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-bold uppercase tracking-wider">Comments Logged</span>
+            <i class="fa-solid fa-comments text-amber-500 text-lg"></i>
+          </div>
+          <div class="mt-3">
+            <h3 class="text-3xl font-extrabold text-slate-900" id="kpiTotalComments">0</h3>
+            <p class="text-[11px] font-medium text-amber-600 mt-1"><i class="fa-solid fa-message"></i> Praise & Points to Improve</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-bar text-emerald-600"></i> ESSU SET Domain Ratings (%)
+          </h3>
+          <div class="h-64">
+            <canvas id="domainChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-emerald-600"></i> Performance Level Distribution
+          </h3>
+          <div class="h-64 flex items-center justify-center">
+            <canvas id="sentimentChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Directory Table -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-md-center gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-arrow-down-a-z text-emerald-600"></i> Faculty Evaluation Summary Directory (Alphabetical Order A-Z)
+            </h3>
+            <p class="text-xs text-slate-500">Overview of total evaluators and overall weighted rating per faculty member</p>
+          </div>
+          <div class="relative w-full md:w-80">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="Search faculty name or course..." 
+                   class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[480px]">
+          <table class="w-full text-left text-sm" id="facultyTable">
+            <thead class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider sticky top-0 z-10 border-b border-slate-200">
+              <tr>
+                <th class="px-6 py-3.5">Faculty Member (A-Z)</th>
+                <th class="px-6 py-3.5 text-center">Evaluators Count</th>
+                <th class="px-6 py-3.5 text-center">Weighted Rating (%)</th>
+                <th class="px-6 py-3.5 text-center">Performance Level</th>
+                <th class="px-6 py-3.5">Courses Handled</th>
+                <th class="px-6 py-3.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700" id="facultyTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: FACULTY STUDENT LIST (NO RATINGS) -->
+    <div id="tabStudents" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-id-card text-emerald-700"></i> Faculty Subjects & SET Student Respondent Directory
+            </h3>
+            <p class="text-xs text-slate-500">Comprehensive log of students who completed the evaluation per subject (Ratings excluded for confidentiality).</p>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+            <div class="w-full sm:w-72">
+              <select id="studentsFacultySelect" onchange="filterStudentsByFacultyDropdown()" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+                <option value="ALL">Show All Faculty Members</option>
+              </select>
+            </div>
+            <button onclick="exportStudentDirectoryExcel()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-emerald-950 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm whitespace-nowrap">
+              <i class="fa-solid fa-file-excel"></i> Export Student Directory (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[600px]">
+          <table class="w-full text-left text-xs" id="studentsDirectoryTable">
+            <thead class="bg-emerald-900 text-white font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10">
+              <tr>
+                <th class="px-6 py-3.5 border-b border-emerald-800">Faculty Member</th>
+                <th class="px-6 py-3.5 border-b border-emerald-800">Subject / Course Handled</th>
+                <th class="px-6 py-3.5 border-b border-emerald-800">Student Complete Name (Evaluator)</th>
+                <th class="px-6 py-3.5 text-center border-b border-emerald-800">Degree Program / Section</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-800" id="studentsDirectoryTableBody">
+              <!-- Dynamically populated without ratings -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: QUALITATIVE COMMENTS HUB -->
+    <div id="tabComments" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        
+        <!-- Header Controls -->
+        <div class="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-comments text-amber-500"></i> Qualitative Feedback Log
+            </h3>
+            <p class="text-xs text-slate-500">View praise and specific points for teacher improvement submitted by students.</p>
+          </div>
+
+          <div class="w-full lg:w-72">
+            <select id="facultyFilterSelect" onchange="filterCommentsByFaculty()" class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none shadow-sm">
+              <option value="ALL">Show All Faculty Members</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- CATEGORY NAVIGATION BUTTONS -->
+        <div class="bg-slate-100 border-b border-slate-200 px-6 py-3 flex flex-wrap gap-2 items-center">
+          <button id="tabImproveBtn" onclick="switchCommentTab('improve')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-amber-600 text-white shadow-sm border border-amber-500">
+            <i class="fa-solid fa-lightbulb text-amber-200"></i> What do you want your teacher to improve? 
+            <span id="improveCountSpan" class="bg-amber-950 text-amber-200 px-2 py-0.5 rounded-full text-[10px]">0</span>
+          </button>
+
+          <button id="tabPraiseBtn" onclick="switchCommentTab('praise')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-700 bg-white hover:bg-emerald-50 border border-slate-300">
+            <i class="fa-solid fa-thumbs-up text-emerald-600"></i> What do you like most in your teacher? 
+            <span id="praiseCountSpan" class="bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-full text-[10px]">0</span>
+          </button>
+
+          <button id="tabAllBtn" onclick="switchCommentTab('all')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-700 bg-white hover:bg-slate-50 border border-slate-300">
+            <i class="fa-solid fa-layer-group text-indigo-500"></i> All Comments (Combined)
+            <span id="allCommentsCountSpan" class="bg-slate-200 text-slate-800 px-2 py-0.5 rounded-full text-[10px]">0</span>
+          </button>
+        </div>
+
+        <!-- Comments Grid -->
+        <div class="p-6 bg-slate-50/30">
+          <div id="commentsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2">
+            <!-- Dynamically populated comments -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: FULL SET RAW DATASET TABLE TAB -->
+    <div id="tabFullTable" class="space-y-6 hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-6 border-b border-slate-200 bg-slate-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-table text-emerald-800"></i> Full SET Evaluation Raw Responses Dataset
+            </h3>
+            <p class="text-xs text-slate-500">Complete raw evaluation dataset containing student entries, benchmark ratings (Q1–Q15), scores, praise, and points for improvement.</p>
+          </div>
+          <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <div class="relative w-full sm:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="fullTableSearch" onkeyup="filterFullSetTable()" placeholder="Search evaluator or faculty..." 
+                     class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+            <button onclick="exportFullRawDatasetExcel()" class="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-emerald-950 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm whitespace-nowrap">
+              <i class="fa-solid fa-file-excel"></i> Export Raw Dataset (.xlsx)
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[650px] border-t border-slate-100">
+          <table class="w-full text-left text-[11px] whitespace-nowrap" id="rawDatasetTable">
+            <thead class="bg-emerald-950 text-emerald-100 font-bold uppercase tracking-wider sticky top-0 z-10 border-b border-emerald-800">
+              <tr id="rawTableHeaderRow">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">Student Evaluator Name</th>
+                <th class="px-4 py-3">Faculty Member</th>
+                <th class="px-4 py-3">Course / Program</th>
+                <th class="px-4 py-3">Subject Handled</th>
+                <th class="px-2 py-3 text-center bg-emerald-900">Q1</th>
+                <th class="px-2 py-3 text-center bg-emerald-900">Q2</th>
+                <th class="px-2 py-3 text-center bg-emerald-900">Q3</th>
+                <th class="px-2 py-3 text-center bg-emerald-900">Q4</th>
+                <th class="px-2 py-3 text-center bg-emerald-900">Q5</th>
+                <th class="px-2 py-3 text-center bg-emerald-900">Q6</th>
+                <th class="px-2 py-3 text-center bg-cyan-900">Q7</th>
+                <th class="px-2 py-3 text-center bg-cyan-900">Q8</th>
+                <th class="px-2 py-3 text-center bg-cyan-900">Q9</th>
+                <th class="px-2 py-3 text-center bg-cyan-900">Q10</th>
+                <th class="px-2 py-3 text-center bg-cyan-900">Q11</th>
+                <th class="px-2 py-3 text-center bg-purple-900">Q12</th>
+                <th class="px-2 py-3 text-center bg-purple-900">Q13</th>
+                <th class="px-2 py-3 text-center bg-purple-900">Q14</th>
+                <th class="px-2 py-3 text-center bg-purple-900">Q15</th>
+                <th class="px-4 py-3 text-center bg-emerald-900">Total Score (/75)</th>
+                <th class="px-4 py-3 text-center bg-emerald-900">SET Rating (%)</th>
+                <th class="px-4 py-3 min-w-[200px]">What do you like most?</th>
+                <th class="px-4 py-3 min-w-[200px] bg-amber-950 text-amber-200">What do you want to improve?</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-800" id="rawDatasetTableBody">
+              <tr>
+                <td colspan="24" class="px-6 py-12 text-center text-slate-400">
+                  <i class="fa-solid fa-database text-3xl mb-2"></i>
+                  <p class="text-xs">No raw evaluation records loaded yet. Please upload an SET Excel dataset.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: OFFICIAL REPORTS & EXCEL SUMMARY TAB -->
+    <div id="tabReports" class="space-y-8 hidden">
+      <!-- Controls / Export Toolbar -->
+      <div class="bg-emerald-900 text-white p-6 rounded-2xl shadow-sm border border-emerald-800 flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+        <div>
+          <h3 class="text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-file-excel text-amber-300"></i> Official Reports & Excel Summary Generator
+          </h3>
+          <p class="text-xs text-emerald-200 mt-1">Export complete subject respondent summaries and printable evaluation reports compliant with ESSU guidelines.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="exportSubjectRespondentExcel()" class="bg-amber-400 hover:bg-amber-500 text-emerald-950 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-file-excel"></i> Export Subject Respondents (.xlsx)
+          </button>
+          <button onclick="window.print()" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 shadow-sm border border-emerald-600">
+            <i class="fa-solid fa-print"></i> Print Report (PDF)
+          </button>
+        </div>
+      </div>
+
+      <!-- EXCEL SUMMARY SHEET PREVIEW -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6 print-shadow-none">
+        <div class="border-b border-slate-200 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded">Excel Summary Sheet Preview</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">Summary Record: Number of Respondents Per Subject</h2>
+            <p class="text-xs text-slate-500">Live preview of downloadable Excel spreadsheet listing respondent counts and mean ratings per subject</p>
+          </div>
+          
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <div class="relative w-full md:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+              <input type="text" id="reportSubjectSearch" onkeyup="filterReportSubjectTable()" placeholder="Search subject or faculty..." 
+                     class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+            </div>
+            <button onclick="exportSubjectRespondentExcel()" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs px-3 py-1.5 rounded-lg transition font-bold flex items-center gap-1.5 whitespace-nowrap">
+              <i class="fa-solid fa-download"></i> Download Sheet
+            </button>
+          </div>
+        </div>
+
+        <!-- Excel Table View -->
+        <div class="overflow-x-auto max-h-[500px] border border-slate-200 rounded-xl">
+          <table class="w-full text-left text-xs" id="excelSummaryTable">
+            <thead class="bg-emerald-900 text-emerald-50 font-bold uppercase tracking-wider text-[10px] sticky top-0 z-10">
+              <tr>
+                <th class="px-4 py-3 border-b border-emerald-800">Faculty Name (A-Z)</th>
+                <th class="px-4 py-3 border-b border-emerald-800">Subject / Course Handled</th>
+                <th class="px-4 py-3 text-center border-b border-emerald-800 bg-emerald-950">Number of Respondents</th>
+                <th class="px-4 py-3 text-center border-b border-emerald-800">Subject Mean SET (%)</th>
+                <th class="px-4 py-3 text-center border-b border-emerald-800">Faculty Total Respondents</th>
+                <th class="px-4 py-3 text-center border-b border-emerald-800">Faculty Overall Rating (%)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 text-slate-800" id="excelSummaryTableBody">
+              <!-- Dynamically populated per subject -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REPORT 1: Official SET Guidelines Summary -->
+      <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-6 print-shadow-none">
+        <div class="border-b border-slate-200 pb-4 flex justify-between items-start">
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded">Report Type 1: Guidelines Compliance</span>
+            <h2 class="text-xl font-bold text-slate-900 mt-2">Campus Evaluation Summary Report (CFER / SET Guidelines)</h2>
+            <p class="text-xs text-slate-500">Eastern Samar State University • Salcedo Campus Evaluation Period</p>
+          </div>
+          <div class="text-right text-xs text-slate-500 font-mono">
+            <p>Date Generated: <span id="reportGenDate">August 2026</span></p>
+            <p>Formula: (Total Score / 75) × 100</p>
+          </div>
+        </div>
+
+        <!-- Section 1: Executive Findings -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider text-emerald-900 border-l-4 border-emerald-600 pl-2">
+            1. Executive Findings & Institutional Mean Ratings
+          </h4>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            The overall campus mean Student Evaluation of Teachers (SET) rating stands at <strong class="text-emerald-700" id="rpt1OverallMean">0.0%</strong>, categorized under the qualitative level of <strong class="text-emerald-700" id="rpt1Qualitative">No Data</strong>. A total of <strong id="rpt1TotalEval">0</strong> student evaluation forms were processed across <strong id="rpt1TotalFac">0</strong> active teaching personnel.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <p class="text-[11px] font-semibold text-slate-500">Domain A: Teaching & Learning Mgmt (Q1-Q6)</p>
+              <h4 class="text-xl font-bold text-emerald-700 mt-1"><span id="rpt1D1">0.0</span>%</h4>
+              <p class="text-[10px] text-slate-500 mt-0.5">Time utilization, outcomes, critical thinking</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <p class="text-[11px] font-semibold text-slate-500">Domain B: Content, Pedagogy & ICT (Q7-Q11)</p>
+              <h4 class="text-xl font-bold text-cyan-700 mt-1"><span id="rpt1D2">0.0</span>%</h4>
+              <p class="text-[10px] text-slate-500 mt-0.5">Subject mastery, simplification, ICT tools</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <p class="text-[11px] font-semibold text-slate-500">Domain C: Commitment & Transparency (Q12-Q15)</p>
+              <h4 class="text-xl font-bold text-purple-700 mt-1"><span id="rpt1D3">0.0</span>%</h4>
+              <p class="text-[10px] text-slate-500 mt-0.5">Diversity, consultation, transparent grading</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Qualitative Feedback Summary -->
+        <div class="space-y-3 pt-2">
+          <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider text-emerald-900 border-l-4 border-emerald-600 pl-2">
+            2. Qualitative Feedback Synthesis
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200">
+              <h5 class="text-xs font-bold text-emerald-900 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-thumbs-up text-emerald-600"></i> Primary Praise Commendations ("What do you like most in your teacher?")
+              </h5>
+              <ul class="text-xs text-emerald-950 space-y-1.5 list-disc list-inside" id="rpt1PraiseList">
+                <li>High approachable presence and commitment during consultation hours.</li>
+                <li>Clear breakdown of complex technical ideas and subject concepts.</li>
+                <li>Punctual attendance and well-structured learning materials.</li>
+              </ul>
+            </div>
+
+            <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200">
+              <h5 class="text-xs font-bold text-amber-900 mb-2 flex items-center gap-1.5">
+                <i class="fa-solid fa-lightbulb text-amber-600"></i> Recommended Improvement Areas ("What do you want your teacher to improve?")
+              </h5>
+              <ul class="text-xs text-amber-950 space-y-1.5 list-disc list-inside" id="rpt1ImproveList">
+                <li>Provide more step-by-step practical examples prior to major requirements.</li>
+                <li>Adjust lecture pacing when covering brand-new technical topics.</li>
+                <li>Ensure early posting of rubrics and grading criteria for group projects.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs border-t border-slate-800 no-print">
+    <p>Eastern Samar State University (ESSU) Salcedo Campus • Faculty Teaching Effectiveness Evaluation System</p>
+  </footer>
+
+  <!-- Application Engine Script -->
+  <script>
+    let rawDataset = [];
+    let processedFacultyMap = {};
+    let facultyStudentRecords = [];
+    let currentCommentTab = 'improve'; // Default view to "To Improve"
+    let domainChart, sentimentChart;
+
+    function getQualitativeDescription(percentage) {
+      if (percentage >= 91.0) return { label: 'Always Manifested', style: 'bg-emerald-100 text-emerald-800 border-emerald-200' };
+      if (percentage >= 61.0) return { label: 'Often Manifested', style: 'bg-blue-100 text-blue-800 border-blue-200' };
+      if (percentage >= 31.0) return { label: 'Sometimes Manifested', style: 'bg-amber-100 text-amber-800 border-amber-200' };
+      if (percentage >= 11.0) return { label: 'Seldom Manifested', style: 'bg-orange-100 text-orange-800 border-orange-200' };
+      if (percentage > 0) return { label: 'Rarely Manifested', style: 'bg-rose-100 text-rose-800 border-rose-200' };
+      return { label: 'No Data', style: 'bg-slate-100 text-slate-600 border-slate-200' };
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initCharts([0, 0, 0], [0, 0, 0, 0, 0]);
+      setupDragAndDrop();
+    });
+
+    function switchMainTab(tabName) {
+      const tabs = ['Dashboard', 'Students', 'Comments', 'FullTable', 'Reports'];
+      tabs.forEach(t => {
+        const tabEl = document.getElementById(`tab${t}`);
+        const btnEl = document.getElementById(`nav${t}Btn`);
+        if (t.toLowerCase() === tabName) {
+          tabEl.classList.remove('hidden');
+          btnEl.className = 'px-5 py-2.5 text-xs font-bold border-b-2 border-amber-400 text-amber-300 flex items-center gap-2 transition whitespace-nowrap';
+        } else {
+          tabEl.classList.add('hidden');
+          btnEl.className = 'px-5 py-2.5 text-xs font-bold border-b-2 border-transparent text-emerald-200 hover:text-white flex items-center gap-2 transition whitespace-nowrap';
+        }
+      });
+    }
+
+    function initCharts(domainData, scaleDist) {
+      const ctxDomain = document.getElementById('domainChart').getContext('2d');
+      domainChart = new Chart(ctxDomain, {
+        type: 'bar',
+        data: {
+          labels: [
+            'Management of Teaching & Learning (Q1-Q6)', 
+            'Content, Pedagogy & Tech (Q7-Q11)', 
+            'Commitment & Transparency (Q12-Q15)'
+          ],
+          datasets: [{
+            label: 'Domain Mean Score (%)',
+            data: domainData,
+            backgroundColor: ['#10b981', '#06b6d4', '#8b5cf6'],
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { min: 0, max: 100 } },
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      const ctxSentiment = document.getElementById('sentimentChart').getContext('2d');
+      sentimentChart = new Chart(ctxSentiment, {
+        type: 'doughnut',
+        data: {
+          labels: [
+            'Always Manifested (91-100%)', 
+            'Often Manifested (61-90%)', 
+            'Sometimes Manifested (31-60%)',
+            'Seldom Manifested (11-30%)',
+            'Rarely Manifested (0-10%)'
+          ],
+          datasets: [{
+            data: scaleDist,
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#f97316', '#ef4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    function setupDragAndDrop() {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.body.addEventListener(eventName, e => e.preventDefault(), false);
+      });
+
+      document.body.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && (files[0].name.endsWith('.xlsx') || files[0].name.endsWith('.xls'))) {
+          processExcelFile(files[0]);
+        }
+      });
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) processExcelFile(file);
+    }
+
+    function processExcelFile(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rows = XLSX.utils.sheet_to_json(sheet);
+
+        if (!rows || rows.length === 0) {
+          alert('No response records found in the uploaded Excel file.');
+          return;
+        }
+
+        analyzeAndRenderDataset(rows);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function extractStudentCompleteName(row, keys, defaultIndex) {
+      const fullNameKey = keys.find(k => {
+        const lk = k.toLowerCase();
+        return (lk.includes('full') && lk.includes('name')) || lk.includes('complete name') || lk.includes('student name') || lk.includes('evaluator name');
+      });
+
+      if (fullNameKey && row[fullNameKey]) {
+        return String(row[fullNameKey]).trim();
+      }
+
+      const firstNameKey = keys.find(k => k.toLowerCase().includes('first name') || k.toLowerCase().includes('given name'));
+      const middleNameKey = keys.find(k => k.toLowerCase().includes('middle name') || k.toLowerCase().includes('middle initial'));
+      const lastNameKey = keys.find(k => k.toLowerCase().includes('last name') || k.toLowerCase().includes('surname') || k.toLowerCase().includes('family name'));
+
+      if (firstNameKey || lastNameKey) {
+        const fn = firstNameKey && row[firstNameKey] ? String(row[firstNameKey]).trim() : '';
+        const mn = middleNameKey && row[middleNameKey] ? String(row[middleNameKey]).trim() : '';
+        const ln = lastNameKey && row[lastNameKey] ? String(row[lastNameKey]).trim() : '';
+        const constructed = [fn, mn, ln].filter(Boolean).join(' ');
+        if (constructed.length > 0) return constructed;
+      }
+
+      const generalStudentKey = keys.find(k => k.toLowerCase().includes('student') || k.toLowerCase().includes('evaluator') || k.toLowerCase().includes('name')) || keys[defaultIndex];
+      if (row[generalStudentKey]) {
+        return String(row[generalStudentKey]).trim();
+      }
+
+      return '';
+    }
+
+    // EXACT & ROBUST DETECTOR FOR QUALITATIVE COLUMNS
+    function detectQualitativeKeys(keys) {
+      let likedKey = keys.find(k => k.trim() === 'What do you like most in your teacher?');
+      let improveKey = keys.find(k => k.trim() === 'What do you want your teacher to improve?');
+
+      if (!improveKey) {
+        improveKey = keys.find(k => {
+          const lk = k.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+          return lk.includes('improve') || lk.includes('improvement') || lk.includes('suggestion') || lk.includes('recommend');
+        });
+      }
+
+      if (!likedKey) {
+        likedKey = keys.find(k => {
+          const lk = k.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+          return (lk.includes('like') || lk.includes('praise') || lk.includes('commend')) && k !== improveKey;
+        });
+      }
+
+      if (!improveKey) improveKey = keys[keys.length - 1];
+      if (!likedKey) likedKey = keys.find(k => k !== improveKey) || keys[keys.length - 2];
+
+      return { likedKey, improveKey };
+    }
+
+    function analyzeAndRenderDataset(rows) {
+      rawDataset = rows;
+      const totalEvaluators = rows.length;
+      
+      document.getElementById('recordCountLabel').innerText = `${totalEvaluators.toLocaleString()} Responses`;
+      document.getElementById('kpiTotalEvaluators').innerText = totalEvaluators.toLocaleString();
+
+      const sampleRow = rows[0];
+      const keys = Object.keys(sampleRow);
+
+      const facultyKey = keys.find(k => k.toLowerCase().includes('faculty') || k.toLowerCase().includes('teacher')) || keys[6];
+      const courseKey = keys.find(k => k.toLowerCase().includes('course') && !k.toLowerCase().includes('subject')) || keys[5];
+      const subjectKey = keys.find(k => k.toLowerCase().includes('subject')) || keys[7];
+
+      // Detect Qualitative Columns
+      const { likedKey, improveKey } = detectQualitativeKeys(keys);
+
+      // Identify 15 Benchmark statements
+      const benchmarkKeys = keys.filter(k => {
+        const match = k.match(/\[(\d+)\./);
+        return match && parseInt(match[1]) >= 1 && parseInt(match[1]) <= 15;
+      });
+
+      let d1Scores = [], d2Scores = [], d3Scores = [];
+      let allOverallRatings = [];
+      let facultyMap = {};
+      let degreeProgramMap = {};
+      facultyStudentRecords = [];
+
+      let countAlways = 0, countOften = 0, countSometimes = 0, countSeldom = 0, countRarely = 0;
+      let totalPraiseCount = 0, totalImproveCount = 0;
+
+      rows.forEach((row, idx) => {
+        let studentTotalRaw = 0;
+        let itemNumCount = 0;
+
+        benchmarkKeys.forEach(k => {
+          const match = k.match(/\[(\d+)\./);
+          const val = parseFloat(row[k]);
+          if (!isNaN(val)) {
+            const num = parseInt(match[1]);
+            if (num >= 1 && num <= 6) d1Scores.push((val / 5) * 100);
+            else if (num >= 7 && num <= 11) d2Scores.push((val / 5) * 100);
+            else if (num >= 12 && num <= 15) d3Scores.push((val / 5) * 100);
+
+            studentTotalRaw += val;
+            itemNumCount++;
+          }
+        });
+
+        let setRatingPct = itemNumCount > 0 ? (studentTotalRaw / (itemNumCount * 5)) * 100 : 0;
+
+        if (setRatingPct > 0) {
+          allOverallRatings.push(setRatingPct);
+          if (setRatingPct >= 91.0) countAlways++;
+          else if (setRatingPct >= 61.0) countOften++;
+          else if (setRatingPct >= 31.0) countSometimes++;
+          else if (setRatingPct >= 11.0) countSeldom++;
+          else countRarely++;
+        }
+
+        const facultyName = row[facultyKey] ? String(row[facultyKey]).trim() : 'Unassigned Faculty';
+        const degreeCourse = row[courseKey] ? String(row[courseKey]).trim() : 'General Program';
+        const subject = row[subjectKey] ? String(row[subjectKey]).trim() : 'General Subject';
+        
+        let studentCompleteName = extractStudentCompleteName(row, keys, 1);
+        if (!studentCompleteName) {
+          studentCompleteName = `Student Respondent #${idx + 1}`;
+        }
+
+        facultyStudentRecords.push({
+          faculty: facultyName,
+          subject: subject,
+          student: studentCompleteName,
+          course: degreeCourse
+        });
+
+        degreeProgramMap[degreeCourse] = (degreeProgramMap[degreeCourse] || 0) + 1;
+
+        if (!facultyMap[facultyName]) {
+          facultyMap[facultyName] = {
+            totalRatingSum: 0,
+            evaluatorCount: 0,
+            subjects: {},
+            praiseList: [],
+            improveList: []
+          };
+        }
+
+        if (setRatingPct > 0) {
+          facultyMap[facultyName].totalRatingSum += setRatingPct;
+          facultyMap[facultyName].evaluatorCount++;
+
+          if (!facultyMap[facultyName].subjects[subject]) {
+            facultyMap[facultyName].subjects[subject] = { sumRating: 0, count: 0 };
+          }
+          facultyMap[facultyName].subjects[subject].sumRating += setRatingPct;
+          facultyMap[facultyName].subjects[subject].count++;
+        }
+
+        // Extract Qualitative Feedback
+        const rawPraise = (likedKey && row[likedKey] !== undefined && row[likedKey] !== null) ? String(row[likedKey]).trim() : '';
+        const rawImprove = (improveKey && row[improveKey] !== undefined && row[improveKey] !== null) ? String(row[improveKey]).trim() : '';
+
+        const ignoreList = ['none', 'n a', 'na', 'nothing', 'no comment', 'none so far', 'no', 'nil', 'good', 'ok', 'okay', 'all good', 'none'];
+
+        const cleanPraise = rawPraise.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        const cleanImprove = rawImprove.toLowerCase().replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+
+        if (rawPraise.length >= 2 && !ignoreList.includes(cleanPraise)) {
+          facultyMap[facultyName].praiseList.push(rawPraise);
+          totalPraiseCount++;
+        }
+
+        if (rawImprove.length >= 2 && !ignoreList.includes(cleanImprove)) {
+          facultyMap[facultyName].improveList.push(rawImprove);
+          totalImproveCount++;
+        }
+      });
+
+      processedFacultyMap = facultyMap;
+
+      const facultyListSorted = Object.keys(facultyMap).sort();
+      document.getElementById('kpiTotalFaculty').innerText = facultyListSorted.length;
+
+      const calcMean = arr => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+      const overallMean = calcMean(allOverallRatings);
+
+      document.getElementById('kpiMeanRating').innerText = overallMean.toFixed(1);
+      document.getElementById('kpiQualitativeLabel').innerText = getQualitativeDescription(overallMean).label;
+
+      const sortedCourses = Object.keys(degreeProgramMap).sort((a,b) => degreeProgramMap[b] - degreeProgramMap[a]);
+      if (sortedCourses.length > 0) {
+        document.getElementById('kpiTopCourse').innerText = sortedCourses[0].replace('Bachelor of Science in ', 'BS ').replace('Bachelor of ', '');
+        document.getElementById('kpiTopCourseCount').innerText = `${degreeProgramMap[sortedCourses[0]]} Evaluators`;
+      }
+
+      document.getElementById('kpiTotalComments').innerText = (totalPraiseCount + totalImproveCount).toLocaleString();
+
+      // Update Charts
+      const avgD1 = calcMean(d1Scores);
+      const avgD2 = calcMean(d2Scores);
+      const avgD3 = calcMean(d3Scores);
+
+      domainChart.data.datasets[0].data = [avgD1.toFixed(1), avgD2.toFixed(1), avgD3.toFixed(1)];
+      domainChart.update();
+
+      sentimentChart.data.datasets[0].data = [countAlways, countOften, countSometimes, countSeldom, countRarely];
+      sentimentChart.update();
+
+      // Render Tables & Sections
+      renderAlphabeticalFacultyTable(facultyListSorted);
+      populateStudentsFacultyDropdown(facultyListSorted);
+      renderFacultyStudentDirectory();
+      populateFacultyFilterDropdown(facultyListSorted);
+      switchCommentTab(currentCommentTab);
+
+      // Render Raw Dataset Table
+      renderFullRawSetDatasetTable(benchmarkKeys, facultyKey, courseKey, subjectKey, likedKey, improveKey);
+
+      renderExcelSubjectSummaryTable(facultyListSorted);
+      renderReportsSection(facultyListSorted, overallMean, totalEvaluators, avgD1, avgD2, avgD3);
+    }
+
+    function renderFullRawSetDatasetTable(benchmarkKeys, facultyKey, courseKey, subjectKey, likedKey, improveKey) {
+      const tbody = document.getElementById('rawDatasetTableBody');
+      tbody.innerHTML = '';
+
+      if (!rawDataset || rawDataset.length === 0) return;
+
+      const sampleKeys = Object.keys(rawDataset[0]);
+
+      rawDataset.forEach((row, idx) => {
+        const studentName = extractStudentCompleteName(row, sampleKeys, 1) || `Respondent #${idx + 1}`;
+        const faculty = row[facultyKey] ? String(row[facultyKey]).trim() : 'N/A';
+        const course = row[courseKey] ? String(row[courseKey]).trim() : 'N/A';
+        const subject = row[subjectKey] ? String(row[subjectKey]).trim() : 'N/A';
+
+        let qVals = [];
+        let rowSum = 0;
+        let count = 0;
+
+        for (let i = 1; i <= 15; i++) {
+          const itemKey = benchmarkKeys.find(k => {
+            const m = k.match(/\[(\d+)\./);
+            return m && parseInt(m[1]) === i;
+          });
+
+          const val = (itemKey && row[itemKey] !== undefined) ? parseFloat(row[itemKey]) : 0;
+          qVals.push(isNaN(val) ? 0 : val);
+          if (!isNaN(val) && val > 0) {
+            rowSum += val;
+            count++;
+          }
+        }
+
+        const ratingPct = count > 0 ? (rowSum / (count * 5)) * 100 : 0;
+        const likedText = (likedKey && row[likedKey]) ? String(row[likedKey]).trim() : '-';
+        const improveText = (improveKey && row[improveKey]) ? String(row[improveKey]).trim() : '-';
+
+        const tr = document.createElement('tr');
+        tr.className = idx % 2 === 0 ? 'bg-white hover:bg-emerald-50/30' : 'bg-slate-50/60 hover:bg-emerald-50/30';
+
+        tr.innerHTML = `
+          <td class="px-4 py-2.5 font-bold text-slate-500 border-b border-slate-100 text-center">${idx + 1}</td>
+          <td class="px-4 py-2.5 font-semibold text-slate-900 border-b border-slate-100">${studentName}</td>
+          <td class="px-4 py-2.5 font-bold text-emerald-950 border-b border-slate-100">${faculty}</td>
+          <td class="px-4 py-2.5 text-slate-600 border-b border-slate-100">${course}</td>
+          <td class="px-4 py-2.5 font-medium text-slate-800 border-b border-slate-100">${subject}</td>
+          
+          ${qVals.map(q => `<td class="px-2 py-2.5 text-center font-mono border-b border-slate-100 ${q >= 4 ? 'text-emerald-700 font-bold' : 'text-slate-600'}">${q || '-'}</td>`).join('')}
+
+          <td class="px-4 py-2.5 text-center font-extrabold text-slate-900 border-b border-slate-100 bg-emerald-50/50">${rowSum}</td>
+          <td class="px-4 py-2.5 text-center border-b border-slate-100">
+            <span class="px-2 py-0.5 rounded-full font-bold text-[10px] ${ratingPct >= 91 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+              ${ratingPct.toFixed(1)}%
+            </span>
+          </td>
+          <td class="px-4 py-2.5 text-slate-700 border-b border-slate-100 italic truncate max-w-[200px]" title="${likedText}">${likedText}</td>
+          <td class="px-4 py-2.5 text-amber-950 bg-amber-50/40 border-b border-slate-100 italic truncate max-w-[200px] font-medium" title="${improveText}">${improveText}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterFullSetTable() {
+      const input = document.getElementById("fullTableSearch").value.toLowerCase();
+      const rows = document.querySelectorAll("#rawDatasetTable tbody tr");
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+      });
+    }
+
+    function exportFullRawDatasetExcel() {
+      if (!rawDataset || rawDataset.length === 0) {
+        alert('No raw SET dataset available to export.');
+        return;
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rawDataset);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Raw SET Dataset");
+      XLSX.writeFile(workbook, "ESSU_Salcedo_Full_Raw_SET_Dataset.xlsx");
+    }
+
+    function renderAlphabeticalFacultyTable(sortedFacultyNames) {
+      const tbody = document.getElementById('facultyTableBody');
+      tbody.innerHTML = '';
+
+      sortedFacultyNames.forEach(name => {
+        const item = processedFacultyMap[name];
+        const evaluatorCount = item.evaluatorCount;
+        const weightedRating = evaluatorCount > 0 ? (item.totalRatingSum / evaluatorCount) : 0;
+        const qual = getQualitativeDescription(weightedRating);
+        const subjects = Object.keys(item.subjects).join(', ');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition';
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-bold text-slate-900 border-b border-slate-100">${name}</td>
+          <td class="px-6 py-4 text-center font-extrabold text-slate-800 border-b border-slate-100">
+            <span class="bg-slate-100 text-slate-800 px-3 py-1 rounded-full text-xs border border-slate-200">${evaluatorCount.toLocaleString()}</span>
+          </td>
+          <td class="px-6 py-4 text-center font-bold border-b border-slate-100">
+            <span class="text-xs px-2.5 py-1 rounded-full border ${qual.style}">${weightedRating.toFixed(2)}%</span>
+          </td>
+          <td class="px-6 py-4 text-center text-xs font-semibold text-slate-600 border-b border-slate-100">${qual.label}</td>
+          <td class="px-6 py-4 text-xs text-slate-600 max-w-[240px] truncate border-b border-slate-100" title="${subjects}">${subjects || 'General'}</td>
+          <td class="px-6 py-4 text-center border-b border-slate-100">
+            <button onclick="inspectFacultyComments('${name}')" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold px-3 py-1.5 rounded-lg transition border border-emerald-200">
+              <i class="fa-solid fa-comments mr-1"></i> Comments
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function populateStudentsFacultyDropdown(sortedFacultyNames) {
+      const select = document.getElementById('studentsFacultySelect');
+      select.innerHTML = '<option value="ALL">Show All Faculty Members</option>';
+      
+      sortedFacultyNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.innerText = name;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderFacultyStudentDirectory(selectedFaculty = 'ALL') {
+      const tbody = document.getElementById('studentsDirectoryTableBody');
+      tbody.innerHTML = '';
+
+      let filteredRecords = selectedFaculty === 'ALL' 
+        ? facultyStudentRecords 
+        : facultyStudentRecords.filter(rec => rec.faculty === selectedFaculty);
+
+      if (filteredRecords.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-6 py-8 text-center text-slate-400">
+              <i class="fa-solid fa-users-slash text-2xl mb-1"></i>
+              <p>No student evaluation records found for this selection.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const sortedRecords = [...filteredRecords].sort((a, b) => {
+        if (a.faculty !== b.faculty) return a.faculty.localeCompare(b.faculty);
+        if (a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+        return a.student.localeCompare(b.student);
+      });
+
+      sortedRecords.forEach((rec, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = idx % 2 === 0 ? 'bg-white hover:bg-emerald-50/40' : 'bg-slate-50/60 hover:bg-emerald-50/40';
+        tr.innerHTML = `
+          <td class="px-6 py-3 font-bold text-slate-900 border-b border-slate-100">${rec.faculty}</td>
+          <td class="px-6 py-3 font-medium text-emerald-900 border-b border-slate-100">${rec.subject}</td>
+          <td class="px-6 py-3 font-semibold text-slate-800 border-b border-slate-100">
+            <i class="fa-solid fa-user-graduate text-slate-400 mr-1.5 text-[10px]"></i>${rec.student}
+          </td>
+          <td class="px-6 py-3 text-center text-slate-600 border-b border-slate-100">${rec.course}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterStudentsByFacultyDropdown() {
+      const selectedFaculty = document.getElementById("studentsFacultySelect").value;
+      renderFacultyStudentDirectory(selectedFaculty);
+    }
+
+    function exportStudentDirectoryExcel() {
+      if (!facultyStudentRecords || facultyStudentRecords.length === 0) {
+        alert('No student evaluator records available to export.');
+        return;
+      }
+
+      const selectedFaculty = document.getElementById("studentsFacultySelect").value;
+      let filteredRecords = selectedFaculty === 'ALL' 
+        ? facultyStudentRecords 
+        : facultyStudentRecords.filter(rec => rec.faculty === selectedFaculty);
+
+      const sortedRecords = [...filteredRecords].sort((a, b) => {
+        if (a.faculty !== b.faculty) return a.faculty.localeCompare(b.faculty);
+        if (a.subject !== b.subject) return a.subject.localeCompare(b.subject);
+        return a.student.localeCompare(b.student);
+      });
+
+      const excelRows = sortedRecords.map(rec => ({
+        "Faculty Member": rec.faculty,
+        "Subject / Course Handled": rec.subject,
+        "Student Complete Name": rec.student,
+        "Degree Program / Section": rec.course
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(excelRows);
+      
+      worksheet['!cols'] = [
+        { wch: 32 },
+        { wch: 45 },
+        { wch: 35 },
+        { wch: 30 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Student Evaluators List");
+
+      const fileName = selectedFaculty === 'ALL' 
+        ? "ESSU_Salcedo_SET_Faculty_Student_Directory.xlsx"
+        : `ESSU_Salcedo_SET_${selectedFaculty.replace(/[^a-zA-Z0-9]/g, '_')}_Student_Directory.xlsx`;
+
+      XLSX.writeFile(workbook, fileName);
+    }
+
+    function renderExcelSubjectSummaryTable(sortedFacultyNames) {
+      const tbody = document.getElementById('excelSummaryTableBody');
+      tbody.innerHTML = '';
+
+      sortedFacultyNames.forEach(facName => {
+        const facData = processedFacultyMap[facName];
+        const totalFacEval = facData.evaluatorCount;
+        const facWeightedRating = totalFacEval > 0 ? (facData.totalRatingSum / totalFacEval) : 0;
+        
+        const subjectKeys = Object.keys(facData.subjects).sort();
+        const rowSpanCount = subjectKeys.length;
+
+        subjectKeys.forEach((subjName, idx) => {
+          const subjData = facData.subjects[subjName];
+          const subjMeanPct = subjData.count > 0 ? (subjData.sumRating / subjData.count) : 0;
+
+          const tr = document.createElement('tr');
+          tr.className = idx % 2 === 0 ? 'bg-white hover:bg-emerald-50/30' : 'bg-slate-50/60 hover:bg-emerald-50/30';
+
+          let html = '';
+          if (idx === 0) {
+            html += `<td class="px-4 py-3 font-bold text-slate-900 border-r border-slate-200" ${rowSpanCount > 1 ? `rowspan="${rowSpanCount}"` : ''}>${facName}</td>`;
+          }
+
+          html += `
+            <td class="px-4 py-3 text-slate-700 font-medium">${subjName}</td>
+            <td class="px-4 py-3 text-center font-extrabold text-emerald-900 bg-emerald-50/50">${subjData.count}</td>
+            <td class="px-4 py-3 text-center font-bold text-emerald-700">${subjMeanPct.toFixed(2)}%</td>
+          `;
+
+          if (idx === 0) {
+            html += `
+              <td class="px-4 py-3 text-center font-bold text-slate-800 border-l border-slate-200" ${rowSpanCount > 1 ? `rowspan="${rowSpanCount}"` : ''}>
+                ${totalFacEval}
+              </td>
+              <td class="px-4 py-3 text-center border-l border-slate-200" ${rowSpanCount > 1 ? `rowspan="${rowSpanCount}"` : ''}>
+                <span class="font-bold text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-full text-[11px]">${facWeightedRating.toFixed(2)}%</span>
+              </td>
+            `;
+          }
+
+          tr.innerHTML = html;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function exportSubjectRespondentExcel() {
+      if (!processedFacultyMap || Object.keys(processedFacultyMap).length === 0) {
+        alert('No evaluation data available to export.');
+        return;
+      }
+
+      const excelRows = [];
+      const sortedFacultyNames = Object.keys(processedFacultyMap).sort();
+
+      sortedFacultyNames.forEach(facName => {
+        const facData = processedFacultyMap[facName];
+        const totalFacEval = facData.evaluatorCount;
+        const facWeightedRating = totalFacEval > 0 ? (facData.totalRatingSum / totalFacEval) : 0;
+        
+        const subjectKeys = Object.keys(facData.subjects).sort();
+
+        subjectKeys.forEach(subjName => {
+          const subjData = facData.subjects[subjName];
+          const subjMeanPct = subjData.count > 0 ? (subjData.sumRating / subjData.count) : 0;
+
+          excelRows.push({
+            "Faculty Name": facName,
+            "Subject / Course Handled": subjName,
+            "Number of Respondents": subjData.count,
+            "Subject Mean Rating (%)": parseFloat(subjMeanPct.toFixed(2)),
+            "Faculty Total Respondents": totalFacEval,
+            "Faculty Overall Rating (%)": parseFloat(facWeightedRating.toFixed(2))
+          });
+        });
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(excelRows);
+      
+      worksheet['!cols'] = [
+        { wch: 30 },
+        { wch: 45 },
+        { wch: 24 },
+        { wch: 22 },
+        { wch: 24 },
+        { wch: 24 }
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Respondents per Subject");
+
+      XLSX.writeFile(workbook, "ESSU_Salcedo_SET_Respondents_Per_Subject.xlsx");
+    }
+
+    function populateFacultyFilterDropdown(sortedFacultyNames) {
+      const select = document.getElementById('facultyFilterSelect');
+      select.innerHTML = '<option value="ALL">Show All Faculty Members</option>';
+      
+      sortedFacultyNames.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.innerText = name;
+        select.appendChild(opt);
+      });
+    }
+
+    function switchCommentTab(tab) {
+      currentCommentTab = tab;
+      const praiseBtn = document.getElementById('tabPraiseBtn');
+      const improveBtn = document.getElementById('tabImproveBtn');
+      const allBtn = document.getElementById('tabAllBtn');
+
+      praiseBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-700 bg-white hover:bg-emerald-50 border border-slate-300';
+      improveBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-700 bg-white hover:bg-amber-50 border border-slate-300';
+      allBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-700 bg-white hover:bg-slate-50 border border-slate-300';
+
+      if (tab === 'improve') {
+        improveBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-amber-600 text-white shadow-sm border border-amber-500';
+      } else if (tab === 'praise') {
+        praiseBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-emerald-800 text-white shadow-sm border border-emerald-700';
+      } else {
+        allBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-slate-800 text-white shadow-sm border border-slate-700';
+      }
+
+      renderCommentsList();
+    }
+
+    function inspectFacultyComments(facultyName) {
+      switchMainTab('comments');
+      document.getElementById('facultyFilterSelect').value = facultyName;
+      renderCommentsList();
+    }
+
+    function filterCommentsByFaculty() {
+      renderCommentsList();
+    }
+
+    function renderCommentsList() {
+      const selectedFaculty = document.getElementById('facultyFilterSelect').value;
+      const container = document.getElementById('commentsContainer');
+      container.innerHTML = '';
+
+      let targetFacultyList = selectedFaculty === 'ALL' 
+        ? Object.keys(processedFacultyMap) 
+        : [selectedFaculty];
+
+      let allPraiseItems = [];
+      let allImproveItems = [];
+
+      targetFacultyList.forEach(fac => {
+        if (processedFacultyMap[fac]) {
+          processedFacultyMap[fac].praiseList.forEach(c => allPraiseItems.push({ faculty: fac, text: c, type: 'praise' }));
+          processedFacultyMap[fac].improveList.forEach(c => allImproveItems.push({ faculty: fac, text: c, type: 'improve' }));
+        }
+      });
+
+      document.getElementById('praiseCountSpan').innerText = allPraiseItems.length.toLocaleString();
+      document.getElementById('improveCountSpan').innerText = allImproveItems.length.toLocaleString();
+      document.getElementById('allCommentsCountSpan').innerText = (allPraiseItems.length + allImproveItems.length).toLocaleString();
+
+      let activeList = [];
+      if (currentCommentTab === 'praise') activeList = allPraiseItems;
+      else if (currentCommentTab === 'improve') activeList = allImproveItems;
+      else activeList = [...allImproveItems, ...allPraiseItems];
+
+      if (activeList.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400">
+            <i class="fa-regular fa-comment-dots text-4xl mb-2"></i>
+            <p class="text-sm font-medium">No comments logged under this selection.</p>
+          </div>
+        `;
+        return;
+      }
+
+      activeList.forEach(item => {
+        const isPraise = item.type === 'praise';
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border bg-white shadow-sm flex flex-col justify-between transition hover:shadow-md ${
+          isPraise ? 'border-emerald-200' : 'border-amber-200'
+        }`;
+
+        const iconColor = isPraise ? 'text-emerald-500' : 'text-amber-500';
+        const quoteBg = isPraise ? 'bg-emerald-50 text-emerald-950' : 'bg-amber-50 text-amber-950';
+        const categoryLabel = isPraise 
+          ? 'What do you like most in your teacher?' 
+          : 'What do you want your teacher to improve?';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[11px] font-bold text-slate-700 truncate max-w-[200px]">${item.faculty}</span>
+              <i class="fa-solid ${isPraise ? 'fa-quote-left' : 'fa-lightbulb'} ${iconColor} text-xs"></i>
+            </div>
+            <p class="text-[10px] font-semibold ${isPraise ? 'text-emerald-700' : 'text-amber-700'} mb-2">
+              ${categoryLabel}
+            </p>
+            <p class="text-xs ${quoteBg} p-3 rounded-lg leading-relaxed italic font-normal">
+              "${item.text}"
+            </p>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderReportsSection(sortedFacultyNames, overallMean, totalEvaluators, d1, d2, d3) {
+      document.getElementById('rpt1OverallMean').innerText = `${overallMean.toFixed(1)}%`;
+      document.getElementById('rpt1Qualitative').innerText = getQualitativeDescription(overallMean).label;
+      document.getElementById('rpt1TotalEval').innerText = totalEvaluators.toLocaleString();
+      document.getElementById('rpt1TotalFac').innerText = sortedFacultyNames.length;
+
+      document.getElementById('rpt1D1').innerText = d1.toFixed(1);
+      document.getElementById('rpt1D2').innerText = d2.toFixed(1);
+      document.getElementById('rpt1D3').innerText = d3.toFixed(1);
+
+      // Synthesize qualitative responses directly into Report Type 1
+      const praiseUl = document.getElementById('rpt1PraiseList');
+      const improveUl = document.getElementById('rpt1ImproveList');
+
+      let samplePraise = [];
+      let sampleImprove = [];
+
+      sortedFacultyNames.forEach(fac => {
+        if (processedFacultyMap[fac]) {
+          processedFacultyMap[fac].praiseList.forEach(c => {
+            if (c.length > 12 && samplePraise.length < 5 && !samplePraise.includes(c)) {
+              samplePraise.push(c);
+            }
+          });
+          processedFacultyMap[fac].improveList.forEach(c => {
+            if (c.length > 12 && sampleImprove.length < 5 && !sampleImprove.includes(c)) {
+              sampleImprove.push(c);
+            }
+          });
+        }
+      });
+
+      if (praiseUl && samplePraise.length > 0) {
+        praiseUl.innerHTML = samplePraise.map(c => `<li>${c}</li>`).join('');
+      }
+      if (improveUl && sampleImprove.length > 0) {
+        improveUl.innerHTML = sampleImprove.map(c => `<li>${c}</li>`).join('');
+      }
+    }
+
+    function filterTable() {
+      const input = document.getElementById("searchInput").value.toLowerCase();
+      const rows = document.querySelectorAll("#facultyTable tbody tr");
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+      });
+    }
+
+    function filterReportSubjectTable() {
+      const input = document.getElementById("reportSubjectSearch").value.toLowerCase();
+      const rows = document.querySelectorAll("#excelSummaryTable tbody tr");
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
