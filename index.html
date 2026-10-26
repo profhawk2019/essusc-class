@@ -181,197 +181,6 @@
                     </div>
                     <span id="kpi-undergrad-courses" class="text-4xl font-black text-sky-400 mt-4">0</span>
                 </div>
-                <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm md:col-span-2 space-y-2Here is the updated code[cite: 1]. It includes an enhanced **Ingestion Engine** that automatically detects and extracts metadata from document tables like `COE INPUT.docx`[cite: 1]:
-
-1. **Header Metadata Detection**: Automatically detects the **College** (`COLLEGE OF ENGINEERING`), **Semester Term** (`Second Semester`), **Academic Year** (`2025 - 2026`), and **Program / Section** (`BACHELOR OF SCIENCE IN COMPUTER ENGINEERING I - 1`) directly from the uploaded document text[cite: 1].
-2. **Auto-Routing & Registration**: Reads every class block line, registers missing instructors/rooms, maps the program and section automatically into the system registries[cite: 1], and updates the active view to match the parsed term/year[cite: 1].
-3. **Filter Bypassing**: Ignores empty rows, "NOON INTERMISSION", and non-academic entries like "Research Work and Other Activities"[cite: 1].
-
----
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESSU Salcedo Scheduling & Workload System</title>
-    <script src="[https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4](https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4)"></script>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)"></script>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js](https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js)"></script>
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js](https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js](https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
-    <style>
-        @media print {
-            body, main, header, section, div, table {
-                background: white !important;
-                color: black !important;
-            }
-            .no-print { 
-                display: none !important; 
-            }
-            .print-page { 
-                page-break-after: always !important; 
-                break-after: page !important;
-                padding: 0 !important; 
-                margin: 0 0 10mm 0 !important; 
-                border: none !important; 
-            }
-            body:has(.printing-matrix-active) main,
-            body:has(.printing-matrix-active) header {
-                display: none !important;
-            }
-            .print-matrix-view { 
-                display: block !important; 
-                width: 100% !important; 
-            }
-            @page {
-                size: auto;
-                margin: 15mm 10mm 15mm 10mm;
-            }
-        }
-        .code-added-highlight { background-color: rgba(254, 240, 138, 0.08); }
-        
-        /* Institutional Color Palette Schematics */
-        .header-coed { background-color: #1d4ed8 !important; color: white !important; }
-        .header-coe { background-color: #7f1d1d !important; color: white !important; }
-        .header-cans { background-color: #3f6212 !important; color: white !important; }
-        .header-ccs { background-color: #6b21a8 !important; color: white !important; }
-        .header-cas { background-color: #0d9488 !important; color: white !important; }
-        .header-gs { background-color: #075985 !important; color: white !important; }
-        .header-default { background-color: #1e293b !important; color: white !important; }
-
-        .border-coed { border-color: #1d4ed8 !important; }
-        .border-coe { border-color: #7f1d1d !important; }
-        .border-cans { border-color: #3f6212 !important; }
-        .border-ccs { border-color: #6b21a8 !important; }
-        .border-cas { border-color: #0d9488 !important; }
-        .border-gs { border-color: #075985 !important; }
-        .border-default { border-color: #1e293b !important; }
-
-        .bg-coed-soft { background-color: rgba(29, 78, 216, 0.05) !important; }
-        .bg-coe-soft { background-color: rgba(127, 29, 29, 0.05) !important; }
-        .bg-cans-soft { background-color: rgba(63, 98, 18, 0.05) !important; }
-        .bg-ccs-soft { background-color: rgba(107, 33, 168, 0.05) !important; }
-        .bg-cas-soft { background-color: rgba(13, 148, 136, 0.05) !important; }
-        .bg-gs-soft { background-color: rgba(7, 89, 133, 0.05) !important; }
-        .bg-default-soft { background-color: rgba(30, 41, 59, 0.05) !important; }
-
-        .text-coed { color: #1d4ed8 !important; }
-        .text-coe { color: #7f1d1d !important; }
-        .text-cans { color: #3f6212 !important; }
-        .text-ccs { color: #6b21a8 !important; }
-        .text-cas { color: #0d9488 !important; }
-        .text-gs { color: #075985 !important; }
-        .text-default { color: #1e293b !important; }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-800 font-sans antialiased">
-
-    <header class="bg-blue-950 text-white shadow-md no-print">
-        <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight">ESSU Salcedo Scheduling and Workload System (SWS v1)</h1>
-                <p class="text-sm text-blue-200">Class Matrix & Faculty Workload Automated Generator</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-                <button onclick="purgeLocalStorageCache()" class="bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">
-                    🚨 Wipe Database Cache
-                </button>
-                <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
-                    <span class="text-xs text-blue-200 font-medium">AY:</span>
-                    <select id="academicYearSelect" onchange="switchAcademicYear(this.value)" class="bg-blue-950 text-xs text-white font-bold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
-                        <option value="2025-2026">AY 2025 - 2026</option>
-                        <option value="2026-2027">AY 2026 - 2027</option>
-                        <option value="2027-2028">AY 2027 - 2028</option>
-                        <option value="NEW">+ Add School Year...</option>
-                    </select>
-                </div>
-                <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
-                    <span class="text-xs text-blue-200 font-medium">Term:</span>
-                    <select id="semesterTermSelect" onchange="switchSemesterTerm(this.value)" class="bg-blue-950 text-xs text-amber-300 font-extrabold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
-                        <option value="First Semester">First Semester</option>
-                        <option value="Second Semester">Second Semester</option>
-                        <option value="SUMMER">Summer Term</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 py-8 space-y-10">
-
-        <div class="border-b border-gray-200 no-print">
-            <nav class="flex flex-wrap gap-2 sm:space-x-6" aria-label="Tabs">
-                <button onclick="switchTab('dashboard-view')" id="tab-dashboard-view" class="tab-btn border-b-2 border-blue-950 text-blue-950 font-bold pb-4 text-sm px-1 cursor-pointer">
-                    📊 Dashboard Hub
-                </button>
-                <button onclick="switchTab('upload-view')" id="tab-upload-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
-                    📥 Schedule Ingestion Engine
-                </button>
-                <button onclick="switchTab('encoder-view')" id="tab-encoder-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
-                    ✍ Manual Encoder
-                </button>
-                <button onclick="switchTab('schedule-view')" id="tab-schedule-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
-                    🗂 Master Class Program
-                </button>
-                <button onclick="switchTab('program-schedule-view')" id="tab-program-schedule-view" class="tab-btn border-b-2 border-transparent text-indigo-700 hover:text-indigo-900 pb-4 text-sm px-1 cursor-pointer font-medium">
-                    📅 Class Schedule Report
-                </button>
-                <button onclick="switchTab('summary-view')" id="tab-summary-view" class="tab-btn border-b-2 border-transparent hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-medium text-emerald-700">
-                    📊 Faculty Load Summary
-                </button>
-                <button onclick="switchTab('workload-view')" id="tab-workload-view" class="tab-btn border-b-2 border-transparent hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-medium text-purple-700">
-                    📋 Individual Workload Sheets
-                </button>
-                <button onclick="switchTab('management-view')" id="tab-management-view" class="tab-btn border-b-2 border-transparent hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-semibold text-indigo-600">
-                    ⚙ Registries Management
-                </button>
-            </nav>
-        </div>
-
-        <section id="dashboard-view" class="tab-content bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
-            <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
-                    <p class="text-sm text-gray-500">Real-time summary tracking university loading balances and compliance ratios for <strong class="text-blue-950" id="displayActiveYearLabel">AY 2025 - 2026</strong> (<span id="displayActiveTermLabel" class="font-extrabold text-amber-600">Second Semester</span>).</p>
-                </div>
-                <button onclick="createCleanSchoolYearPrompt()" class="no-print bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer">
-                    ✨ Initialize New Academic Period
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-between">
-                    <span class="text-xs font-bold uppercase text-blue-600 tracking-wider">Total Schedules Listed</span>
-                    <span id="kpi-total-schedules" class="text-3xl font-extrabold text-blue-950 mt-2">0</span>
-                </div>
-                <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl flex flex-col justify-between">
-                    <span class="text-xs font-bold uppercase text-purple-600 tracking-wider">Registered Faculty Members</span>
-                    <span id="kpi-total-faculty" class="text-3xl font-extrabold text-purple-950 mt-2">0</span>
-                </div>
-                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col justify-between">
-                    <span class="text-xs font-bold uppercase text-emerald-600 tracking-wider">Total Allocated Load</span>
-                    <span id="kpi-total-units" class="text-3xl font-extrabold text-emerald-950 mt-2">0 Unit/s</span>
-                </div>
-                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col justify-between">
-                    <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Audited Compliance Rate</span>
-                    <span id="kpi-compliance-rate" class="text-3xl font-extrabold text-amber-950 mt-2">100%</span>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="p-4 bg-slate-900 text-white rounded-xl flex flex-col justify-between shadow-sm md:col-span-1">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-lg">🎓</span>
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Undergraduate Courses Running</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Total distinct course scopes active (strictly excluding Graduate Studies channels).</p>
-                    </div>
-                    <span id="kpi-undergrad-courses" class="text-4xl font-black text-sky-400 mt-4">0</span>
-                </div>
                 <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm md:col-span-2 space-y-2">
                     <div class="border-b pb-1">
                         <span class="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-1">
@@ -444,8 +253,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Upload Document or Text File (.txt, .csv, copied Word tables)[cite: 1]</label>
-                        <input type="file" id="csvFileInput" accept=".csv, .txt" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100" onchange="handleCSVFileLoad(event)">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Upload Document (.docx, .txt, .csv)[cite: 1]</label>
+                        <input type="file" id="csvFileInput" accept=".docx, .csv, .txt" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100" onchange="handleFileInputLoad(event)">
                     </div>
 
                     <div>
@@ -630,7 +439,7 @@ Monday and Wednesday
                         <button onclick="changeSummaryGrouping('none')" id="group-none-btn" class="bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer">Flat List</button>
                         <button onclick="changeSummaryGrouping('college')" id="group-college-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By College</button>
                         <button onclick="changeSummaryGrouping('program')" id="group-program-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By Program</button>
-                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 border font-medium text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer font-bold">📋 General Workload Matrix</button>
+                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 font-medium text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer font-bold">📋 General Workload Matrix</button>
                     </div>
                     <div id="sortingControlsContainer" class="flex items-center gap-1 border-l pl-3 border-gray-300">
                         <span class="text-xs font-bold uppercase text-gray-500 mr-1">Sort Metrics:</span>
@@ -1254,12 +1063,32 @@ Monday and Wednesday
             return h * 60 + m; 
         }
 
-        function handleCSVFileLoad(ev) {
+        function handleFileInputLoad(ev) {
             const f = ev.target.files[0]; 
-            if (!f) return; 
-            const r = new FileReader();
-            r.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; }; 
-            r.readAsText(f);
+            if (!f) return;
+            
+            const fname = f.name.toLowerCase();
+            if (fname.endsWith('.docx')) {
+                const r = new FileReader();
+                r.onload = function(e) {
+                    if (window.mammoth) {
+                        window.mammoth.extractRawText({ arrayBuffer: e.target.result })
+                            .then(function(result) {
+                                document.getElementById("rawSchedulePasteInput").value = result.value;
+                            })
+                            .catch(function(err) {
+                                alert("⚠️ Word file reading error: " + err.message);
+                            });
+                    } else {
+                        alert("⚠️ Mammoth extraction library unavailable.");
+                    }
+                };
+                r.readAsArrayBuffer(f);
+            } else {
+                const r = new FileReader();
+                r.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; }; 
+                r.readAsText(f);
+            }
         }
 
         // AUTO-DETECT PROGRAM & SECTION PARSER
