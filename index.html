@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @media print {
@@ -90,6 +91,7 @@
                 <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
                     <span class="text-xs text-blue-200 font-medium">AY:</span>
                     <select id="academicYearSelect" onchange="switchAcademicYear(this.value)" class="bg-blue-950 text-xs text-white font-bold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
+                        <option value="2025-2026">AY 2025 - 2026</option>
                         <option value="2026-2027">AY 2026 - 2027</option>
                         <option value="2027-2028">AY 2027 - 2028</option>
                         <option value="NEW">+ Add School Year...</option>
@@ -142,7 +144,198 @@
             <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
-                    <p class="text-sm text-gray-500">Real-time summary tracking university loading balances and compliance ratios for <strong class="text-blue-950" id="displayActiveYearLabel">AY 2026 - 2027</strong> (<span id="displayActiveTermLabel" class="font-extrabold text-amber-600">First Semester</span>).</p>
+                    <p class="text-sm text-gray-500">Real-time summary tracking university loading balances and compliance ratios for <strong class="text-blue-950" id="displayActiveYearLabel">AY 2025 - 2026</strong> (<span id="displayActiveTermLabel" class="font-extrabold text-amber-600">Second Semester</span>).</p>
+                </div>
+                <button onclick="createCleanSchoolYearPrompt()" class="no-print bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer">
+                    ✨ Initialize New Academic Period
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-blue-600 tracking-wider">Total Schedules Listed</span>
+                    <span id="kpi-total-schedules" class="text-3xl font-extrabold text-blue-950 mt-2">0</span>
+                </div>
+                <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-purple-600 tracking-wider">Registered Faculty Members</span>
+                    <span id="kpi-total-faculty" class="text-3xl font-extrabold text-purple-950 mt-2">0</span>
+                </div>
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-emerald-600 tracking-wider">Total Allocated Load</span>
+                    <span id="kpi-total-units" class="text-3xl font-extrabold text-emerald-950 mt-2">0 Unit/s</span>
+                </div>
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-amber-600 tracking-wider">Audited Compliance Rate</span>
+                    <span id="kpi-compliance-rate" class="text-3xl font-extrabold text-amber-950 mt-2">100%</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-slate-900 text-white rounded-xl flex flex-col justify-between shadow-sm md:col-span-1">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">🎓</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Undergraduate Courses Running</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Total distinct course scopes active (strictly excluding Graduate Studies channels).</p>
+                    </div>
+                    <span id="kpi-undergrad-courses" class="text-4xl font-black text-sky-400 mt-4">0</span>
+                </div>
+                <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-sm md:col-span-2 space-y-2Here is the updated code[cite: 1]. It includes an enhanced **Ingestion Engine** that automatically detects and extracts metadata from document tables like `COE INPUT.docx`[cite: 1]:
+
+1. **Header Metadata Detection**: Automatically detects the **College** (`COLLEGE OF ENGINEERING`), **Semester Term** (`Second Semester`), **Academic Year** (`2025 - 2026`), and **Program / Section** (`BACHELOR OF SCIENCE IN COMPUTER ENGINEERING I - 1`) directly from the uploaded document text[cite: 1].
+2. **Auto-Routing & Registration**: Reads every class block line, registers missing instructors/rooms, maps the program and section automatically into the system registries[cite: 1], and updates the active view to match the parsed term/year[cite: 1].
+3. **Filter Bypassing**: Ignores empty rows, "NOON INTERMISSION", and non-academic entries like "Research Work and Other Activities"[cite: 1].
+
+---
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESSU Salcedo Scheduling & Workload System</title>
+    <script src="[https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4](https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4)"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js](https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js](https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js)"></script>
+    <script src="[https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js](https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js](https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+    <style>
+        @media print {
+            body, main, header, section, div, table {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .print-page { 
+                page-break-after: always !important; 
+                break-after: page !important;
+                padding: 0 !important; 
+                margin: 0 0 10mm 0 !important; 
+                border: none !important; 
+            }
+            body:has(.printing-matrix-active) main,
+            body:has(.printing-matrix-active) header {
+                display: none !important;
+            }
+            .print-matrix-view { 
+                display: block !important; 
+                width: 100% !important; 
+            }
+            @page {
+                size: auto;
+                margin: 15mm 10mm 15mm 10mm;
+            }
+        }
+        .code-added-highlight { background-color: rgba(254, 240, 138, 0.08); }
+        
+        /* Institutional Color Palette Schematics */
+        .header-coed { background-color: #1d4ed8 !important; color: white !important; }
+        .header-coe { background-color: #7f1d1d !important; color: white !important; }
+        .header-cans { background-color: #3f6212 !important; color: white !important; }
+        .header-ccs { background-color: #6b21a8 !important; color: white !important; }
+        .header-cas { background-color: #0d9488 !important; color: white !important; }
+        .header-gs { background-color: #075985 !important; color: white !important; }
+        .header-default { background-color: #1e293b !important; color: white !important; }
+
+        .border-coed { border-color: #1d4ed8 !important; }
+        .border-coe { border-color: #7f1d1d !important; }
+        .border-cans { border-color: #3f6212 !important; }
+        .border-ccs { border-color: #6b21a8 !important; }
+        .border-cas { border-color: #0d9488 !important; }
+        .border-gs { border-color: #075985 !important; }
+        .border-default { border-color: #1e293b !important; }
+
+        .bg-coed-soft { background-color: rgba(29, 78, 216, 0.05) !important; }
+        .bg-coe-soft { background-color: rgba(127, 29, 29, 0.05) !important; }
+        .bg-cans-soft { background-color: rgba(63, 98, 18, 0.05) !important; }
+        .bg-ccs-soft { background-color: rgba(107, 33, 168, 0.05) !important; }
+        .bg-cas-soft { background-color: rgba(13, 148, 136, 0.05) !important; }
+        .bg-gs-soft { background-color: rgba(7, 89, 133, 0.05) !important; }
+        .bg-default-soft { background-color: rgba(30, 41, 59, 0.05) !important; }
+
+        .text-coed { color: #1d4ed8 !important; }
+        .text-coe { color: #7f1d1d !important; }
+        .text-cans { color: #3f6212 !important; }
+        .text-ccs { color: #6b21a8 !important; }
+        .text-cas { color: #0d9488 !important; }
+        .text-gs { color: #075985 !important; }
+        .text-default { color: #1e293b !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased">
+
+    <header class="bg-blue-950 text-white shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight">ESSU Salcedo Scheduling and Workload System (SWS v1)</h1>
+                <p class="text-sm text-blue-200">Class Matrix & Faculty Workload Automated Generator</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <button onclick="purgeLocalStorageCache()" class="bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">
+                    🚨 Wipe Database Cache
+                </button>
+                <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
+                    <span class="text-xs text-blue-200 font-medium">AY:</span>
+                    <select id="academicYearSelect" onchange="switchAcademicYear(this.value)" class="bg-blue-950 text-xs text-white font-bold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
+                        <option value="2025-2026">AY 2025 - 2026</option>
+                        <option value="2026-2027">AY 2026 - 2027</option>
+                        <option value="2027-2028">AY 2027 - 2028</option>
+                        <option value="NEW">+ Add School Year...</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
+                    <span class="text-xs text-blue-200 font-medium">Term:</span>
+                    <select id="semesterTermSelect" onchange="switchSemesterTerm(this.value)" class="bg-blue-950 text-xs text-amber-300 font-extrabold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
+                        <option value="First Semester">First Semester</option>
+                        <option value="Second Semester">Second Semester</option>
+                        <option value="SUMMER">Summer Term</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-10">
+
+        <div class="border-b border-gray-200 no-print">
+            <nav class="flex flex-wrap gap-2 sm:space-x-6" aria-label="Tabs">
+                <button onclick="switchTab('dashboard-view')" id="tab-dashboard-view" class="tab-btn border-b-2 border-blue-950 text-blue-950 font-bold pb-4 text-sm px-1 cursor-pointer">
+                    📊 Dashboard Hub
+                </button>
+                <button onclick="switchTab('upload-view')" id="tab-upload-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
+                    📥 Schedule Ingestion Engine
+                </button>
+                <button onclick="switchTab('encoder-view')" id="tab-encoder-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
+                    ✍ Manual Encoder
+                </button>
+                <button onclick="switchTab('schedule-view')" id="tab-schedule-view" class="tab-btn border-b-2 border-transparent text-gray-500 hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer">
+                    🗂 Master Class Program
+                </button>
+                <button onclick="switchTab('program-schedule-view')" id="tab-program-schedule-view" class="tab-btn border-b-2 border-transparent text-indigo-700 hover:text-indigo-900 pb-4 text-sm px-1 cursor-pointer font-medium">
+                    📅 Class Schedule Report
+                </button>
+                <button onclick="switchTab('summary-view')" id="tab-summary-view" class="tab-btn border-b-2 border-transparent hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-medium text-emerald-700">
+                    📊 Faculty Load Summary
+                </button>
+                <button onclick="switchTab('workload-view')" id="tab-workload-view" class="tab-btn border-b-2 border-transparent hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-medium text-purple-700">
+                    📋 Individual Workload Sheets
+                </button>
+                <button onclick="switchTab('management-view')" id="tab-management-view" class="tab-btn border-b-2 border-transparent hover:text-gray-700 pb-4 text-sm px-1 cursor-pointer font-semibold text-indigo-600">
+                    ⚙ Registries Management
+                </button>
+            </nav>
+        </div>
+
+        <section id="dashboard-view" class="tab-content bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
+            <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
+                    <p class="text-sm text-gray-500">Real-time summary tracking university loading balances and compliance ratios for <strong class="text-blue-950" id="displayActiveYearLabel">AY 2025 - 2026</strong> (<span id="displayActiveTermLabel" class="font-extrabold text-amber-600">Second Semester</span>).</p>
                 </div>
                 <button onclick="createCleanSchoolYearPrompt()" class="no-print bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer">
                     ✨ Initialize New Academic Period
@@ -245,47 +438,39 @@
         <section id="upload-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print space-y-6">
             <div class="border-b border-gray-100 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Document Ingestion & Parsing Engine</h2>
-                <p class="text-sm text-gray-500">Target Operational Term: <strong class="text-blue-950" id="ingestionYearBadge">2026-2027</strong> | <span id="ingestionTermBadge" class="font-bold text-amber-600">First Semester</span>. Clean CSV spreadsheet lines parsed here are appended directly to this semester's schedule matrix.</p>
+                <p class="text-sm text-gray-500">Auto-routes parsed entries to the specific Program, Year, and Section based on document headers[cite: 1].</p>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Target Academic College Destination</label>
-                        <select id="uploadCollegeSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
-                            <option value="">Select Target College Division...</option>
-                            <option value="COE">College of Engineering (COE)</option>
-                            <option value="CCS">College of Computer Studies (CCS)</option>
-                            <option value="COEd">College of Education (COEd)</option>
-                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
-                            <option value="CAS">College of Arts and Sciences (CAS)</option>
-                            <option value="Graduate Studies">Graduate Studies</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">File Ingestion Input (.csv / .txt)</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Upload Document or Text File (.txt, .csv, copied Word tables)[cite: 1]</label>
                         <input type="file" id="csvFileInput" accept=".csv, .txt" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100" onchange="handleCSVFileLoad(event)">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Raw Spreadsheet CSV Console</label>
-                        <textarea id="rawSchedulePasteInput" rows="11" placeholder="Paste line elements here...&#10;Format: BSCPE 1-1,Monday and Wednesday (07:30- 09:00),Math 111,3,Bolito,COE-1" class="w-full font-mono text-xs p-3 bg-gray-950 text-emerald-400 border border-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed"></textarea>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Raw Document Input Console</label>
+                        <textarea id="rawSchedulePasteInput" rows="12" placeholder="Paste document contents or table here..." class="w-full font-mono text-xs p-3 bg-gray-950 text-emerald-400 border border-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed"></textarea>
                     </div>
 
                     <div class="flex justify-between items-center">
                         <button onclick="clearIngestionConsole()" class="text-xs text-red-600 hover:underline font-semibold cursor-pointer">Clear Ingestion Board</button>
                         <button onclick="processUploadedScheduleText()" class="bg-blue-950 hover:bg-blue-900 text-white font-semibold text-sm px-6 py-2.5 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer">
-                            Parse, Merge & Append to Selected Term Database
+                            Parse & Auto-Save To Class Program
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-3">
-                    <h4 class="font-bold text-gray-900 uppercase tracking-wide border-b border-gray-200 pb-2">📋 Clean CSV Ingestion Template</h4>
-                    <p class="text-gray-600">Optimized to read the structure of your data file:</p>
-                    <div class="bg-gray-900 text-gray-100 font-mono p-2 rounded text-[10px] overflow-x-auto whitespace-pre">BSCpE III-1,Monday and Wednesday (01:00 PM – 04:00 PM),CpE 311,4,Araneta,COE-3
-BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11</div>
+                    <h4 class="font-bold text-gray-900 uppercase tracking-wide border-b border-gray-200 pb-2">📋 Word/Document Format Example</h4>
+                    <p class="text-gray-600">Supports direct imports from official university document tables[cite: 1]:</p>
+                    <div class="bg-gray-900 text-gray-100 font-mono p-2 rounded text-[10px] overflow-x-auto whitespace-pre">COLLEGE OF ENGINEERING (COE) CLASS PROGRAM
+Second Semester, SY 2025 - 2026
+BACHELOR OF SCIENCE IN COMPUTER ENGINEERING I - 1
+
+Monday and Wednesday
+07:30 – 09:00 | CPE 122 Discrete Mathematics | 3 | Mr. Marco C. Berongoy | COE-1
+01:00 – 04:00 | ENGG 122 Physics for Engineers | 4 | Prof. Noel Yanga | COE-3</div>
                 </div>
             </div>
         </section>
@@ -293,7 +478,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         <section id="encoder-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print">
             <div class="border-b border-gray-100 pb-4 mb-6">
                 <h2 class="text-xl font-bold text-gray-900">Manual Entry Wizard</h2>
-                <p class="text-sm text-gray-500">Encode a single class block directly into active database records for <strong class="text-blue-950" id="encoderYearBadge">AY 2026-2027</strong> (<span id="encoderTermBadge" class="font-bold text-amber-600">First Semester</span>).</p>
+                <p class="text-sm text-gray-500">Encode a single class block directly into active database records for <strong class="text-blue-950" id="encoderYearBadge">AY 2025-2026</strong> (<span id="encoderTermBadge" class="font-bold text-amber-600">Second Semester</span>).</p>
             </div>
 
             <form id="scheduleForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -326,7 +511,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Subject Code & Descriptive Title</label>
-                    <input type="text" id="subjectTitle" placeholder="e.g., CpE 311 (Logic Circuits and Design)" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="text" id="subjectTitle" placeholder="e.g., CPE 122 Discrete Mathematics" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
 
                 <div>
@@ -385,7 +570,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">University Master Schedule Matrix</h2>
-                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by College divisions for <strong class="text-blue-950" id="masterYearBadge">AY 2026-2027</strong> (<span id="masterTermBadge" class="font-bold text-amber-600">First Semester</span>).</p>
+                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by College divisions for <strong class="text-blue-950" id="masterYearBadge">AY 2025-2026</strong> (<span id="masterTermBadge" class="font-bold text-amber-600">Second Semester</span>).</p>
                 </div>
                 <div class="flex gap-2 no-print">
                     <button onclick="exportMasterProgramPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer">
@@ -711,8 +896,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
     <script>
         // System State & Registry Models
-        let activeAcademicYear = "2026-2027";
-        let activeSemesterTerm = "First Semester"; // "First Semester", "Second Semester", "SUMMER"
+        let activeAcademicYear = "2025-2026";
+        let activeSemesterTerm = "Second Semester"; 
         
         let registeredPrograms = {};
         let registeredSections = {};
@@ -727,7 +912,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         let matrixFilterScope = 'all';
 
         const defaultPrograms = {
-            "COE": ["Bachelor of Science in Agricultural and Biosystems Engineering", "Bachelor of Science in Computer Engineering"],
+            "COE": ["Bachelor of Science in Computer Engineering", "Bachelor of Science in Agricultural and Biosystems Engineering"],
             "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
             "COEd": ["Bachelor of Elementary Education", "Bachelor of Secondary Education - English", "Bachelor of Secondary Education - Mathematics", "Bachelor of Secondary Education - Science", "Bachelor of Technology and Livelihood Education - HE", "Bachelor of Technology and Livelihood Education - ICT", "Bachelor of Early Childhood Education"],
             "CCS": ["Bachelor of Science in Computer Science", "Bachelor of Science in Information Technology"],
@@ -754,8 +939,8 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         const defaultRooms = ["COE-1", "COE-3", "COE-4", "COE-5", "COE-8", "COE-9", "COE-11", "COE-12", "CCS-1", "CCS-15", "CCS-16"].sort();
         
         const defaultSchedules = [
-            { id: "3001", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "Math 111 (Mathematics in the Modern World)", unifiedUnits: 3, instructorName: "Bolito, Cherlowen A.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
-            { id: "3002", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE-3" }
+            { id: "3001", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "CPE 122 Discrete Mathematics", unifiedUnits: 3, instructorName: "Berongoy, Marco C.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
+            { id: "3002", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "CPE 121 Object-Oriented Programming", unifiedUnits: 2, instructorName: "Ranido, Arvin Melson D.", dayAssignment: "Tuesday and Thursday", startTime: "07:30", endTime: "10:30", roomNumber: "COE-3" }
         ];
 
         const designationUnitMinimums = {
@@ -820,22 +1005,21 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
         function initializeSystemStateHydration() {
             try {
-                activeAcademicYear = localStorage.getItem("hub_activeAcademicYear") || "2026-2027";
-                activeSemesterTerm = localStorage.getItem("hub_activeSemesterTerm") || "First Semester";
+                activeAcademicYear = localStorage.getItem("hub_activeAcademicYear") || "2025-2026";
+                activeSemesterTerm = localStorage.getItem("hub_activeSemesterTerm") || "Second Semester";
                 
                 registeredPrograms = JSON.parse(localStorage.getItem("hub_registeredPrograms")) || defaultPrograms;
                 registeredSections = JSON.parse(localStorage.getItem("hub_registeredSections")) || defaultSections;
                 registeredFaculty = JSON.parse(localStorage.getItem("hub_registeredFaculty")) || defaultFaculty;
                 registeredRooms = JSON.parse(localStorage.getItem("hub_registeredRooms")) || defaultRooms;
                 
-                // Load schedule tied to active Year & Semester Term
                 const currentKey = getScheduleStorageKey();
                 const storedSchedules = localStorage.getItem(currentKey);
                 
                 if (storedSchedules) {
                     sharedSchedules = JSON.parse(storedSchedules);
                 } else {
-                    sharedSchedules = (activeAcademicYear === "2026-2027" && activeSemesterTerm === "First Semester") ? defaultSchedules : [];
+                    sharedSchedules = (activeAcademicYear === "2025-2026" && activeSemesterTerm === "Second Semester") ? defaultSchedules : [];
                 }
 
                 registeredFaculty.forEach(f => {
@@ -857,15 +1041,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             localStorage.setItem("hub_registeredFaculty", JSON.stringify(registeredFaculty));
             localStorage.setItem("hub_registeredRooms", JSON.stringify(registeredRooms));
             
-            // Save schedule keyed to active Academic Year and Term
             localStorage.setItem(getScheduleStorageKey(), JSON.stringify(sharedSchedules));
             localStorage.setItem("hub_activeAcademicYear", activeAcademicYear);
             localStorage.setItem("hub_activeSemesterTerm", activeSemesterTerm);
         }
 
         function loadFactoryStateDefaults() {
-            activeAcademicYear = "2026-2027";
-            activeSemesterTerm = "First Semester";
+            activeAcademicYear = "2025-2026";
+            activeSemesterTerm = "Second Semester";
             registeredPrograms = JSON.parse(JSON.stringify(defaultPrograms));
             registeredSections = JSON.parse(JSON.stringify(defaultSections));
             registeredFaculty = JSON.parse(JSON.stringify(defaultFaculty));
@@ -917,7 +1100,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             activeAcademicYear = selectedYear;
             localStorage.setItem("hub_activeAcademicYear", activeAcademicYear);
             
-            // Load schedule dataset for selected year & current term
             const storedSchedules = localStorage.getItem(getScheduleStorageKey());
             sharedSchedules = storedSchedules ? JSON.parse(storedSchedules) : [];
             
@@ -929,7 +1111,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             activeSemesterTerm = selectedTerm;
             localStorage.setItem("hub_activeSemesterTerm", activeSemesterTerm);
 
-            // Load schedule dataset for selected term & current year
             const storedSchedules = localStorage.getItem(getScheduleStorageKey());
             sharedSchedules = storedSchedules ? JSON.parse(storedSchedules) : [];
 
@@ -942,11 +1123,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (inputYear && inputYear.trim()) {
                 const cleanYearKey = inputYear.trim().replace(/\s+/g, "");
                 activeAcademicYear = cleanYearKey;
-                sharedSchedules = []; // Fresh clean slate
+                sharedSchedules = [];
                 saveSystemStateToLocalStorage();
                 syncAcademicYearDropdown();
                 executeRegistryDataSynchronization();
-                alert(`✨ Successfully initialized AY ${cleanYearKey} (${activeSemesterTerm})! Schedule matrix is clean, and all faculty/room registries are ready.`);
+                alert(`✨ Successfully initialized AY ${cleanYearKey} (${activeSemesterTerm})!`);
             } else {
                 document.getElementById("academicYearSelect").value = activeAcademicYear;
             }
@@ -1081,79 +1262,128 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             r.readAsText(f);
         }
 
+        // AUTO-DETECT PROGRAM & SECTION PARSER
         function processUploadedScheduleText() {
-            const selectedCollege = document.getElementById("uploadCollegeSelect").value;
-            const txt = document.getElementById("rawSchedulePasteInput").value;
-            if(!selectedCollege || !txt.trim()) { alert("⚠️ Configuration Target Division Missing!"); return; }
+            const rawText = document.getElementById("rawSchedulePasteInput").value;
+            if(!rawText.trim()) { alert("⚠️ Document text console is empty!"); return; }
 
-            const lines = txt.split(/\r?\n/);
-            let parsedCount = 0;
+            // 1. Auto-detect College
+            let detectedCollege = "COE";
+            if (/ENGINEERING/i.test(rawText)) detectedCollege = "COE";
+            else if (/COMPUTER STUDIES|COMPUTING/i.test(rawText)) detectedCollege = "CCS";
+            else if (/EDUCATION/i.test(rawText)) detectedCollege = "COEd";
+            else if (/AGRICULTURE/i.test(rawText)) detectedCollege = "CANS";
+            else if (/ARTS AND SCIENCES/i.test(rawText)) detectedCollege = "CAS";
+            else if (/GRADUATE/i.test(rawText)) detectedCollege = "Graduate Studies";
+
+            // 2. Auto-detect Term and Year
+            if (/First Semester/i.test(rawText)) activeSemesterTerm = "First Semester";
+            else if (/Second Semester/i.test(rawText)) activeSemesterTerm = "Second Semester";
+            else if (/SUMMER/i.test(rawText)) activeSemesterTerm = "SUMMER";
+
+            const yearMatch = rawText.match(/(?:20\d{2})\s*[-–]\s*(?:20\d{2})/);
+            if (yearMatch) activeAcademicYear = yearMatch[0].replace(/\s+/g, '');
+
+            // 3. Auto-detect Program & Section
+            let detectedProgram = "Bachelor of Science in Computer Engineering";
+            let detectedSection = "BSCpE 1-1";
+
+            const programSectionMatch = rawText.match(/(BACHELOR OF SCIENCE IN [^\n\r\|]+?)(?:\s+([I|V|X\d]+(?:\s*-\s*\d+)?))?[\r\n|]/i);
+            if (programSectionMatch) {
+                detectedProgram = programSectionMatch[1].trim();
+                let yearSecRaw = programSectionMatch[2] ? programSectionMatch[2].trim() : "1-1";
+                
+                // Standardize Section Code (e.g., BSCpE 1-1)
+                let acronym = detectedProgram.split(/\s+/).map(w => w[0]).join('').replace(/BOS/g,'BS');
+                if (detectedProgram.toLowerCase().includes("computer engineering")) acronym = "BSCpE";
+                
+                detectedSection = `${acronym} ${yearSecRaw}`;
+            }
+
+            // Sync structural registries
+            if (!registeredPrograms[detectedCollege]) registeredPrograms[detectedCollege] = [];
+            if (!registeredPrograms[detectedCollege].includes(detectedProgram)) registeredPrograms[detectedCollege].push(detectedProgram);
             
-            const facultyMapCache = new Map(registeredFaculty.map(f => [f.name.toLowerCase(), f]));
+            if (!registeredSections[detectedProgram]) registeredSections[detectedProgram] = [];
+            if (!registeredSections[detectedProgram].includes(detectedSection)) registeredSections[detectedProgram].push(detectedSection);
 
-            for(let i=0; i < lines.length; i++) {
-                let segment = lines[i].trim(); if(!segment) continue;
-                let tokens = segment.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(t => t.replace(/^"|"$|\\r|\\n/g, '').trim());
+            // 4. Line Parsing
+            const lines = rawText.split(/\r?\n/);
+            let parsedCount = 0;
+            let currentDayAssignment = "Monday and Wednesday";
 
-                if(tokens.length >= 4) {
-                    let section = tokens[0] || "General Section";
-                    let dayTimeBlock = tokens[1] || "";
-                    let subjectTitle = tokens[2] || "";
-                    let units = parseInt(tokens[3]) || 3;
-                    let instructor = tokens[4] || "Instructor Unassigned";
-                    let room = tokens[5] ? tokens[5].replace(/"/g, '') : "General Room";
+            lines.forEach(line => {
+                let cleanLine = line.trim();
+                if (!cleanLine) return;
 
-                    if(section.toUpperCase().includes("SECTION") || section.toUpperCase().includes("DAY/TIME")) continue;
+                // Track active day section headers
+                if (/^(Monday and Wednesday|Tuesday and Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i.test(cleanLine)) {
+                    const dayMatch = cleanLine.match(/^(Monday and Wednesday|Tuesday and Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
+                    if (dayMatch) currentDayAssignment = dayMatch[1].trim();
+                    return;
+                }
 
-                    let assignedProgram = (registeredPrograms[selectedCollege] && registeredPrograms[selectedCollege][0]) || "General Program"; 
-                    let upperSection = section.toUpperCase();
+                // Filter non-academic intermission lines
+                if (/INTERMISSION|Research Work|DAY\/TIME|SUBJECT/i.test(cleanLine)) return;
 
-                    if(selectedCollege === "COE") {
-                        if(upperSection.includes("BSCPE") || upperSection.includes("CPE")) assignedProgram = "Bachelor of Science in Computer Engineering";
-                        else if(upperSection.includes("BSABE") || upperSection.includes("ABE")) assignedProgram = "Bachelor of Science in Agricultural and Biosystems Engineering";
-                    } else if(selectedCollege === "CCS") {
-                        if(upperSection.includes("BSCS") || upperSection.includes("CS")) assignedProgram = "Bachelor of Science in Computer Science";
-                        else if(upperSection.includes("BSIT") || upperSection.includes("IT")) assignedProgram = "Bachelor of Science in Information Technology";
+                // Match time, subject, units, professor, and room
+                const tokenParts = cleanLine.split('|').map(p => p.trim());
+                if (tokenParts.length >= 3) {
+                    let timeRaw = tokenParts[0];
+                    let subjectRaw = tokenParts[1];
+                    let unitsRaw = parseInt(tokenParts[2]) || 3;
+                    let profRaw = tokenParts[3] || "TBA";
+                    let roomRaw = tokenParts[4] || "General Room";
+
+                    // Clean professor name format
+                    profRaw = profRaw.replace(/^(Mr\.|Ms\.|Mrs\.|Engr\.|Prof\.|Dr\.)\s+/i, '').trim();
+                    if (profRaw.includes(' ')) {
+                        let parts = profRaw.split(' ');
+                        let lastName = parts.pop();
+                        profRaw = `${lastName}, ${parts.join(' ')}`;
                     }
 
-                    if(!registeredSections[assignedProgram]) registeredSections[assignedProgram] = [];
-                    if(!registeredSections[assignedProgram].includes(section)) registeredSections[assignedProgram].push(section);
-
-                    let dayAssignment = "Monday", startTime = "08:00", endTime = "11:00";
-                    const dayMatches = dayTimeBlock.match(/(Monday\s+and\s+Wednesday|Tuesday\s+and\s+Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
-                    if(dayMatches) dayAssignment = dayMatches[1].trim();
-
-                    const timeMatches = dayTimeBlock.match(/(\d{1,2}:\d{2})\s*(AM|PM)?\s*[-–]\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i);
-                    if(timeMatches) { 
-                        let startRaw = timeMatches[1]; let startAmpm = timeMatches[2];
-                        let endRaw = timeMatches[3]; let endAmpm = timeMatches[4];
-                        startTime = convertTo24Hour(startAmpm ? `${startRaw} ${startAmpm}` : startRaw); 
-                        endTime = convertTo24Hour(endAmpm ? `${endRaw} ${endAmpm}` : endRaw); 
+                    // Clean time intervals
+                    let startTime = "08:00", endTime = "11:00";
+                    const timeMatches = timeRaw.match(/(\d{1,2}:\d{2})\s*(AM|PM)?\s*[-–]\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i);
+                    if (timeMatches) {
+                        startTime = convertTo24Hour(timeMatches[1] + (timeMatches[2] || ''));
+                        endTime = convertTo24Hour(timeMatches[3] + (timeMatches[4] || ''));
                     }
 
-                    let matchFaculty = facultyMapCache.get(instructor.toLowerCase());
-                    let matchFacultyName = matchFaculty ? matchFaculty.name : instructor;
-                    
-                    if(!matchFaculty) {
-                        const newFaculty = { name: instructor, college: selectedCollege, rank: "TBA", designation: "Without Designation" };
-                        registeredFaculty.push(newFaculty);
-                        facultyMapCache.set(instructor.toLowerCase(), newFaculty);
+                    // Auto-register Faculty and Rooms
+                    if (profRaw && profRaw !== "TBA" && !registeredFaculty.some(f => f.name.toLowerCase() === profRaw.toLowerCase())) {
+                        registeredFaculty.push({ name: profRaw, college: detectedCollege, rank: "Instructor I", designation: "Without Designation" });
                     }
-                    if(!registeredRooms.includes(room)) registeredRooms.push(room);
+                    if (roomRaw && roomRaw !== "General Room" && !registeredRooms.includes(roomRaw)) {
+                        registeredRooms.push(roomRaw);
+                    }
 
+                    // Append to active schedules
                     sharedSchedules.push({
-                        id: `sched-${Date.now()}-${Math.floor(Math.random() * 100000)}`, college: selectedCollege, program: assignedProgram, classSection: section,
-                        subjectTitle: subjectTitle, unifiedUnits: units, instructorName: matchFacultyName, dayAssignment: dayAssignment,
-                        startTime: startTime, endTime: endTime, roomNumber: room
+                        id: `sched-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+                        college: detectedCollege,
+                        program: detectedProgram,
+                        classSection: detectedSection,
+                        subjectTitle: subjectRaw,
+                        unifiedUnits: unitsRaw,
+                        instructorName: profRaw,
+                        dayAssignment: currentDayAssignment,
+                        startTime: startTime,
+                        endTime: endTime,
+                        roomNumber: roomRaw
                     });
                     parsedCount++;
                 }
-            }
-            
+            });
+
+            // Save state, sync UI and jump to Master Matrix
+            document.getElementById("academicYearSelect").value = activeAcademicYear;
+            document.getElementById("semesterTermSelect").value = activeSemesterTerm;
             saveSystemStateToLocalStorage();
             executeRegistryDataSynchronization();
-            alert(`✅ Ingestion Complete for AY ${activeAcademicYear} (${activeSemesterTerm})! Merged entry expanded by ${parsedCount} lines.`);
-            switchTab('dashboard-view');
+            alert(`✅ Document Parsing Complete!\nAppended ${parsedCount} class blocks into [${detectedProgram} - ${detectedSection}] for AY ${activeAcademicYear} (${activeSemesterTerm}).`);
+            switchTab('schedule-view');
         }
 
         function fontFacultyClassesChronologically(list) {
