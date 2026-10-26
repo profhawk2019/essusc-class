@@ -9,7 +9,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @media print {
@@ -79,32 +78,16 @@
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
 
     <header class="bg-blue-950 text-white shadow-md no-print">
-        <div class="max-w-7xl mx-auto px-4 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="max-w-7xl mx-auto px-4 py-5 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold tracking-tight">ESSU Salcedo Scheduling and Workload System (SWS v1)</h1>
                 <p class="text-sm text-blue-200">Class Matrix & Faculty Workload Automated Generator</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div class="flex items-center gap-3">
                 <button onclick="purgeLocalStorageCache()" class="bg-red-950 hover:bg-red-900 border border-red-700 text-red-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition cursor-pointer">
                     🚨 Wipe Database Cache
                 </button>
-                <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
-                    <span class="text-xs text-blue-200 font-medium">AY:</span>
-                    <select id="academicYearSelect" onchange="switchAcademicYear(this.value)" class="bg-blue-950 text-xs text-white font-bold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
-                        <option value="2025-2026">AY 2025 - 2026</option>
-                        <option value="2026-2027">AY 2026 - 2027</option>
-                        <option value="2027-2028">AY 2027 - 2028</option>
-                        <option value="NEW">+ Add School Year...</option>
-                    </select>
-                </div>
-                <div class="flex items-center gap-2 bg-blue-900 px-3 py-1.5 rounded-lg border border-blue-800">
-                    <span class="text-xs text-blue-200 font-medium">Term:</span>
-                    <select id="semesterTermSelect" onchange="switchSemesterTerm(this.value)" class="bg-blue-950 text-xs text-amber-300 font-extrabold py-1 px-2 rounded outline-none cursor-pointer border border-blue-700">
-                        <option value="First Semester">First Semester</option>
-                        <option value="Second Semester">Second Semester</option>
-                        <option value="SUMMER">Summer Term</option>
-                    </select>
-                </div>
+                <span class="bg-blue-900 text-xs text-blue-100 px-3 py-1.5 rounded-full font-medium">AY 2026 - 2027</span>
             </div>
         </div>
     </header>
@@ -141,14 +124,9 @@
         </div>
 
         <section id="dashboard-view" class="tab-content bg-white rounded-xl shadow-sm border border-gray-200 p-6 space-y-6">
-            <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                    <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
-                    <p class="text-sm text-gray-500">Real-time summary tracking university loading balances and compliance ratios for <strong class="text-blue-950" id="displayActiveYearLabel">AY 2025 - 2026</strong> (<span id="displayActiveTermLabel" class="font-extrabold text-amber-600">Second Semester</span>).</p>
-                </div>
-                <button onclick="createCleanSchoolYearPrompt()" class="no-print bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer">
-                    ✨ Initialize New Academic Period
-                </button>
+            <div class="border-b border-gray-100 pb-4">
+                <h2 class="text-xl font-bold text-gray-900">Academic Analytics Summary</h2>
+                <p class="text-sm text-gray-500">Real-time summary tracking university loading balances, policy standard compliance ratios, and program structural distributions.</p>
             </div>
             
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -247,39 +225,47 @@
         <section id="upload-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print space-y-6">
             <div class="border-b border-gray-100 pb-4">
                 <h2 class="text-xl font-bold text-gray-900">Document Ingestion & Parsing Engine</h2>
-                <p class="text-sm text-gray-500">Auto-routes parsed entries to the specific Program, Year, and Section based on document headers[cite: 1].</p>
+                <p class="text-sm text-gray-500">Select a target college destination. Clean CSV spreadsheet lines parsed here are **permanently appended** into browser local storage.</p>
             </div>
             
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-4">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Upload Document (.docx, .txt, .csv)[cite: 1]</label>
-                        <input type="file" id="csvFileInput" accept=".docx, .csv, .txt" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100" onchange="handleFileInputLoad(event)">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Target Academic College Destination</label>
+                        <select id="uploadCollegeSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <option value="">Select Target College Division...</option>
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Raw Document Input Console</label>
-                        <textarea id="rawSchedulePasteInput" rows="12" placeholder="Paste document contents or table here..." class="w-full font-mono text-xs p-3 bg-gray-950 text-emerald-400 border border-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed"></textarea>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">File Ingestion Input (.csv / .txt)</label>
+                        <input type="file" id="csvFileInput" accept=".csv, .txt" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-950 hover:file:bg-blue-100" onchange="handleCSVFileLoad(event)">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Raw Spreadsheet CSV Console</label>
+                        <textarea id="rawSchedulePasteInput" rows="11" placeholder="Paste line elements here...&#10;Format: BSCPE 1-1,Monday and Wednesday (07:30- 09:00),Math 111,3,Bolito,COE-1" class="w-full font-mono text-xs p-3 bg-gray-950 text-emerald-400 border border-gray-800 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 leading-relaxed"></textarea>
                     </div>
 
                     <div class="flex justify-between items-center">
                         <button onclick="clearIngestionConsole()" class="text-xs text-red-600 hover:underline font-semibold cursor-pointer">Clear Ingestion Board</button>
                         <button onclick="processUploadedScheduleText()" class="bg-blue-950 hover:bg-blue-900 text-white font-semibold text-sm px-6 py-2.5 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer">
-                            Parse & Auto-Save To Class Program
+                            Parse, Merge & Append to Local Database
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 text-xs space-y-3">
-                    <h4 class="font-bold text-gray-900 uppercase tracking-wide border-b border-gray-200 pb-2">📋 Word/Document Format Example</h4>
-                    <p class="text-gray-600">Supports direct imports from official university document tables[cite: 1]:</p>
-                    <div class="bg-gray-900 text-gray-100 font-mono p-2 rounded text-[10px] overflow-x-auto whitespace-pre">COLLEGE OF ENGINEERING (COE) CLASS PROGRAM
-Second Semester, SY 2025 - 2026
-BACHELOR OF SCIENCE IN COMPUTER ENGINEERING I - 1
-
-Monday and Wednesday
-07:30 – 09:00 | CPE 122 Discrete Mathematics | 3 | Mr. Marco C. Berongoy | COE-1
-01:00 – 04:00 | ENGG 122 Physics for Engineers | 4 | Prof. Noel Yanga | COE-3</div>
+                    <h4 class="font-bold text-gray-900 uppercase tracking-wide border-b border-gray-200 pb-2">📋 Clean CSV Ingestion Template</h4>
+                    <p class="text-gray-600">Optimized to read the structure of your data file:</p>
+                    <div class="bg-gray-900 text-gray-100 font-mono p-2 rounded text-[10px] overflow-x-auto whitespace-pre">BSCpE III-1,Monday and Wednesday (01:00 PM – 04:00 PM),CpE 311,4,Araneta,COE-3
+BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11</div>
                 </div>
             </div>
         </section>
@@ -287,7 +273,7 @@ Monday and Wednesday
         <section id="encoder-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-gray-200 p-6 no-print">
             <div class="border-b border-gray-100 pb-4 mb-6">
                 <h2 class="text-xl font-bold text-gray-900">Manual Entry Wizard</h2>
-                <p class="text-sm text-gray-500">Encode a single class block directly into active database records for <strong class="text-blue-950" id="encoderYearBadge">AY 2025-2026</strong> (<span id="encoderTermBadge" class="font-bold text-amber-600">Second Semester</span>).</p>
+                <p class="text-sm text-gray-500">Encode a single class block directly into the system database records.</p>
             </div>
 
             <form id="scheduleForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -320,7 +306,7 @@ Monday and Wednesday
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Subject Code & Descriptive Title</label>
-                    <input type="text" id="subjectTitle" placeholder="e.g., CPE 122 Discrete Mathematics" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="text" id="subjectTitle" placeholder="e.g., CpE 311 (Logic Circuits and Design)" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" required>
                 </div>
 
                 <div>
@@ -369,7 +355,7 @@ Monday and Wednesday
 
                 <div class="md:col-span-3 flex justify-end pt-2">
                     <button type="submit" class="bg-blue-950 hover:bg-blue-900 text-white font-medium px-6 py-2.5 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer">
-                        Append to Active Term Schedules
+                        Append to Schedules
                     </button>
                 </div>
             </form>
@@ -379,7 +365,7 @@ Monday and Wednesday
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900">University Master Schedule Matrix</h2>
-                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by College divisions for <strong class="text-blue-950" id="masterYearBadge">AY 2025-2026</strong> (<span id="masterTermBadge" class="font-bold text-amber-600">Second Semester</span>).</p>
+                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by color-coded College divisions (12-Hour System Format).</p>
                 </div>
                 <div class="flex gap-2 no-print">
                     <button onclick="exportMasterProgramPDF()" class="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer">
@@ -439,7 +425,7 @@ Monday and Wednesday
                         <button onclick="changeSummaryGrouping('none')" id="group-none-btn" class="bg-blue-950 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer">Flat List</button>
                         <button onclick="changeSummaryGrouping('college')" id="group-college-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By College</button>
                         <button onclick="changeSummaryGrouping('program')" id="group-program-btn" class="bg-white text-gray-700 hover:bg-gray-100 text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer">By Program</button>
-                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 font-medium text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer font-bold">📋 General Workload Matrix</button>
+                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-gray-700 hover:bg-gray-100 border font-medium text-xs px-3 py-1.5 rounded-md border border-gray-200 cursor-pointer font-bold">📋 General Workload Matrix</button>
                     </div>
                     <div id="sortingControlsContainer" class="flex items-center gap-1 border-l pl-3 border-gray-300">
                         <span class="text-xs font-bold uppercase text-gray-500 mr-1">Sort Metrics:</span>
@@ -557,7 +543,7 @@ Monday and Wednesday
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 gap-3">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">Institutional Faculty Roster Registry</h3>
-                        <p class="text-xs text-gray-400">Manage institutional faculty roster. **Preserved automatically across all terms and academic years.**</p>
+                        <p class="text-xs text-gray-400">Manage database entries or sync datasets with clean CSV migrations.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <button onclick="exportFacultyRosterCSV()" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition cursor-pointer flex items-center gap-1">
@@ -587,7 +573,7 @@ Monday and Wednesday
         <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 space-y-4">
                 <div class="flex justify-between items-center border-b pb-2">
-                    <h3 class="text-lg font-bold text-gray-900">✏ Edit Class Schedule Block</h3>
+                    <h3 class="text-lg font-bold text-gray-900">✏  Edit Class Schedule Block</h3>
                     <button onclick="closeScheduleEditorModal()" class="text-gray-400 text-xl font-bold">&times;</button>
                 </div>
                 <form id="modalEditForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -704,10 +690,7 @@ Monday and Wednesday
     </main>
 
     <script>
-        // System State & Registry Models
-        let activeAcademicYear = "2025-2026";
-        let activeSemesterTerm = "Second Semester"; 
-        
+        // System Data Registry Models
         let registeredPrograms = {};
         let registeredSections = {};
         let registeredFaculty = []; 
@@ -721,7 +704,7 @@ Monday and Wednesday
         let matrixFilterScope = 'all';
 
         const defaultPrograms = {
-            "COE": ["Bachelor of Science in Computer Engineering", "Bachelor of Science in Agricultural and Biosystems Engineering"],
+            "COE": ["Bachelor of Science in Agricultural and Biosystems Engineering", "Bachelor of Science in Computer Engineering"],
             "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
             "COEd": ["Bachelor of Elementary Education", "Bachelor of Secondary Education - English", "Bachelor of Secondary Education - Mathematics", "Bachelor of Secondary Education - Science", "Bachelor of Technology and Livelihood Education - HE", "Bachelor of Technology and Livelihood Education - ICT", "Bachelor of Early Childhood Education"],
             "CCS": ["Bachelor of Science in Computer Science", "Bachelor of Science in Information Technology"],
@@ -748,8 +731,8 @@ Monday and Wednesday
         const defaultRooms = ["COE-1", "COE-3", "COE-4", "COE-5", "COE-8", "COE-9", "COE-11", "COE-12", "CCS-1", "CCS-15", "CCS-16"].sort();
         
         const defaultSchedules = [
-            { id: "3001", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "CPE 122 Discrete Mathematics", unifiedUnits: 3, instructorName: "Berongoy, Marco C.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
-            { id: "3002", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "CPE 121 Object-Oriented Programming", unifiedUnits: 2, instructorName: "Ranido, Arvin Melson D.", dayAssignment: "Tuesday and Thursday", startTime: "07:30", endTime: "10:30", roomNumber: "COE-3" }
+            { id: "3001", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE 1-1", subjectTitle: "Math 111 (Mathematics in the Modern World)", unifiedUnits: 3, instructorName: "Bolito, Cherlowen A.", dayAssignment: "Monday and Wednesday", startTime: "07:30", endTime: "09:00", roomNumber: "COE-1" },
+            { id: "3002", college: "COE", program: "Bachelor of Science in Computer Engineering", classSection: "BSCpE III-1", subjectTitle: "CpE 311 (Logic Circuits and Design)", unifiedUnits: 4, instructorName: "Araneta, Arvin Anthony S.", dayAssignment: "Monday and Wednesday", startTime: "13:00", endTime: "16:00", roomNumber: "COE-3" }
         ];
 
         const designationUnitMinimums = {
@@ -807,38 +790,19 @@ Monday and Wednesday
             return 'default';
         }
 
-        function getScheduleStorageKey() {
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, '_');
-            return `hub_sharedSchedules_${activeAcademicYear}_${sanitizedTerm}`;
-        }
-
         function initializeSystemStateHydration() {
             try {
-                activeAcademicYear = localStorage.getItem("hub_activeAcademicYear") || "2025-2026";
-                activeSemesterTerm = localStorage.getItem("hub_activeSemesterTerm") || "Second Semester";
-                
                 registeredPrograms = JSON.parse(localStorage.getItem("hub_registeredPrograms")) || defaultPrograms;
                 registeredSections = JSON.parse(localStorage.getItem("hub_registeredSections")) || defaultSections;
                 registeredFaculty = JSON.parse(localStorage.getItem("hub_registeredFaculty")) || defaultFaculty;
                 registeredRooms = JSON.parse(localStorage.getItem("hub_registeredRooms")) || defaultRooms;
-                
-                const currentKey = getScheduleStorageKey();
-                const storedSchedules = localStorage.getItem(currentKey);
-                
-                if (storedSchedules) {
-                    sharedSchedules = JSON.parse(storedSchedules);
-                } else {
-                    sharedSchedules = (activeAcademicYear === "2025-2026" && activeSemesterTerm === "Second Semester") ? defaultSchedules : [];
-                }
+                sharedSchedules = JSON.parse(localStorage.getItem("hub_sharedSchedules")) || defaultSchedules;
 
                 registeredFaculty.forEach(f => {
                     if (!f.college) f.college = "COE"; 
                     if (!f.rank) f.rank = "Instructor I";
                     if (!f.designation) f.designation = "Without Designation";
                 });
-
-                syncAcademicYearDropdown();
-                document.getElementById("semesterTermSelect").value = activeSemesterTerm;
             } catch (err) {
                 loadFactoryStateDefaults();
             }
@@ -849,15 +813,10 @@ Monday and Wednesday
             localStorage.setItem("hub_registeredSections", JSON.stringify(registeredSections));
             localStorage.setItem("hub_registeredFaculty", JSON.stringify(registeredFaculty));
             localStorage.setItem("hub_registeredRooms", JSON.stringify(registeredRooms));
-            
-            localStorage.setItem(getScheduleStorageKey(), JSON.stringify(sharedSchedules));
-            localStorage.setItem("hub_activeAcademicYear", activeAcademicYear);
-            localStorage.setItem("hub_activeSemesterTerm", activeSemesterTerm);
+            localStorage.setItem("hub_sharedSchedules", JSON.stringify(sharedSchedules));
         }
 
         function loadFactoryStateDefaults() {
-            activeAcademicYear = "2025-2026";
-            activeSemesterTerm = "Second Semester";
             registeredPrograms = JSON.parse(JSON.stringify(defaultPrograms));
             registeredSections = JSON.parse(JSON.stringify(defaultSections));
             registeredFaculty = JSON.parse(JSON.stringify(defaultFaculty));
@@ -872,73 +831,6 @@ Monday and Wednesday
                 loadFactoryStateDefaults();
                 executeRegistryDataSynchronization();
                 switchTab('dashboard-view');
-            }
-        }
-
-        function syncAcademicYearDropdown() {
-            const selectEl = document.getElementById("academicYearSelect");
-            if (!selectEl) return;
-            
-            let exists = Array.from(selectEl.options).some(opt => opt.value === activeAcademicYear);
-            if (!exists) {
-                const opt = document.createElement("option");
-                opt.value = activeAcademicYear;
-                opt.textContent = `AY ${activeAcademicYear.replace("-", " - ")}`;
-                selectEl.insertBefore(opt, selectEl.lastElementChild);
-            }
-            selectEl.value = activeAcademicYear;
-            updateYearLabelsUI();
-        }
-
-        function updateYearLabelsUI() {
-            const displayLabel = `AY ${activeAcademicYear.replace("-", " - ")}`;
-            document.querySelectorAll("#displayActiveYearLabel, #ingestionYearBadge, #encoderYearBadge, #masterYearBadge").forEach(el => {
-                if (el) el.textContent = displayLabel;
-            });
-            document.querySelectorAll("#displayActiveTermLabel, #ingestionTermBadge, #encoderTermBadge, #masterTermBadge").forEach(el => {
-                if (el) el.textContent = activeSemesterTerm;
-            });
-        }
-
-        function switchAcademicYear(selectedYear) {
-            if (selectedYear === "NEW") {
-                createCleanSchoolYearPrompt();
-                return;
-            }
-
-            activeAcademicYear = selectedYear;
-            localStorage.setItem("hub_activeAcademicYear", activeAcademicYear);
-            
-            const storedSchedules = localStorage.getItem(getScheduleStorageKey());
-            sharedSchedules = storedSchedules ? JSON.parse(storedSchedules) : [];
-            
-            updateYearLabelsUI();
-            executeRegistryDataSynchronization();
-        }
-
-        function switchSemesterTerm(selectedTerm) {
-            activeSemesterTerm = selectedTerm;
-            localStorage.setItem("hub_activeSemesterTerm", activeSemesterTerm);
-
-            const storedSchedules = localStorage.getItem(getScheduleStorageKey());
-            sharedSchedules = storedSchedules ? JSON.parse(storedSchedules) : [];
-
-            updateYearLabelsUI();
-            executeRegistryDataSynchronization();
-        }
-
-        function createCleanSchoolYearPrompt() {
-            const inputYear = prompt("Enter the new Academic Year designation (e.g., 2027-2028):", "2027-2028");
-            if (inputYear && inputYear.trim()) {
-                const cleanYearKey = inputYear.trim().replace(/\s+/g, "");
-                activeAcademicYear = cleanYearKey;
-                sharedSchedules = [];
-                saveSystemStateToLocalStorage();
-                syncAcademicYearDropdown();
-                executeRegistryDataSynchronization();
-                alert(`✨ Successfully initialized AY ${cleanYearKey} (${activeSemesterTerm})!`);
-            } else {
-                document.getElementById("academicYearSelect").value = activeAcademicYear;
             }
         }
 
@@ -1063,156 +955,87 @@ Monday and Wednesday
             return h * 60 + m; 
         }
 
-        function handleFileInputLoad(ev) {
+        function handleCSVFileLoad(ev) {
             const f = ev.target.files[0]; 
-            if (!f) return;
-            
-            const fname = f.name.toLowerCase();
-            if (fname.endsWith('.docx')) {
-                const r = new FileReader();
-                r.onload = function(e) {
-                    if (window.mammoth) {
-                        window.mammoth.extractRawText({ arrayBuffer: e.target.result })
-                            .then(function(result) {
-                                document.getElementById("rawSchedulePasteInput").value = result.value;
-                            })
-                            .catch(function(err) {
-                                alert("⚠️ Word file reading error: " + err.message);
-                            });
-                    } else {
-                        alert("⚠️ Mammoth extraction library unavailable.");
-                    }
-                };
-                r.readAsArrayBuffer(f);
-            } else {
-                const r = new FileReader();
-                r.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; }; 
-                r.readAsText(f);
-            }
+            if (!f) return; 
+            const r = new FileReader();
+            r.onload = function(e) { document.getElementById("rawSchedulePasteInput").value = e.target.result; }; 
+            r.readAsText(f);
         }
 
-        // AUTO-DETECT PROGRAM & SECTION PARSER
         function processUploadedScheduleText() {
-            const rawText = document.getElementById("rawSchedulePasteInput").value;
-            if(!rawText.trim()) { alert("⚠️ Document text console is empty!"); return; }
+            const selectedCollege = document.getElementById("uploadCollegeSelect").value;
+            const txt = document.getElementById("rawSchedulePasteInput").value;
+            if(!selectedCollege || !txt.trim()) { alert("⚠️ Configuration Target Division Missing!"); return; }
 
-            // 1. Auto-detect College
-            let detectedCollege = "COE";
-            if (/ENGINEERING/i.test(rawText)) detectedCollege = "COE";
-            else if (/COMPUTER STUDIES|COMPUTING/i.test(rawText)) detectedCollege = "CCS";
-            else if (/EDUCATION/i.test(rawText)) detectedCollege = "COEd";
-            else if (/AGRICULTURE/i.test(rawText)) detectedCollege = "CANS";
-            else if (/ARTS AND SCIENCES/i.test(rawText)) detectedCollege = "CAS";
-            else if (/GRADUATE/i.test(rawText)) detectedCollege = "Graduate Studies";
-
-            // 2. Auto-detect Term and Year
-            if (/First Semester/i.test(rawText)) activeSemesterTerm = "First Semester";
-            else if (/Second Semester/i.test(rawText)) activeSemesterTerm = "Second Semester";
-            else if (/SUMMER/i.test(rawText)) activeSemesterTerm = "SUMMER";
-
-            const yearMatch = rawText.match(/(?:20\d{2})\s*[-–]\s*(?:20\d{2})/);
-            if (yearMatch) activeAcademicYear = yearMatch[0].replace(/\s+/g, '');
-
-            // 3. Auto-detect Program & Section
-            let detectedProgram = "Bachelor of Science in Computer Engineering";
-            let detectedSection = "BSCpE 1-1";
-
-            const programSectionMatch = rawText.match(/(BACHELOR OF SCIENCE IN [^\n\r\|]+?)(?:\s+([I|V|X\d]+(?:\s*-\s*\d+)?))?[\r\n|]/i);
-            if (programSectionMatch) {
-                detectedProgram = programSectionMatch[1].trim();
-                let yearSecRaw = programSectionMatch[2] ? programSectionMatch[2].trim() : "1-1";
-                
-                // Standardize Section Code (e.g., BSCpE 1-1)
-                let acronym = detectedProgram.split(/\s+/).map(w => w[0]).join('').replace(/BOS/g,'BS');
-                if (detectedProgram.toLowerCase().includes("computer engineering")) acronym = "BSCpE";
-                
-                detectedSection = `${acronym} ${yearSecRaw}`;
-            }
-
-            // Sync structural registries
-            if (!registeredPrograms[detectedCollege]) registeredPrograms[detectedCollege] = [];
-            if (!registeredPrograms[detectedCollege].includes(detectedProgram)) registeredPrograms[detectedCollege].push(detectedProgram);
-            
-            if (!registeredSections[detectedProgram]) registeredSections[detectedProgram] = [];
-            if (!registeredSections[detectedProgram].includes(detectedSection)) registeredSections[detectedProgram].push(detectedSection);
-
-            // 4. Line Parsing
-            const lines = rawText.split(/\r?\n/);
+            const lines = txt.split(/\r?\n/);
             let parsedCount = 0;
-            let currentDayAssignment = "Monday and Wednesday";
+            
+            const facultyMapCache = new Map(registeredFaculty.map(f => [f.name.toLowerCase(), f]));
 
-            lines.forEach(line => {
-                let cleanLine = line.trim();
-                if (!cleanLine) return;
+            for(let i=0; i < lines.length; i++) {
+                let segment = lines[i].trim(); if(!segment) continue;
+                let tokens = segment.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(t => t.replace(/^"|"$|\\r|\\n/g, '').trim());
 
-                // Track active day section headers
-                if (/^(Monday and Wednesday|Tuesday and Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i.test(cleanLine)) {
-                    const dayMatch = cleanLine.match(/^(Monday and Wednesday|Tuesday and Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
-                    if (dayMatch) currentDayAssignment = dayMatch[1].trim();
-                    return;
-                }
+                if(tokens.length >= 4) {
+                    let section = tokens[0] || "General Section";
+                    let dayTimeBlock = tokens[1] || "";
+                    let subjectTitle = tokens[2] || "";
+                    let units = parseInt(tokens[3]) || 3;
+                    let instructor = tokens[4] || "Instructor Unassigned";
+                    let room = tokens[5] ? tokens[5].replace(/"/g, '') : "General Room";
 
-                // Filter non-academic intermission lines
-                if (/INTERMISSION|Research Work|DAY\/TIME|SUBJECT/i.test(cleanLine)) return;
+                    if(section.toUpperCase().includes("SECTION") || section.toUpperCase().includes("DAY/TIME")) continue;
 
-                // Match time, subject, units, professor, and room
-                const tokenParts = cleanLine.split('|').map(p => p.trim());
-                if (tokenParts.length >= 3) {
-                    let timeRaw = tokenParts[0];
-                    let subjectRaw = tokenParts[1];
-                    let unitsRaw = parseInt(tokenParts[2]) || 3;
-                    let profRaw = tokenParts[3] || "TBA";
-                    let roomRaw = tokenParts[4] || "General Room";
+                    let assignedProgram = (registeredPrograms[selectedCollege] && registeredPrograms[selectedCollege][0]) || "General Program"; 
+                    let upperSection = section.toUpperCase();
 
-                    // Clean professor name format
-                    profRaw = profRaw.replace(/^(Mr\.|Ms\.|Mrs\.|Engr\.|Prof\.|Dr\.)\s+/i, '').trim();
-                    if (profRaw.includes(' ')) {
-                        let parts = profRaw.split(' ');
-                        let lastName = parts.pop();
-                        profRaw = `${lastName}, ${parts.join(' ')}`;
+                    if(selectedCollege === "COE") {
+                        if(upperSection.includes("BSCPE") || upperSection.includes("CPE")) assignedProgram = "Bachelor of Science in Computer Engineering";
+                        else if(upperSection.includes("BSABE") || upperSection.includes("ABE")) assignedProgram = "Bachelor of Science in Agricultural and Biosystems Engineering";
+                    } else if(selectedCollege === "CCS") {
+                        if(upperSection.includes("BSCS") || upperSection.includes("CS")) assignedProgram = "Bachelor of Science in Computer Science";
+                        else if(upperSection.includes("BSIT") || upperSection.includes("IT")) assignedProgram = "Bachelor of Science in Information Technology";
                     }
 
-                    // Clean time intervals
-                    let startTime = "08:00", endTime = "11:00";
-                    const timeMatches = timeRaw.match(/(\d{1,2}:\d{2})\s*(AM|PM)?\s*[-–]\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i);
-                    if (timeMatches) {
-                        startTime = convertTo24Hour(timeMatches[1] + (timeMatches[2] || ''));
-                        endTime = convertTo24Hour(timeMatches[3] + (timeMatches[4] || ''));
+                    if(!registeredSections[assignedProgram]) registeredSections[assignedProgram] = [];
+                    if(!registeredSections[assignedProgram].includes(section)) registeredSections[assignedProgram].push(section);
+
+                    let dayAssignment = "Monday", startTime = "08:00", endTime = "11:00";
+                    const dayMatches = dayTimeBlock.match(/(Monday\s+and\s+Wednesday|Tuesday\s+and\s+Thursday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
+                    if(dayMatches) dayAssignment = dayMatches[1].trim();
+
+                    const timeMatches = dayTimeBlock.match(/(\d{1,2}:\d{2})\s*(AM|PM)?\s*[-–]\s*(\d{1,2}:\d{2})\s*(AM|PM)?/i);
+                    if(timeMatches) { 
+                        let startRaw = timeMatches[1]; let startAmpm = timeMatches[2];
+                        let endRaw = timeMatches[3]; let endAmpm = timeMatches[4];
+                        startTime = convertTo24Hour(startAmpm ? `${startRaw} ${startAmpm}` : startRaw); 
+                        endTime = convertTo24Hour(endAmpm ? `${endRaw} ${endAmpm}` : endRaw); 
                     }
 
-                    // Auto-register Faculty and Rooms
-                    if (profRaw && profRaw !== "TBA" && !registeredFaculty.some(f => f.name.toLowerCase() === profRaw.toLowerCase())) {
-                        registeredFaculty.push({ name: profRaw, college: detectedCollege, rank: "Instructor I", designation: "Without Designation" });
+                    let matchFaculty = facultyMapCache.get(instructor.toLowerCase());
+                    let matchFacultyName = matchFaculty ? matchFaculty.name : instructor;
+                    
+                    if(!matchFaculty) {
+                        const newFaculty = { name: instructor, college: selectedCollege, rank: "TBA", designation: "Without Designation" };
+                        registeredFaculty.push(newFaculty);
+                        facultyMapCache.set(instructor.toLowerCase(), newFaculty);
                     }
-                    if (roomRaw && roomRaw !== "General Room" && !registeredRooms.includes(roomRaw)) {
-                        registeredRooms.push(roomRaw);
-                    }
+                    if(!registeredRooms.includes(room)) registeredRooms.push(room);
 
-                    // Append to active schedules
                     sharedSchedules.push({
-                        id: `sched-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
-                        college: detectedCollege,
-                        program: detectedProgram,
-                        classSection: detectedSection,
-                        subjectTitle: subjectRaw,
-                        unifiedUnits: unitsRaw,
-                        instructorName: profRaw,
-                        dayAssignment: currentDayAssignment,
-                        startTime: startTime,
-                        endTime: endTime,
-                        roomNumber: roomRaw
+                        id: `sched-${Date.now()}-${Math.floor(Math.random() * 100000)}`, college: selectedCollege, program: assignedProgram, classSection: section,
+                        subjectTitle: subjectTitle, unifiedUnits: units, instructorName: matchFacultyName, dayAssignment: dayAssignment,
+                        startTime: startTime, endTime: endTime, roomNumber: room
                     });
                     parsedCount++;
                 }
-            });
-
-            // Save state, sync UI and jump to Master Matrix
-            document.getElementById("academicYearSelect").value = activeAcademicYear;
-            document.getElementById("semesterTermSelect").value = activeSemesterTerm;
+            }
+            
             saveSystemStateToLocalStorage();
             executeRegistryDataSynchronization();
-            alert(`✅ Document Parsing Complete!\nAppended ${parsedCount} class blocks into [${detectedProgram} - ${detectedSection}] for AY ${activeAcademicYear} (${activeSemesterTerm}).`);
-            switchTab('schedule-view');
+            alert(`✅ Ingestion Complete! Merged entry expanded by ${parsedCount} lines.`);
+            switchTab('dashboard-view');
         }
 
         function fontFacultyClassesChronologically(list) {
@@ -1336,7 +1159,7 @@ Monday and Wednesday
 
                 if (htmlElementsBuffer.length === 0) {
                     nonCompliantContainer.className = "block w-full text-center p-6 border border-dashed rounded-xl bg-emerald-50/10 text-emerald-700 font-bold text-xs";
-                    nonCompliantContainer.innerHTML = `✨ Complete Curricular Balance Verified for AY ${activeAcademicYear} (${activeSemesterTerm})! All operational faculty profiles match designation standards or satisfy the secondary 20-hour load criteria.`;
+                    nonCompliantContainer.innerHTML = "✨ Complete Curricular Balance Verified! All operational faculty profiles match designation standards or satisfy the secondary 20-hour load criteria.";
                 } else {
                     nonCompliantContainer.className = "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full";
                     nonCompliantContainer.innerHTML = htmlElementsBuffer.join('');
@@ -1457,12 +1280,12 @@ Monday and Wednesday
                             <button onclick="invokeScheduleRowDeletion('${r.id}')" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button>
                         </td>
                     </tr>
-                `).join('') : `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic bg-gray-50/50">No schedule blocks available for this college in AY ${activeAcademicYear} (${activeSemesterTerm}).</td></tr>`;
+                `).join('') : `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic bg-gray-50/50">No schedule blocks available for this college.</td></tr>`;
                 
                 return `
                     <div class="border rounded-lg overflow-hidden bg-white">
                         <div class="${activeColorClass} p-3 font-bold uppercase tracking-wide flex justify-between items-center">
-                            <span>${college} Division Matrix (AY ${activeAcademicYear} - ${activeSemesterTerm})</span>
+                            <span>${college} Division Matrix</span>
                             <button onclick="exportCollegeCSV('${college}')" class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-md transition border border-white/30 no-print cursor-pointer">📤 Export Ingestion CSV</button>
                         </div>
                         <table class="w-full text-left">
@@ -1488,8 +1311,7 @@ Monday and Wednesday
             const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
-            link.setAttribute("download", `Ingestion_Template_${String(collegeKey).replace(/[^a-zA-Z0-9]/g, "_")}_AY${activeAcademicYear}_${sanitizedTerm}.csv`);
+            link.setAttribute("download", `Ingestion_Template_${String(collegeKey).replace(/[^a-zA-Z0-9]/g, "_")}.csv`);
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
 
@@ -1585,7 +1407,7 @@ Monday and Wednesday
             const container = document.getElementById("programScheduleReportContainer"); if(!container) return;
             const filtered = getFilteredSchedules();
             if(filtered.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No schedule entries found for AY ${activeAcademicYear} (${activeSemesterTerm}) matching active filters.</div>`;
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No schedule entries found matching filters.</div>`;
                 return;
             }
 
@@ -1615,7 +1437,7 @@ Monday and Wednesday
 
                 return `
                     <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white print-page">
-                        <div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode} (AY ${activeAcademicYear} - ${activeSemesterTerm})</span></div>
+                        <div class="${activeColorClass} px-4 py-2.5 text-sm font-bold tracking-wide flex justify-between"><span>📋 Class Schedule: ${progName} - ${sectCode}</span></div>
                         <table class="w-full text-left table-auto">
                             <thead><tr class="bg-gray-100 text-[11px] font-bold uppercase text-gray-600 border-b"><th class="p-2.5">Day</th><th class="p-2.5">Time Interval</th><th class="p-2.5">Subject Title</th><th class="p-2.5 text-center">Unit/s</th><th class="p-2.5">Assigned Faculty</th><th class="p-2.5 text-center">Room</th><th class="p-2.5 text-right no-print">Actions</th></tr></thead>
                             <tbody>${tableRows}</tbody>
@@ -2018,14 +1840,14 @@ Monday and Wednesday
                     htmlMatrixBuffer += `
                         <div class="p-5 bg-white border-t-4 border rounded-xl space-y-4 shadow-sm border-${colorStyleKey} print-page">
                             <div class="flex items-center justify-between border-b pb-2">
-                                <h3 class="text-sm font-black text-gray-900 tracking-wide uppercase">${collegeKey} DEPARTMENT MATRIX ANALYSIS (AY ${activeAcademicYear} - ${activeSemesterTerm})</h3>
+                                <h3 class="text-sm font-black text-gray-900 tracking-wide uppercase">${collegeKey} DEPARTMENT MATRIX ANALYSIS</h3>
                                 <span class="text-[10px] uppercase text-white font-extrabold px-2 py-0.5 rounded header-${colorStyleKey}">${collegeKey}</span>
                             </div>
                             <div class="space-y-4 divide-y divide-dashed divide-gray-200">${structuralTablesHtml}</div>
                         </div>`;
                 });
 
-                container.innerHTML = htmlMatrixBuffer || `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No structural metrics found matching active dropdown filters for AY ${activeAcademicYear} (${activeSemesterTerm}).</div>`;
+                container.innerHTML = htmlMatrixBuffer || `<div class="p-8 text-center text-gray-400 border border-dashed rounded-xl">No structural metrics found matching active dropdown filters.</div>`;
                 return;
             }
 
@@ -2050,7 +1872,7 @@ Monday and Wednesday
                     rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                     return `
                         <div class="border bg-white print-page">
-                            <div class="${getCollegeColorClass(college)} p-2 font-bold uppercase text-xs">${college} Division (AY ${activeAcademicYear} - ${activeSemesterTerm})</div>
+                            <div class="${getCollegeColorClass(college)} p-2 font-bold uppercase text-xs">${college} Division</div>
                             <table class="w-full text-left text-sm">${rows.map(r => `
                                 <tr class="border-b">
                                     <td class="p-3 font-semibold w-1/4">${r.name}</td><td class="p-3 text-gray-400 text-xs">${r.rank}</td>
@@ -2069,7 +1891,7 @@ Monday and Wednesday
                         rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
                         htmlBuffer += `
                             <div class="border bg-white print-page">
-                                <div class="${getCollegeColorClass(col)} p-2 text-xs font-bold">${p} (AY ${activeAcademicYear} - ${activeSemesterTerm})</div>
+                                <div class="${getCollegeColorClass(col)} p-2 text-xs font-bold">${p}</div>
                                 <table class="w-full text-left text-sm">${rows.map(r => `
                                     <tr class="border-b">
                                         <td class="p-3 font-semibold w-1/4">${r.name}</td><td class="p-3 text-gray-400 text-xs">${r.rank}</td>
@@ -2121,11 +1943,8 @@ Monday and Wednesday
                                 `<span class="bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full font-bold ml-2">⚠️ Below Parameters</span>`);
 
             return `
-                <div class="bg-white border-2 border-gray-800 rounded-lg p-6 my-4 shadow-sm print-page">
-                    <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">
-                        INDIVIDUAL FACULTY INSTRUCTIONAL WORKLOAD SHEET<br>
-                        <span class="text-xs font-bold text-gray-600 uppercase tracking-widest">AY ${activeAcademicYear} - ${activeSemesterTerm}</span>
-                    </div>
+                <div class="bg-white border-2 border-gray-880 rounded-lg p-6 my-4 shadow-sm print-page">
+                    <div class="text-center font-black border-b-2 border-gray-800 pb-2 mb-4">ABSOLUTE FACULTY INSTRUCTIONAL WORKLOAD SHEET</div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-sm mb-4 border-b pb-3 border-gray-100">
                         <div>
                             <div class="text-base font-bold text-blue-950">Faculty Member: ${prof}</div>
@@ -2135,7 +1954,7 @@ Monday and Wednesday
                     </div>
                     <table class="w-full text-xs border">
                         <thead><tr class="bg-gray-100 font-bold"><th class="p-2 border">Day/Time</th><th class="p-2 border text-left">Subject</th><th class="p-2 border text-center">Units</th><th class="p-2 border text-center">Hrs/Wk</th><th class="p-2 border text-center">Class</th><th class="p-2 border text-center">Room</th></tr></thead>
-                        <tbody>${tableRows.length > 0 ? tableRows : '<tr><td colspan="6" class="p-4 text-center text-gray-400 italic font-medium">No class assignments logged for this term.</td></tr>'}
+                        <tbody>${tableRows}
                             <tr class="bg-gray-50 font-bold text-center"><td colspan="2" class="p-2 text-right">Totals:</td><td class="text-blue-900 bg-blue-50/50">${uTot} Unit/s</td><td class="${!isSheetCompliant ? 'text-red-600 bg-red-50/50 font-extrabold' : 'text-emerald-700 bg-emerald-50/50'}">${hTot.toFixed(1)} Hrs</td><td colspan="2"></td></tr>
                         </tbody>
                     </table>
@@ -2151,7 +1970,7 @@ Monday and Wednesday
                                     (collegeScope === "ALL" ? registeredFaculty.map(f => f.name).sort() : registeredFaculty.filter(f => f.college === collegeScope).map(f => f.name).sort());
 
             container.innerHTML = targetFacultyList.map(prof => {
-                const clList = sharedSchedules.filter(s => s.instructorName === prof);
+                const clList = sharedSchedules.filter(s => s.instructorName === prof); if(clList.length === 0) return '';
                 return buildWorkloadHTML(prof, fontFacultyClassesChronologically(clList));
             }).join('');
         }
@@ -2177,33 +1996,31 @@ Monday and Wednesday
                     });
                 });
             }
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
-            XLSX.writeFile(wb, `Faculty_Load_Summary_AY${activeAcademicYear}_${sanitizedTerm}_${currentSummaryGroupingMode}.xlsx`);
+            XLSX.writeFile(wb, `Faculty_Load_Summary_${currentSummaryGroupingMode}.xlsx`);
         }
 
         function triggerWorkloadExport(formatType) {
             const targetScope = document.getElementById("workloadScopeSelector").value;
             const singleSelectedFaculty = document.getElementById("facultySelector").value;
             const collegeScope = document.getElementById("facultyWorkloadCollegeScope").value;
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
 
             let workloadMap = []; let facultyScopeList = registeredFaculty.filter(f => collegeScope === "ALL" || f.college === collegeScope).map(f => f.name).sort();
 
             if (targetScope === "current") {
                 if(singleSelectedFaculty !== "ALL") facultyScopeList = [singleSelectedFaculty];
-                workloadMap.push({ titleId: `Selected_Workloads_AY${activeAcademicYear}_${sanitizedTerm}`, members: facultyScopeList });
+                workloadMap.push({ titleId: "Selected_Workloads", members: facultyScopeList });
             } else if (targetScope === "all") {
-                workloadMap.push({ titleId: `University_Workloads_AY${activeAcademicYear}_${sanitizedTerm}`, members: facultyScopeList });
+                workloadMap.push({ titleId: "University_As_A_Whole_Workloads", members: facultyScopeList });
             } else if (targetScope === "college") {
                 ["COE", "CCS", "COEd", "CANS", "CAS", "Graduate Studies"].forEach(colKey => {
                     let filteredMembers = registeredFaculty.filter(f => f.college === colKey).map(f => f.name);
-                    if(filteredMembers.length > 0) workloadMap.push({ titleId: `College_${colKey}_Workloads_AY${activeAcademicYear}_${sanitizedTerm}`, members: filteredMembers });
+                    if(filteredMembers.length > 0) workloadMap.push({ titleId: `College_${colKey}_Workloads`, members: filteredMembers });
                 });
             } else if (targetScope === "program") {
                 Object.keys(registeredPrograms).forEach(colKey => {
                     registeredPrograms[colKey].forEach(progKey => {
                         let filteredMembers = facultyScopeList.filter(fName => sharedSchedules.some(s => s.instructorName === fName && s.program === progKey));
-                        if(filteredMembers.length > 0) workloadMap.push({ titleId: `Program_${progKey.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 20)}_AY${activeAcademicYear}_${sanitizedTerm}`, members: filteredMembers });
+                        if(filteredMembers.length > 0) workloadMap.push({ titleId: `Program_${progKey.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 30)}`, members: filteredMembers });
                     });
                 });
             }
@@ -2235,9 +2052,8 @@ Monday and Wednesday
                     let preps = new Set(classes.map(c => c.subjectTitle)).size;
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
 
-                    doc.setFontSize(13); doc.text(`INDIVIDUAL FACULTY WORKLOAD SHEET`, 105, 12, { align: "center" });
-                    doc.setFontSize(10); doc.text(`AY ${activeAcademicYear} (${activeSemesterTerm})`, 105, 17, { align: "center" });
-                    doc.setFontSize(9); doc.text(`Faculty Member: ${prof} | Dept: ${facObj.college} | Rank: ${facObj.rank} | Role: ${facObj.designation} | Preparations: ${preps}`, 14, 24);
+                    doc.setFontSize(14); doc.text("INDIVIDUAL FACULTY WORKLOAD SHEET", 105, 15, { align: "center" });
+                    doc.setFontSize(10); doc.text(`Faculty Member: ${prof} | Dept: ${facObj.college} | Rank: ${facObj.rank} | Role: ${facObj.designation} | Preparations: ${preps}`, 14, 23);
 
                     let totU = 0, totH = 0;
                     let tableBody = classes.map(c => {
@@ -2245,7 +2061,7 @@ Monday and Wednesday
                         return [`${c.dayAssignment}\n(${convert24To12Hour(c.startTime)}\n-${convert24To12Hour(c.endTime)})`, c.subjectTitle, c.unifiedUnits, hrs.toFixed(1), c.classSection, c.roomNumber];
                     });
                     tableBody.push([{ text: 'Totals Compliance:', colSpan: 2, styles: { fontStyle: 'bold', halign: 'right' } }, '', totU, totH.toFixed(1), '', '']);
-                    docAutoTableShim(doc, { startY: 28, head: [['Day / Time Assignment', 'Subject Descriptive Title', 'Unit/s', 'Hrs/Wk', 'Class', 'Room']], body: tableBody, theme: 'grid', headStyles: { fillColor: [20, 30, 60] } });
+                    docAutoTableShim(doc, { startY: 27, head: [['Day / Time Assignment', 'Subject Descriptive Title', 'Unit/s', 'Hrs/Wk', 'Class', 'Room']], body: tableBody, theme: 'grid', headStyles: { fillColor: [20, 30, 60] } });
                 });
                 if(matchesAdded > 0) doc.save(`${packageItem.titleId}.pdf`);
             });
@@ -2259,7 +2075,7 @@ Monday and Wednesday
                     let classes = fontFacultyClassesChronologically(clList);
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     let matrixData = [
-                        [`INDIVIDUAL FACULTY WORKLOAD SHEET`], [`AY ${activeAcademicYear} - ${activeSemesterTerm}`], [],
+                        ["INDIVIDUAL FACULTY WORKLOAD SHEET"], ["Academic Year 2026 - 2027 Summary Allocation Blueprint"], [],
                         ["Faculty Member Name:", prof, "Academic Rank:", facObj.rank, "Designation:", facObj.designation, "Department:", facObj.college], [],
                         ["Day / Time Assignment", "Subject Code & Description", "Course Unit/s", "Hours per Week", "Section Block", "Room Layout"]
                     ];
@@ -2284,8 +2100,7 @@ Monday and Wednesday
                     let classes = fontFacultyClassesChronologically(clList);
                     let facObj = registeredFaculty.find(f => f.name === prof) || { name: prof, college: "COE", rank: "Instructor I", designation: "Without Designation" };
                     sectionChildren.push(
-                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `INDIVIDUAL FACULTY WORKLOAD SHEET`, bold: true, size: 28 })] }),
-                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `AY ${activeAcademicYear} (${activeSemesterTerm})`, size: 20, bold: true })] }),
+                        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "INDIVIDUAL FACULTY WORKLOAD SHEET", bold: true, size: 28 })] }),
                         new Paragraph({ text: "" }), new Paragraph({ children: [new TextRun({ text: `Faculty Member: ${prof} | College Dept: ${facObj.college} | Rank: ${facObj.rank} | Designation: ${facObj.designation}`, bold: true })] }), new Paragraph({ text: "" })
                     );
                     let tableHeaderCells = ["Day / Time", "Subject Descriptive Title", "Unit/s", "Hrs/Wk", "Class Section", "Room"].map(x => new TableCell({ children: [new Paragraph({ text: x, style: "bold" })] }));
@@ -2338,19 +2153,16 @@ Monday and Wednesday
             Object.keys(registeredPrograms).forEach(college => {
                 const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
                 if (!first) doc.addPage(); first = false;
-                doc.setFontSize(11); doc.text(`${college} MASTER MATRIX CLASS PROGRAM (AY ${activeAcademicYear} - ${activeSemesterTerm})`, 14, 15);
+                doc.setFontSize(12); doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 15);
                 docAutoTableShim(doc, { startY: 20, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]), headStyles: { fillColor: getCollegeHexCode(college) } });
-            }); 
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
-            doc.save(`Master_Class_Program_AY${activeAcademicYear}_${sanitizedTerm}.pdf`);
+            }); doc.save('Master_Class_Program.pdf');
         }
 
         function exportFacultySummaryPDF() {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text(`FACULTY LOADING ANALYSIS (AY ${activeAcademicYear} - ${activeSemesterTerm})`, 14, 20);
+            const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); doc.text("FACULTY LOADING ANALYSIS", 14, 20);
             let dataset = getAggregatedFacultyMetricsList();
             docAutoTableShim(doc, { startY: 25, head: [['Instructor', 'Home College', 'Rank', 'Designation', 'Units', 'Hours']], body: dataset.map(f => [f.name, f.homeCollege, f.rank, f.designation, `${f.units} Unit/s`, `${f.hours.toFixed(1)} Hrs`]) });
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
-            doc.save(`Faculty_Load_Summary_AY${activeAcademicYear}_${sanitizedTerm}.pdf`);
+            doc.save('Faculty_Load_Summary.pdf');
         }
 
         function exportProgramSchedulePDF() {
@@ -2360,12 +2172,10 @@ Monday and Wednesday
             let first = true;
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode, colKey] = key.split("::"); if(!first) doc.addPage(); first = false;
-                doc.setFontSize(11); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode} (AY ${activeAcademicYear} - ${activeSemesterTerm})`, 14, 15);
+                doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
                 let dataRows = fontFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
                 docAutoTableShim(doc, { startY: 22, head: [['Day', 'Time Bracket (12H)', 'Subject Title', 'Unit/s', 'Faculty Instructor', 'Room']], body: dataRows, headStyles: { fillColor: getCollegeHexCode(colKey) } });
-            }); 
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
-            doc.save(`Class_Schedules_Report_AY${activeAcademicYear}_${sanitizedTerm}.pdf`);
+            }); doc.save('Class_Schedules_Report.pdf');
         }
 
         function exportProgramScheduleExcel() {
@@ -2373,12 +2183,10 @@ Monday and Wednesday
             let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
             Object.keys(grouped).forEach(key => {
                 let [progName, sectCode] = key.split("::");
-                let sheetRows = [[`CLASS INSTRUCTIONAL SCHEDULE REPORT`], [`AY ${activeAcademicYear} - ${activeSemesterTerm}`], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window", "Subject Description", "Unit/s", "Faculty Instructor", "Room Assignment"]];
+                let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window", "Subject Description", "Unit/s", "Faculty Instructor", "Room Assignment"]];
                 fontFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sheetRows), `${sectCode}`.replace(/[^a-zA-Z0-9]/g, "").substring(0, 30));
-            }); 
-            const sanitizedTerm = activeSemesterTerm.replace(/\s+/g, "_");
-            XLSX.writeFile(wb, `Class_Schedules_AY${activeAcademicYear}_${sanitizedTerm}.xlsx`);
+            }); XLSX.writeFile(wb, "University_Class_Schedules.xlsx");
         }
 
         function clearIngestionConsole() { document.getElementById("rawSchedulePasteInput").value = ""; }
