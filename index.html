@@ -46,6 +46,7 @@
         .header-coe { background-color: #7f1d1d !important; color: white !important; }
         .header-cans { background-color: #3f6212 !important; color: white !important; }
         .header-ccs { background-color: #6b21a8 !important; color: white !important; }
+        .header-cas { background-color: #0d9488 !important; color: white !important; }
         .header-gs { background-color: #075985 !important; color: white !important; }
         .header-default { background-color: #1e293b !important; color: white !important; }
 
@@ -53,6 +54,7 @@
         .border-coe { border-color: #7f1d1d !important; }
         .border-cans { border-color: #3f6212 !important; }
         .border-ccs { border-color: #6b21a8 !important; }
+        .border-cas { border-color: #0d9488 !important; }
         .border-gs { border-color: #075985 !important; }
         .border-default { border-color: #1e293b !important; }
 
@@ -60,6 +62,7 @@
         .bg-coe-soft { background-color: rgba(127, 29, 29, 0.05) !important; }
         .bg-cans-soft { background-color: rgba(63, 98, 18, 0.05) !important; }
         .bg-ccs-soft { background-color: rgba(107, 33, 168, 0.05) !important; }
+        .bg-cas-soft { background-color: rgba(13, 148, 136, 0.05) !important; }
         .bg-gs-soft { background-color: rgba(7, 89, 133, 0.05) !important; }
         .bg-default-soft { background-color: rgba(30, 41, 59, 0.05) !important; }
 
@@ -67,6 +70,7 @@
         .text-coe { color: #7f1d1d !important; }
         .text-cans { color: #3f6212 !important; }
         .text-ccs { color: #6b21a8 !important; }
+        .text-cas { color: #0d9488 !important; }
         .text-gs { color: #075985 !important; }
         .text-default { color: #1e293b !important; }
     </style>
@@ -162,7 +166,7 @@
                             <span class="normal-case text-[10px] text-gray-400 font-medium">(Distinct physical rooms assigned per college schedule logs)</span>
                         </span>
                     </div>
-                    <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1"></div>
+                    <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-6 gap-2 pt-1"></div>
                 </div>
             </div>
             
@@ -234,6 +238,7 @@
                             <option value="CCS">College of Computer Studies (CCS)</option>
                             <option value="COEd">College of Education (COEd)</option>
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
                     </div>
@@ -280,13 +285,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         <option value="CCS">College of Computer Studies (CCS)</option>
                         <option value="COEd">College of Education (COEd)</option>
                         <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                        <option value="CAS">College of Arts and Sciences (CAS)</option>
                         <option value="Graduate Studies">Graduate Studies</option>
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Degree Course/Program</label>
-                    <select id="programSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="populateEncoderPrograms()" required>
+                    <select id="programSelect" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-blue-500" onchange="populateEncoderSections()" required>
                         <option value="">Select a Course</option>
                     </select>
                 </div>
@@ -387,6 +393,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <option value="CCS">College of Computer Studies (CCS)</option>
                             <option value="COEd">College of Education (COEd)</option>
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
                         <select id="reportProgramFilter" class="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs outline-none max-w-xs" onchange="populateReportSectionFilter()">
@@ -449,6 +456,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <option value="CCS">College of Computer Studies (CCS)</option>
                             <option value="COEd">College of Education (COEd)</option>
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
                     </div>
@@ -482,6 +490,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <option value="CCS">College of Computer Studies (CCS)</option>
                             <option value="COEd">College of Education (COEd)</option>
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
                         <select id="facultySelector" class="bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-xs outline-none" onchange="renderWorkloads()">
@@ -604,6 +613,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <option value="CCS">College of Computer Studies (CCS)</option>
                             <option value="COEd">College of Education (COEd)</option>
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
                     </div>
@@ -615,6 +625,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <option value="CCS">College of Computer Studies (CCS)</option>
                             <option value="COEd">College of Education (COEd)</option>
                             <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
                             <option value="Graduate Studies">Graduate Studies</option>
                         </select>
                     </div>
@@ -697,6 +708,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             "CANS": ["Bachelor of Science in Agriculture", "Bachelor of Science in Agribusiness", "Bachelor of Science in Environmental Science"],
             "COEd": ["Bachelor of Elementary Education", "Bachelor of Secondary Education - English", "Bachelor of Secondary Education - Mathematics", "Bachelor of Secondary Education - Science", "Bachelor of Technology and Livelihood Education - HE", "Bachelor of Technology and Livelihood Education - ICT", "Bachelor of Early Childhood Education"],
             "CCS": ["Bachelor of Science in Computer Science", "Bachelor of Science in Information Technology"],
+            "CAS": ["Bachelor of Arts in Communication", "Bachelor of Science in Biology"],
             "Graduate Studies": ["PhD", "MAED-EM", "MAED-Math", "MAM", "MATVE"]
         };
 
@@ -751,6 +763,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (key === 'COE') return 'header-coe';
             if (key === 'CANS') return 'header-cans';
             if (key === 'CCS') return 'header-ccs';
+            if (key === 'CAS') return 'header-cas';
             if (key === 'GRADUATE STUDIES' || key === 'GS') return 'header-gs';
             return 'header-default';
         }
@@ -761,6 +774,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (key === 'COE') return [127, 29, 29];
             if (key === 'CANS') return [63, 98, 18];
             if (key === 'CCS') return [107, 33, 168];
+            if (key === 'CAS') return [13, 148, 136];
             if (key === 'GRADUATE STUDIES' || key === 'GS') return [7, 89, 133];
             return [30, 41, 59];
         }
@@ -771,6 +785,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             if (key === 'COE') return 'coe';
             if (key === 'CANS') return 'cans';
             if (key === 'CCS') return 'ccs';
+            if (key === 'CAS') return 'cas';
             if (key === 'GRADUATE STUDIES' || key === 'GS') return 'gs';
             return 'default';
         }
@@ -1035,13 +1050,14 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             
             let totalUnits = 0; let compliantCount = 0; let nonCompliantCount = 0; let totalAuditedFaculty = 0;
             const distinctUndergradCourses = new Set();
-            const classroomsPerCollege = { "COE": new Set(), "CCS": new Set(), "COEd": new Set(), "CANS": new Set(), "Graduate Studies": new Set() };
+            const classroomsPerCollege = { "COE": new Set(), "CCS": new Set(), "COEd": new Set(), "CANS": new Set(), "CAS": new Set(), "Graduate Studies": new Set() };
 
             const collegeAudit = {
                 "COE": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
                 "CCS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
                 "COEd": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
                 "CANS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
+                "CAS": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] },
                 "Graduate Studies": { compliant: 0, nonCompliant: 0, topFaculty: null, maxUnits: -1, maxHours: -1, underloadedList: [] }
             };
 
@@ -1173,7 +1189,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 }).join('');
             }
 
-            const collegeCounts = { "COE": 0, "CCS": 0, "COEd": 0, "CANS": 0, "Graduate Studies": 0 };
+            const collegeCounts = { "COE": 0, "CCS": 0, "COEd": 0, "CANS": 0, "CAS": 0, "Graduate Studies": 0 };
             sharedSchedules.forEach(s => { if (collegeCounts.hasOwnProperty(s.college)) collegeCounts[s.college]++; });
             
             if (collegeShareChartInstance) collegeShareChartInstance.destroy();
@@ -1183,7 +1199,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     type: 'doughnut',
                     data: {
                         labels: Object.keys(collegeCounts),
-                        datasets: [{ data: Object.values(collegeCounts), backgroundColor: ['#7f1d1d', '#6b21a8', '#1d4ed8', '#3f6212', '#075985'] }]
+                        datasets: [{ data: Object.values(collegeCounts), backgroundColor: ['#7f1d1d', '#6b21a8', '#1d4ed8', '#3f6212', '#0d9488', '#075985'] }]
                     },
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
                 });
@@ -1251,10 +1267,10 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             const container = document.getElementById("masterScheduleContainer"); if(!container) return;
             
             container.innerHTML = Object.keys(registeredPrograms).map(college => {
-                const recs = sharedSchedules.filter(s => s.college === college); if(recs.length === 0) return '';
+                const recs = sharedSchedules.filter(s => s.college === college);
                 const activeColorClass = getCollegeColorClass(college);
                 
-                const tableRows = recs.map(r => `
+                const tableRows = recs.length > 0 ? recs.map(r => `
                     <tr class="border-b text-sm">
                         <td class="p-3 font-semibold">${r.classSection}</td>
                         <td class="p-3">${r.dayAssignment}<br><span class="font-mono text-gray-600 font-bold text-xs">${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}</span></td>
@@ -1264,7 +1280,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                             <button onclick="invokeScheduleRowDeletion('${r.id}')" class="text-red-600 font-bold bg-red-50 px-2 py-1 rounded text-xs cursor-pointer">Delete</button>
                         </td>
                     </tr>
-                `).join('');
+                `).join('') : `<tr><td colspan="7" class="p-4 text-center text-gray-400 italic bg-gray-50/50">No schedule blocks available for this college.</td></tr>`;
                 
                 return `
                     <div class="border rounded-lg overflow-hidden bg-white">
@@ -1463,7 +1479,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
 
             const facultyGroupedContainer = document.getElementById("regFacultyGroupedContainer");
             if (facultyGroupedContainer) {
-                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                const uniqueCollegesKeys = ["COE", "CCS", "COEd", "CANS", "CAS", "Graduate Studies"];
                 facultyGroupedContainer.innerHTML = uniqueCollegesKeys.map(colKey => {
                     const matchingFacultyRows = registeredFaculty
                         .map((f, i) => ({ data: f, originalIndex: i }))
@@ -1664,11 +1680,9 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
         
         function changeSummarySort(m) { currentSummarySortMetric = m; renderSummaryDashboard(); }
 
-        // Triggered via individual action buttons (Reset, Program, Compliant/Non-Compliant)
         function filterMatrixView(scopeType) {
             matrixFilterScope = scopeType;
             
-            // Adjust individual target action button highlight rings dynamically
             const subButtons = ['matrix-filter-program', 'matrix-filter-compliant', 'matrix-filter-noncompliant', 'matrix-filter-all'];
             subButtons.forEach(btnId => {
                 const el = document.getElementById(btnId);
@@ -1690,12 +1704,11 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             renderSummaryDashboard();
         }
 
-        // Dropdown handler targeting direct operational scope assignments
         function handleMatrixDropdownCollegeChange(dropdownValue) {
             if (dropdownValue === 'all-colleges') {
                 matrixFilterScope = 'all';
             } else {
-                matrixFilterScope = dropdownValue; // Stores the college string value ('COE', 'CCS', etc.) directly
+                matrixFilterScope = dropdownValue;
             }
             renderSummaryDashboard();
         }
@@ -1764,14 +1777,12 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             let dataset = getAggregatedFacultyMetricsList(); if(dataset.length === 0) return;
 
             if (currentSummaryGroupingMode === 'matrix-tab') {
-                const collegesList = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                const collegesList = ["COE", "CCS", "COEd", "CANS", "CAS", "Graduate Studies"];
                 let htmlMatrixBuffer = "";
 
-                // General chronological matrix configuration sort defaults
                 dataset.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
 
                 collegesList.forEach(collegeKey => {
-                    // Check if dropdown filter isolates down to a specific single college key scenario
                     if (matrixFilterScope !== 'all' && matrixFilterScope !== 'program' && matrixFilterScope !== 'compliant' && matrixFilterScope !== 'non-compliant') {
                         if (matrixFilterScope !== collegeKey) return; 
                     }
@@ -1784,7 +1795,6 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                     let compliantFaculty = collegeFaculty.filter(f => (f.units >= (designationUnitMinimums[f.designation] || 18)) || f.hours >= 20 || f.rank === "TBA");
                     let nonCompliantFaculty = collegeFaculty.filter(f => f.rank !== "TBA" && (f.units < (designationUnitMinimums[f.designation] || 18)) && f.hours < 20);
 
-                    // Contextual global rules modifiers checks
                     if (matrixFilterScope === 'compliant') {
                         nonCompliantFaculty = [];
                         if (compliantFaculty.length === 0) return;
@@ -1856,7 +1866,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                         </tbody>
                     </table>`;
             } else if (currentSummaryGroupingMode === 'college') {
-                const colleges = ["COE", "CCS", "COEd", "CANS", "Graduate Studies"];
+                const colleges = ["COE", "CCS", "COEd", "CANS", "CAS", "Graduate Studies"];
                 container.innerHTML = colleges.map(college => {
                     const rows = dataset.filter(f => f.homeCollege === college); if(rows.length===0) return '';
                     rows.sort((a,b) => currentSummarySortMetric==='units' ? b.units - a.units : b.hours - a.hours);
@@ -1973,7 +1983,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
                 let dataRows = dataset.map(f => ({ "Faculty Name": f.name, "Department College": f.homeCollege, "Academic Rank": f.rank, "Designation Assignment": f.designation, "Total Workload Unit/s": f.units, "Weekly Committed Hours": f.hours, "Distinct Preparations Count": f.prepsCount }));
                 XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(dataRows), "Flat Load List");
             } else if (currentSummaryGroupingMode === 'college') {
-                ["COE", "CCS", "COEd", "CANS", "Graduate Studies"].forEach(college => {
+                ["COE", "CCS", "COEd", "CANS", "CAS", "Graduate Studies"].forEach(college => {
                     let rows = dataset.filter(f => f.homeCollege === college); if (rows.length === 0) return;
                     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.map(f => ({ "Instructor": f.name, "Rank": f.rank, "Designation": f.designation, "Assigned Unit/s": f.units, "Weekly Hours": f.hours }))), college.substring(0, 31));
                 });
@@ -2002,7 +2012,7 @@ BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11<
             } else if (targetScope === "all") {
                 workloadMap.push({ titleId: "University_As_A_Whole_Workloads", members: facultyScopeList });
             } else if (targetScope === "college") {
-                ["COE", "CCS", "COEd", "CANS", "Graduate Studies"].forEach(colKey => {
+                ["COE", "CCS", "COEd", "CANS", "CAS", "Graduate Studies"].forEach(colKey => {
                     let filteredMembers = registeredFaculty.filter(f => f.college === colKey).map(f => f.name);
                     if(filteredMembers.length > 0) workloadMap.push({ titleId: `College_${colKey}_Workloads`, members: filteredMembers });
                 });
