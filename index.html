@@ -1,4 +1,695 @@
-<script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESSU Salcedo Scheduling & Workload System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print {
+            body, main, header, section, div, table {
+                background: white !important;
+                color: black !important;
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            .print-page { 
+                page-break-after: always !important; 
+                break-after: page !important;
+                padding: 0 !important; 
+                margin: 0 0 10mm 0 !important; 
+                border: none !important; 
+            }
+            body:has(.printing-matrix-active) main,
+            body:has(.printing-matrix-active) header {
+                display: none !important;
+            }
+            .print-matrix-view { 
+                display: block !important; 
+                width: 100% !important; 
+            }
+            @page {
+                size: auto;
+                margin: 15mm 10mm 15mm 10mm;
+            }
+        }
+        .code-added-highlight { background-color: rgba(254, 240, 138, 0.25); }
+        
+        /* Green, Yellow & White Institutional Color Palette Schematics */
+        .header-coed { background-color: #15803d !important; color: white !important; border-bottom: 2px solid #facc15; }
+        .header-coe { background-color: #14532d !important; color: #fef08a !important; border-bottom: 2px solid #eab308; }
+        .header-cans { background-color: #3f6212 !important; color: white !important; border-bottom: 2px solid #fde047; }
+        .header-ccs { background-color: #065f46 !important; color: white !important; border-bottom: 2px solid #facc15; }
+        .header-cas { background-color: #047857 !important; color: white !important; border-bottom: 2px solid #fde047; }
+        .header-gs { background-color: #ca8a04 !important; color: white !important; border-bottom: 2px solid #14532d; }
+        .header-default { background-color: #166534 !important; color: white !important; }
+
+        .border-coed { border-color: #15803d !important; }
+        .border-coe { border-color: #14532d !important; }
+        .border-cans { border-color: #3f6212 !important; }
+        .border-ccs { border-color: #065f46 !important; }
+        .border-cas { border-color: #047857 !important; }
+        .border-gs { border-color: #ca8a04 !important; }
+        .border-default { border-color: #166534 !important; }
+
+        .bg-coed-soft { background-color: rgba(21, 128, 61, 0.06) !important; }
+        .bg-coe-soft { background-color: rgba(20, 83, 45, 0.06) !important; }
+        .bg-cans-soft { background-color: rgba(63, 98, 18, 0.06) !important; }
+        .bg-ccs-soft { background-color: rgba(6, 95, 70, 0.06) !important; }
+        .bg-cas-soft { background-color: rgba(4, 120, 87, 0.06) !important; }
+        .bg-gs-soft { background-color: rgba(202, 138, 4, 0.08) !important; }
+        .bg-default-soft { background-color: rgba(22, 101, 52, 0.06) !important; }
+
+        .text-coed { color: #15803d !important; }
+        .text-coe { color: #14532d !important; }
+        .text-cans { color: #3f6212 !important; }
+        .text-ccs { color: #065f46 !important; }
+        .text-cas { color: #047857 !important; }
+        .text-gs { color: #a16207 !important; }
+        .text-default { color: #166534 !important; }
+    </style>
+</head>
+<body class="bg-green-50/40 text-gray-800 font-sans antialiased">
+
+    <header class="bg-green-900 text-white shadow-md border-b-4 border-yellow-400 no-print">
+        <div class="max-w-7xl mx-auto px-4 py-5 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-white">ESSU Salcedo Scheduling and Workload System <span class="text-yellow-300">(SWS v1)</span></h1>
+                <p class="text-sm text-green-100">Class Matrix & Faculty Workload Automated Generator</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="purgeLocalStorageCache()" class="bg-yellow-500 hover:bg-yellow-400 text-green-950 border border-yellow-300 text-xs font-bold px-3 py-1.5 rounded-lg transition cursor-pointer shadow-sm">
+                    🚨 Wipe Database Cache
+                </button>
+                <span class="bg-green-800 border border-yellow-400/60 text-xs text-yellow-200 px-3 py-1.5 rounded-full font-semibold">AY 2026 - 2027</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-10">
+
+        <div class="border-b border-green-200 bg-white px-4 pt-3 rounded-t-xl shadow-xs no-print">
+            <nav class="flex flex-wrap gap-2 sm:space-x-6" aria-label="Tabs">
+                <button onclick="switchTab('dashboard-view')" id="tab-dashboard-view" class="tab-btn border-b-3 border-green-700 text-green-900 font-bold pb-3.5 text-sm px-1 cursor-pointer">
+                    📊 Dashboard Hub
+                </button>
+                <button onclick="switchTab('upload-view')" id="tab-upload-view" class="tab-btn border-b-3 border-transparent text-gray-600 hover:text-green-800 pb-3.5 text-sm px-1 cursor-pointer">
+                    📥 Schedule Ingestion Engine
+                </button>
+                <button onclick="switchTab('encoder-view')" id="tab-encoder-view" class="tab-btn border-b-3 border-transparent text-gray-600 hover:text-green-800 pb-3.5 text-sm px-1 cursor-pointer">
+                    ✍ Manual Encoder
+                </button>
+                <button onclick="switchTab('schedule-view')" id="tab-schedule-view" class="tab-btn border-b-3 border-transparent text-gray-600 hover:text-green-800 pb-3.5 text-sm px-1 cursor-pointer">
+                    🗂 Master Class Program
+                </button>
+                <button onclick="switchTab('program-schedule-view')" id="tab-program-schedule-view" class="tab-btn border-b-3 border-transparent text-green-700 hover:text-green-900 pb-3.5 text-sm px-1 cursor-pointer font-medium">
+                    📅 Class Schedule Report
+                </button>
+                <button onclick="switchTab('summary-view')" id="tab-summary-view" class="tab-btn border-b-3 border-transparent hover:text-green-900 pb-3.5 text-sm px-1 cursor-pointer font-medium text-emerald-700">
+                    📊 Faculty Load Summary
+                </button>
+                <button onclick="switchTab('workload-view')" id="tab-workload-view" class="tab-btn border-b-3 border-transparent hover:text-yellow-700 pb-3.5 text-sm px-1 cursor-pointer font-medium text-yellow-700">
+                    📋 Individual Workload Sheets
+                </button>
+                <button onclick="switchTab('management-view')" id="tab-management-view" class="tab-btn border-b-3 border-transparent hover:text-green-900 pb-3.5 text-sm px-1 cursor-pointer font-semibold text-green-800">
+                    ⚙ Registries Management
+                </button>
+            </nav>
+        </div>
+
+        <section id="dashboard-view" class="tab-content bg-white rounded-xl shadow-sm border border-green-200 p-6 space-y-6">
+            <div class="border-b border-green-100 pb-4">
+                <h2 class="text-xl font-bold text-green-950">Academic Analytics Summary</h2>
+                <p class="text-sm text-gray-500">Real-time summary tracking university loading balances, policy standard compliance ratios, and program structural distributions.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-4 bg-green-50 border border-green-200 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-green-700 tracking-wider">Total Schedules Listed</span>
+                    <span id="kpi-total-schedules" class="text-3xl font-extrabold text-green-950 mt-2">0</span>
+                </div>
+                <div class="p-4 bg-yellow-50 border border-yellow-300 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-yellow-700 tracking-wider">Registered Faculty Members</span>
+                    <span id="kpi-total-faculty" class="text-3xl font-extrabold text-yellow-900 mt-2">0</span>
+                </div>
+                <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-emerald-700 tracking-wider">Total Allocated Load</span>
+                    <span id="kpi-total-units" class="text-3xl font-extrabold text-emerald-950 mt-2">0 Unit/s</span>
+                </div>
+                <div class="p-4 bg-amber-50 border border-amber-300 rounded-xl flex flex-col justify-between">
+                    <span class="text-xs font-bold uppercase text-amber-700 tracking-wider">Audited Compliance Rate</span>
+                    <span id="kpi-compliance-rate" class="text-3xl font-extrabold text-amber-900 mt-2">100%</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-green-900 text-white rounded-xl border-b-4 border-yellow-400 flex flex-col justify-between shadow-sm md:col-span-1">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">🎓</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-yellow-300">Undergraduate Courses Running</span>
+                        </div>
+                        <p class="text-[11px] text-green-200 mt-0.5">Total distinct course scopes active (strictly excluding Graduate Studies channels).</p>
+                    </div>
+                    <span id="kpi-undergrad-courses" class="text-4xl font-black text-yellow-400 mt-4">0</span>
+                </div>
+                <div class="p-4 bg-white border border-green-200 rounded-xl shadow-sm md:col-span-2 space-y-2">
+                    <div class="border-b border-green-100 pb-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-green-800 flex items-center gap-1">
+                            <span>🏢 Active Classroom Assets Matrix</span>
+                            <span class="normal-case text-[10px] text-gray-400 font-medium">(Distinct physical rooms assigned per college schedule logs)</span>
+                        </span>
+                    </div>
+                    <div id="dashboard-classrooms-college-deck" class="grid grid-cols-2 sm:grid-cols-6 gap-2 pt-1"></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="p-5 border border-green-200 rounded-xl bg-green-50/30 lg:col-span-2 space-y-3">
+                    <h3 class="text-xs font-bold text-green-900 uppercase tracking-wide">Top 10 Faculty Taught Workloads</h3>
+                    <div class="relative h-64 w-full">
+                        <canvas id="facultyWorkloadChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="p-5 border border-green-200 rounded-xl bg-green-50/30 space-y-3">
+                    <h3 class="text-xs font-bold text-green-900 uppercase tracking-wide">Schedules per College Division</h3>
+                    <div class="relative h-64 w-full flex items-center justify-center">
+                        <canvas id="collegeShareChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="p-5 border border-green-200 rounded-xl bg-white shadow-sm flex flex-col justify-between lg:col-span-1">
+                    <div>
+                        <h3 class="text-xs font-bold text-green-950 uppercase tracking-wider border-b border-green-100 pb-2 mb-2">⚖️ Compliance Audit Per College <span class="normal-case text-[10px] text-gray-400 font-medium">(Excluding TBA)</span></h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-green-50 text-green-900 font-bold border-b border-green-200">
+                                        <th class="p-2">College</th>
+                                        <th class="p-2 text-center text-green-700">Compliant</th>
+                                        <th class="p-2 text-center text-yellow-700">Non-Compliant</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-college-compliance-table-body" class="divide-y divide-gray-100 font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 border border-green-200 rounded-xl bg-white shadow-sm lg:col-span-2">
+                    <h3 class="text-xs font-bold text-green-950 uppercase tracking-wider border-b border-green-100 pb-2">⭐ Top Compliance Workload Per Division</h3>
+                    <div id="dashboard-top-performers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-3"></div>
+                </div>
+            </div>
+
+            <div class="p-5 border border-yellow-300 rounded-xl bg-yellow-50/30 shadow-sm space-y-4">
+                <div class="border-b border-yellow-200 pb-2">
+                    <h3 class="text-sm font-bold text-green-950 uppercase tracking-wide flex items-center gap-2">
+                        <span>⚠️ Strategic Deficiency Registry</span>
+                        <span class="text-xs normal-case font-medium text-gray-600">(Faculty profiles failing both Designation Units and the 20-Hour alternative check)</span>
+                    </h3>
+                </div>
+                <div id="dashboard-non-compliant-faculty-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+            </div>
+        </section>
+
+        <section id="upload-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-green-200 p-6 no-print space-y-6">
+            <div class="border-b border-green-100 pb-4">
+                <h2 class="text-xl font-bold text-green-950">Document Ingestion & Parsing Engine</h2>
+                <p class="text-sm text-gray-500">Select a target college destination. Clean CSV spreadsheet lines parsed here are <strong>permanently appended</strong> into browser local storage.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-green-900 mb-1">Target Academic College Destination</label>
+                        <select id="uploadCollegeSelect" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 text-sm outline-none focus:ring-2 focus:ring-green-600" required>
+                            <option value="">Select Target College Division...</option>
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-green-900 mb-1">File Ingestion Input (.csv / .txt)</label>
+                        <input type="file" id="csvFileInput" accept=".csv, .txt" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2 text-sm outline-none file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-yellow-400 file:text-green-950 hover:file:bg-yellow-300" onchange="handleCSVFileLoad(event)">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-green-900 mb-1">Raw Spreadsheet CSV Console</label>
+                        <textarea id="rawSchedulePasteInput" rows="11" placeholder="Paste line elements here...&#10;Format: BSCPE 1-1,Monday and Wednesday (07:30- 09:00),Math 111,3,Bolito,COE-1" class="w-full font-mono text-xs p-3 bg-green-950 text-yellow-300 border border-green-800 rounded-lg outline-none focus:ring-2 focus:ring-yellow-400 leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <button onclick="clearIngestionConsole()" class="text-xs text-yellow-700 hover:underline font-bold cursor-pointer">Clear Ingestion Board</button>
+                        <button onclick="processUploadedScheduleText()" class="bg-green-800 hover:bg-green-700 text-white border-b-2 border-yellow-400 font-semibold text-sm px-6 py-2.5 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer">
+                            Parse, Merge & Append to Local Database
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50/60 p-4 rounded-xl border border-yellow-300 text-xs space-y-3">
+                    <h4 class="font-bold text-green-950 uppercase tracking-wide border-b border-yellow-200 pb-2">📋 Clean CSV Ingestion Template</h4>
+                    <p class="text-gray-600">Optimized to read the structure of your data file:</p>
+                    <div class="bg-green-950 text-yellow-200 font-mono p-2.5 rounded text-[10px] overflow-x-auto whitespace-pre">BSCpE III-1,Monday and Wednesday (01:00 PM – 04:00 PM),CpE 311,4,Araneta,COE-3
+BSABE III-2,Tuesday and Thursday (10:30 AM - 12:00 PM),ABE 312,3,Cabahug,COE-11</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="encoder-view" class="tab-content hidden bg-white rounded-xl shadow-sm border border-green-200 p-6 no-print">
+            <div class="border-b border-green-100 pb-4 mb-6">
+                <h2 class="text-xl font-bold text-green-950">Manual Entry Wizard</h2>
+                <p class="text-sm text-gray-500">Encode a single class block directly into the system database records.</p>
+            </div>
+
+            <form id="scheduleForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">College Division</label>
+                    <select id="collegeSelect" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" onchange="populateEncoderPrograms()" required>
+                        <option value="">Select College</option>
+                        <option value="COE">College of Engineering (COE)</option>
+                        <option value="CCS">College of Computer Studies (CCS)</option>
+                        <option value="COEd">College of Education (COEd)</option>
+                        <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                        <option value="CAS">College of Arts and Sciences (CAS)</option>
+                        <option value="Graduate Studies">Graduate Studies</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Degree Course/Program</label>
+                    <select id="programSelect" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" onchange="populateEncoderSections()" required>
+                        <option value="">Select a Course</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Year Level & Section</label>
+                    <select id="classSectionSelect" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                        <option value="">Select Section</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Subject Code & Descriptive Title</label>
+                    <input type="text" id="subjectTitle" placeholder="e.g., CpE 311 (Logic Circuits and Design)" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Total Course Unit/s</label>
+                    <input type="number" id="unifiedUnits" min="1" max="12" placeholder="e.g., 3" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Assigned Instructor</label>
+                    <select id="instructorSelect" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                        <option value="">Select Instructor...</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Day Assignment</label>
+                    <select id="dayAssignment" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Monday and Wednesday">Monday and Wednesday (MW)</option>
+                        <option value="Tuesday and Thursday">Tuesday and Thursday (TTH)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-sm font-semibold text-green-900 mb-1">Start Time</label>
+                        <input type="time" id="startTime" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-green-900 mb-1">End Time</label>
+                        <input type="time" id="endTime" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-green-900 mb-1">Room Assignment</label>
+                    <select id="roomSelect" class="w-full bg-green-50/40 border border-green-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-green-600" required>
+                        <option value="">Select Room Layout...</option>
+                    </select>
+                </div>
+
+                <div class="md:col-span-3 flex justify-end pt-2">
+                    <button type="submit" class="bg-green-800 hover:bg-green-700 text-white border-b-2 border-yellow-400 font-semibold px-6 py-2.5 rounded-lg shadow-sm transition transform active:scale-95 cursor-pointer">
+                        Append to Schedules
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section id="schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-green-200 p-6 tab-content">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-green-100 pb-4 mb-4 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-green-950">University Master Schedule Matrix</h2>
+                    <p class="text-sm text-gray-500">Comprehensive schedule registry grouped by color-coded College divisions (12-Hour System Format).</p>
+                </div>
+                <div class="flex gap-2 no-print">
+                    <button onclick="exportMasterProgramPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-green-950 text-xs font-bold px-4 py-2 rounded-lg transition cursor-pointer shadow-xs">
+                        📄 Export Master PDF
+                    </button>
+                    <button onclick="window.print()" class="bg-green-50 hover:bg-green-100 text-green-900 border border-green-300 font-medium px-4 py-2 rounded-lg text-sm cursor-pointer">
+                        🖨 Print
+                    </button>
+                </div>
+            </div>
+            <div id="masterScheduleContainer" class="space-y-8"></div>
+        </section>
+
+        <section id="program-schedule-view" class="hidden bg-white rounded-xl shadow-sm border border-green-200 p-6 tab-content">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-green-100 pb-4 mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-green-950">Class Schedule Report per Program / Section</h2>
+                    <p class="text-sm text-gray-500">Generate, edit, and filter localized section sheets with direct action tools.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 no-print bg-green-50/70 p-3 rounded-xl border border-green-200 w-full lg:w-auto">
+                    <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                        <select id="reportCollegeFilter" class="bg-white border border-green-300 rounded-lg px-3 py-1.5 text-xs outline-none" onchange="populateReportProgramFilter()">
+                            <option value="ALL">All Colleges</option>
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                        <select id="reportProgramFilter" class="bg-white border border-green-300 rounded-lg px-3 py-1.5 text-xs outline-none max-w-xs" onchange="populateReportSectionFilter()">
+                            <option value="ALL">All Programs</option>
+                        </select>
+                        <select id="reportSectionFilter" class="bg-white border border-green-300 rounded-lg px-3 py-1.5 text-xs outline-none" onchange="renderProgramScheduleReport()">
+                            <option value="ALL">All Sections</option>
+                        </select>
+                    </div>
+                    <div class="flex gap-1 border-t sm:border-t-0 sm:border-l pt-2 sm:pt-0 sm:pl-3 border-green-300 ml-auto sm:ml-0">
+                        <button onclick="exportProgramSchedulePDF()" class="bg-yellow-500 hover:bg-yellow-400 text-green-950 text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">📄 PDF</button>
+                        <button onclick="exportProgramScheduleExcel()" class="bg-green-700 hover:bg-green-800 text-white text-xs font-bold px-3 py-1.5 rounded-md cursor-pointer">📊 Excel</button>
+                        <button onclick="window.print()" class="bg-white hover:bg-green-100 text-green-900 border border-green-300 font-medium px-3 py-1.5 rounded-md text-xs cursor-pointer">🖨 Print</button>
+                    </div>
+                </div>
+            </div>
+            <div id="programScheduleReportContainer" class="space-y-6"></div>
+        </section>
+
+        <section id="summary-view" class="hidden bg-white rounded-xl shadow-sm border border-green-200 p-6 tab-content space-y-6">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-green-100 pb-5 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-green-950">Faculty Load Summary Metrics</h2>
+                    <p class="text-sm text-gray-500">Aggregated load summary indices with reactive designation and hour cascading checks.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 no-print bg-green-50/70 p-3 rounded-xl border border-green-200">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-bold uppercase text-green-900 mr-1">Group View:</span>
+                        <button onclick="changeSummaryGrouping('none')" id="group-none-btn" class="bg-green-800 text-white font-bold text-xs px-3 py-1.5 rounded-md cursor-pointer">Flat List</button>
+                        <button onclick="changeSummaryGrouping('college')" id="group-college-btn" class="bg-white text-green-900 hover:bg-green-100 text-xs px-3 py-1.5 rounded-md border border-green-200 cursor-pointer">By College</button>
+                        <button onclick="changeSummaryGrouping('program')" id="group-program-btn" class="bg-white text-green-900 hover:bg-green-100 text-xs px-3 py-1.5 rounded-md border border-green-200 cursor-pointer">By Program</button>
+                        <button onclick="changeSummaryGrouping('matrix-tab')" id="group-matrix-btn" class="bg-white text-green-900 hover:bg-green-100 border text-xs px-3 py-1.5 rounded-md border-green-200 cursor-pointer font-bold">📋 General Workload Matrix</button>
+                    </div>
+                    <div id="sortingControlsContainer" class="flex items-center gap-1 border-l pl-3 border-green-300">
+                        <span class="text-xs font-bold uppercase text-green-900 mr-1">Sort Metrics:</span>
+                        <button onclick="changeSummarySort('units')" id="sort-units-btn" class="bg-yellow-100 text-green-950 font-bold text-xs px-2.5 py-1.5 rounded-md border border-yellow-300 cursor-pointer">Unit/s ⬇</button>
+                        <button onclick="changeSummarySort('hours')" id="sort-hours-btn" class="bg-white text-green-900 hover:bg-green-100 text-xs px-2.5 py-1.5 rounded-md border border-green-300 cursor-pointer">Hours ⬇</button>
+                    </div>
+                    <div class="flex gap-1 border-l pl-3 border-green-300 ml-auto lg:ml-0">
+                        <button onclick="exportFacultySummaryPDF()" class="bg-yellow-500 hover:bg-yellow-400 text-green-950 text-xs font-bold px-3 py-2 rounded-md cursor-pointer">📄 Export PDF</button>
+                        <button onclick="exportFacultySummaryExcelGrouped()" class="bg-green-700 hover:bg-green-800 text-white text-xs font-bold px-3 py-2 rounded-md flex items-center gap-1 cursor-pointer">📈 Export Grouped Excel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="matrixPrintingControlsPanel" class="hidden no-print p-4 bg-green-950 border border-green-800 rounded-xl space-y-3 shadow-md">
+                <div class="flex items-center justify-between border-b border-green-800 pb-2">
+                    <div class="flex items-center gap-2">
+                        <span class="text-yellow-400 text-sm">📋</span>
+                        <h4 class="text-xs font-extrabold uppercase text-white tracking-wider">General Faculty Matrix Filtering Systems</h4>
+                    </div>
+                    <span class="bg-yellow-400 text-green-950 text-[10px] font-mono px-2 py-0.5 rounded font-bold">Active Framework Scope</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 text-xs">
+                    <div class="flex items-center gap-2">
+                        <label for="matrixCollegeScopeDropdown" class="text-green-200 text-xs font-bold">Group by College Status:</label>
+                        <select id="matrixCollegeScopeDropdown" class="bg-green-900 border border-green-700 rounded-md px-3 py-1.5 text-xs text-yellow-200 font-bold outline-none focus:ring-2 focus:ring-yellow-400" onchange="handleMatrixDropdownCollegeChange(this.value)">
+                            <option value="all-colleges">Show All Academic Divisions</option>
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="filterMatrixView('program')" id="matrix-filter-program" class="bg-green-900 hover:bg-green-800 text-white px-3 py-1.5 rounded font-bold border border-green-700 transition cursor-pointer">Group by Program</button>
+                        <button onclick="filterMatrixView('compliant')" id="matrix-filter-compliant" class="bg-emerald-900 text-emerald-300 border border-emerald-700 hover:bg-emerald-800 px-3 py-1.5 rounded font-bold transition cursor-pointer">Show Compliant Only</button>
+                        <button onclick="filterMatrixView('non-compliant')" id="matrix-filter-noncompliant" class="bg-yellow-900/80 text-yellow-300 border border-yellow-600 hover:bg-yellow-800 px-3 py-1.5 rounded font-bold transition cursor-pointer">Show Non-Compliant Only</button>
+                    </div>
+
+                    <button onclick="filterMatrixView('all')" id="matrix-filter-all" class="ml-auto bg-yellow-400 hover:bg-yellow-300 text-green-950 font-bold px-3 py-1.5 rounded transition cursor-pointer shadow-sm">Reset Filters</button>
+                </div>
+            </div>
+            
+            <div id="summaryDashboardDynamicContent" class="overflow-x-auto space-y-6"></div>
+        </section>
+
+        <div id="specializedMatrixPrintFrame" class="hidden print-matrix-view"></div>
+
+        <section id="workload-view" class="hidden bg-white rounded-xl shadow-sm border border-green-200 p-6 tab-content">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-green-100 pb-4 mb-6 gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-green-950">Faculty Structural Load Sheets</h2>
+                    <p class="text-sm text-gray-500">Official individual instructional workloads generated dynamically with adaptive configuration criteria.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto no-print bg-green-50/70 p-2.5 rounded-xl border border-green-200">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <select id="facultyWorkloadCollegeScope" class="bg-white border border-green-300 rounded-lg px-3 py-1.5 text-xs font-bold outline-none text-green-950" onchange="filterWorkloadFacultyDropdown()">
+                            <option value="ALL">Show All College Divisions</option>
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                        <select id="facultySelector" class="bg-white border border-green-300 rounded-lg px-3 py-1.5 text-xs outline-none" onchange="renderWorkloads()">
+                            <option value="ALL">Show All Faculty Sheets</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 lg:ml-auto">
+                        <span class="text-xs font-bold uppercase text-green-800 mr-1">Download:</span>
+                        <button onclick="triggerWorkloadExport('pdf')" class="bg-yellow-500 hover:bg-yellow-400 text-green-950 text-xs font-bold px-2.5 py-1.5 rounded-md cursor-pointer">📄 PDF</button>
+                        <button onclick="triggerWorkloadExport('docx')" class="bg-green-800 hover:bg-green-700 text-white text-xs font-bold px-2.5 py-1.5 rounded-md cursor-pointer">📝 Word</button>
+                        <button onclick="triggerWorkloadExport('xlsx')" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-2.5 py-1.5 rounded-md cursor-pointer">📊 Excel</button>
+                        <select id="workloadScopeSelector" class="bg-white border border-green-300 rounded-md px-2 py-1 text-xs outline-none font-medium text-green-950">
+                            <option value="current">Current Selection Scope</option>
+                            <option value="all">As a Whole (All Combined)</option>
+                            <option value="college">Separated Per College</option>
+                            <option value="program">Separated Per Program</option>
+                        </select>
+                    </div>
+                    <button onclick="window.print()" class="bg-white hover:bg-green-100 text-green-900 border border-green-300 font-medium px-3 py-1.5 rounded-md text-xs cursor-pointer">🖨 Print</button>
+                </div>
+            </div>
+            <div id="workloadSheetsContainer" class="space-y-6"></div>
+        </section>
+
+        <section id="management-view" class="hidden space-y-8 no-print tab-content">
+            <div class="bg-white p-4 rounded-xl border border-green-200 flex flex-wrap gap-2 shadow-sm">
+                <button onclick="switchRegistryTab('reg-programs')" id="subtab-reg-programs" class="reg-tab-btn bg-green-800 text-white text-xs font-bold px-4 py-2 rounded-lg cursor-pointer">🎓 Programs Registry</button>
+                <button onclick="switchRegistryTab('reg-sections')" id="subtab-reg-sections" class="reg-tab-btn bg-green-50 text-green-900 text-xs px-4 py-2 rounded-lg cursor-pointer">🏫 Sections Registry</button>
+                <button onclick="switchRegistryTab('reg-faculty')" id="subtab-reg-faculty" class="reg-tab-btn bg-green-50 text-green-900 text-xs px-4 py-2 rounded-lg cursor-pointer">👥 Faculty Registry</button>
+                <button onclick="switchRegistryTab('reg-rooms')" id="subtab-reg-rooms" class="reg-tab-btn bg-green-50 text-green-900 text-xs px-4 py-2 rounded-lg cursor-pointer font-bold">🏢 Rooms Registry</button>
+            </div>
+
+            <div id="panel-reg-programs" class="reg-panel bg-white p-6 rounded-xl border border-green-200 shadow-sm space-y-6">
+                <div class="flex justify-between items-center border-b border-green-100 pb-3">
+                    <h3 class="text-lg font-bold text-green-950">Degree Course / Program Configurations</h3>
+                    <button onclick="openRegistryAddModal('program')" class="bg-green-800 hover:bg-green-700 text-white border-b-2 border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">+ Add New Program</button>
+                </div>
+                <div class="overflow-x-auto"><table class="w-full text-left border-collapse text-sm"><thead class="bg-green-50 border-b border-green-200 text-xs font-bold uppercase text-green-900"><th class="p-3">College</th><th class="p-3">Program Name</th><th class="p-3 text-right">Actions</th></thead><tbody id="regProgramsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
+            </div>
+
+            <div id="panel-reg-sections" class="reg-panel hidden bg-white p-6 rounded-xl border border-green-200 shadow-sm space-y-6">
+                <div class="flex justify-between items-center border-b border-green-100 pb-3">
+                    <h3 class="text-lg font-bold text-green-950">Year Level & Section Registry</h3>
+                    <button onclick="openRegistryAddModal('section')" class="bg-green-800 hover:bg-green-700 text-white border-b-2 border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">+ Add New Section</button>
+                </div>
+                <div class="overflow-x-auto"><table class="w-full text-left text-sm border-collapse"><thead class="bg-green-50 border-b border-green-200 text-xs font-bold uppercase text-green-900"><th class="p-3">Associated Program</th><th class="p-3">Section Code</th><th class="p-3 text-right">Actions</th></thead><tbody id="regSectionsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
+            </div>
+
+            <div id="panel-reg-faculty" class="reg-panel hidden bg-white p-6 rounded-xl border border-green-200 shadow-sm space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-green-100 pb-3 gap-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-green-950">Institutional Faculty Roster Registry</h3>
+                        <p class="text-xs text-gray-500">Manage database entries or sync datasets with clean CSV migrations.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="exportFacultyRosterCSV()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition cursor-pointer flex items-center gap-1">
+                            📤 Export Faculty CSV
+                        </button>
+                        <label class="bg-yellow-500 hover:bg-yellow-400 text-green-950 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm transition cursor-pointer flex items-center gap-1 text-center">
+                            📥 Import Faculty CSV
+                            <input type="file" id="facultyCsvFileInput" accept=".csv" class="hidden" onchange="importFacultyRosterCSV(event)">
+                        </label>
+                        <button onclick="openRegistryAddModal('faculty')" class="bg-green-800 hover:bg-green-700 text-white border-b-2 border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition cursor-pointer">
+                            + Add New Instructor
+                        </button>
+                    </div>
+                </div>
+                <div id="regFacultyGroupedContainer" class="space-y-6"></div>
+            </div>
+
+            <div id="panel-reg-rooms" class="reg-panel hidden bg-white p-6 rounded-xl border border-green-200 shadow-sm space-y-6">
+                <div class="flex justify-between items-center border-b border-green-100 pb-3">
+                    <h3 class="text-lg font-bold text-green-950">🏢 University Room Facility Registry</h3>
+                    <button onclick="openRegistryAddModal('room')" class="bg-green-800 hover:bg-green-700 text-white border-b-2 border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-pointer">+ Add New Room</button>
+                </div>
+                <div class="overflow-x-auto"><table class="w-full text-left text-sm border-collapse"><thead class="bg-green-50 border-b border-green-200 text-xs font-bold uppercase text-green-900"><th class="p-3">Room Identification Number</th><th class="p-3 text-right">Actions</th></thead><tbody id="regRoomsTableBody" class="divide-y divide-gray-100"></tbody></table></div>
+            </div>
+        </section>
+
+        <div id="scheduleUpdateModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
+            <div class="bg-white rounded-xl shadow-xl border-t-4 border-green-700 max-w-2xl w-full p-6 space-y-4">
+                <div class="flex justify-between items-center border-b border-green-100 pb-2">
+                    <h3 class="text-lg font-bold text-green-950">✏ Edit Class Schedule Block</h3>
+                    <button onclick="closeScheduleEditorModal()" class="text-gray-400 hover:text-green-800 text-xl font-bold">&times;</button>
+                </div>
+                <form id="modalEditForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <input type="hidden" id="modalRecordId">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-green-800 mb-1">Degree Course / Program</label>
+                        <select id="modalProgramSelect" class="w-full bg-green-50/40 border border-green-300 p-2 rounded outline-none" onchange="populateModalSectionsDropdown()" required></select>
+                    </div>
+                    <div><label class="block text-xs font-bold uppercase text-green-800 mb-1">Section (Course-Bound)</label><select id="modalSectionSelect" class="w-full border border-green-300 p-2 bg-green-50/40 rounded"></select></div>
+                    <div class="sm:col-span-2"><label class="block text-xs font-bold uppercase text-green-800 mb-1">Subject Title</label><input type="text" id="modalSubjectTitle" class="w-full bg-green-50/40 border border-green-300 p-2 rounded outline-none" required></div>
+                    <div><label class="block text-xs font-bold uppercase text-green-800 mb-1">Unit/s</label><input type="number" id="modalUnifiedUnits" class="w-full bg-green-50/40 border border-green-300 p-2 rounded" required></div>
+                    <div><label class="block text-xs font-bold uppercase text-green-800 mb-1">Day</label><select id="modalDayAssignment" class="w-full bg-green-50/40 border border-green-300 p-2 rounded"><option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Monday and Wednesday">Monday and Wednesday</option><option value="Tuesday and Thursday">Tuesday and Thursday</option></select></div>
+                    <div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-green-800">Start Time</label><input type="time" id="modalStartTime" class="w-full border border-green-300 p-2 bg-green-50/40 rounded"></div><div><label class="block text-xs font-bold text-green-800">End Time</label><input type="time" id="modalEndTime" class="w-full border border-green-300 p-2 bg-green-50/40 rounded"></div></div>
+                    <div><label class="block text-xs font-bold text-green-800">Professor</label><select id="modalInstructorSelect" class="w-full border border-green-300 p-2 bg-green-50/40 rounded"></select></div>
+                    <div><label class="block text-xs font-bold text-green-800">Room Layout</label><select id="modalRoomSelect" class="w-full border border-green-300 p-2 bg-green-50/40 rounded"></select></div>
+                    <div class="sm:col-span-2 flex justify-end gap-2 border-t border-green-100 pt-3"><button type="button" onclick="closeScheduleEditorModal()" class="bg-gray-100 px-4 py-2 rounded text-xs cursor-pointer">Cancel</button><button type="submit" class="bg-green-800 text-white border-b-2 border-yellow-400 px-4 py-2 rounded text-xs font-bold cursor-pointer">Save Changes</button></div>
+                </form>
+            </div>
+        </div>
+
+        <div id="registryGlobalModal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 hidden no-print">
+            <div class="bg-white rounded-xl shadow-xl border-t-4 border-green-700 max-w-md w-full p-6 space-y-4">
+                <div class="flex justify-between items-center border-b border-green-100 pb-2">
+                    <h3 id="registryModalTitle" class="text-md font-bold text-green-950">Configuration Registry Management</h3>
+                    <button onclick="closeRegistryGlobalModal()" class="text-gray-400 hover:text-green-800 text-xl font-bold">&times;</button>
+                </div>
+                <form id="registryGlobalForm" class="space-y-4 text-xs font-medium">
+                    <input type="hidden" id="regContextMode">
+                    <input type="hidden" id="regContextAction">
+                    <input type="hidden" id="regOldKey">
+                    <input type="hidden" id="regOldIndex">
+
+                    <div id="regWrapperFacultyCollege" class="block">
+                        <label class="block mb-1 text-green-900 font-semibold">Parent Department / Home College Assignment</label>
+                        <select id="regFacultyInputCollege" class="w-full border border-green-300 p-2 rounded bg-green-50/40 text-xs">
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                    </div>
+
+                    <div id="regWrapperCollege" class="hidden">
+                        <label class="block mb-1 text-green-900 font-semibold">Parent College Hub Division</label>
+                        <select id="regInputCollege" class="w-full border border-green-300 p-2 rounded bg-green-50/40 text-xs">
+                            <option value="COE">College of Engineering (COE)</option>
+                            <option value="CCS">College of Computer Studies (CCS)</option>
+                            <option value="COEd">College of Education (COEd)</option>
+                            <option value="CANS">College of Agriculture and Allied Sciences (CANS)</option>
+                            <option value="CAS">College of Arts and Sciences (CAS)</option>
+                            <option value="Graduate Studies">Graduate Studies</option>
+                        </select>
+                    </div>
+
+                    <div id="regWrapperProgram" class="hidden">
+                        <label class="block mb-1 text-green-900 font-semibold">Associated Core Program</label>
+                        <select id="regInputProgram" class="w-full border border-green-300 p-2 rounded bg-green-50/40 text-xs"></select>
+                    </div>
+
+                    <div id="regWrapperRank" class="hidden">
+                        <label class="block mb-1 text-green-900 font-semibold">Institutional Academic Rank</label>
+                        <select id="regInputRank" class="w-full border border-green-300 p-2 rounded bg-green-50/40 text-xs">
+                            <option value="TBA">TBA</option>
+                            <option value="Lecturer">Lecturer</option>
+                            <option value="Instructor I">Instructor I</option>
+                            <option value="Instructor II">Instructor II</option>
+                            <option value="Instructor III">Instructor III</option>
+                            <option value="Assistant Professor I">Assistant Professor I</option>
+                            <option value="Assistant Professor II">Assistant Professor II</option>
+                            <option value="Assistant Professor III">Assistant Professor III</option>
+                            <option value="Assistant Professor IV">Assistant Professor IV</option>
+                            <option value="Associate Professor I">Associate Professor I</option>
+                            <option value="Associate Professor II">Associate Professor II</option>
+                            <option value="Associate Professor III">Associate Professor III</option>
+                            <option value="Associate Professor IV">Associate Professor IV</option>
+                            <option value="Associate Professor V">Associate Professor V</option>
+                            <option value="Professor I">Professor I</option>
+                            <option value="Professor II">Professor II</option>
+                            <option value="Professor III">Professor III</option>
+                            <option value="Professor IV">Professor IV</option>
+                            <option value="Professor V">Professor V</option>
+                            <option value="Professor VI">Professor VI</option>
+                        </select>
+                    </div>
+
+                    <div id="regWrapperDesignation" class="hidden">
+                        <label class="block mb-1 text-green-900 font-semibold">Administrative Load Designation</label>
+                        <select id="regInputDesignation" class="w-full border border-green-300 p-2 rounded bg-green-50/40 text-xs">
+                            <option value="Without Designation">Without Designation (Min 18 Unit/s)</option>
+                            <option value="Dean">Dean (Min 9 Unit/s)</option>
+                            <option value="Director">Director (Min 9 Unit/s)</option>
+                            <option value="Head">Head (Min 12 Unit/s)</option>
+                            <option value="Program Head">Program Head (Min 12 Unit/s)</option>
+                            <option value="Coordinator / In-Charge">Coordinator / In-Charge (Min 15 Unit/s)</option>
+                            <option value="Lecturer">Lecturer (Min 18 Unit/s)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label id="regLabelValue" class="block mb-1 text-green-900 font-semibold">Item Label Value</label>
+                        <input type="text" id="regInputValue" class="w-full border border-green-300 p-2 rounded outline-none bg-green-50/40 text-xs" required>
+                    </div>
+
+                    <div class="flex justify-end gap-2 border-t border-green-100 pt-3">
+                        <button type="button" onclick="closeRegistryGlobalModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded text-xs">Cancel</button>
+                        <button type="submit" class="bg-green-800 text-white border-b-2 border-yellow-400 font-bold px-4 py-2 rounded text-xs">Commit Updates</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
         // System Data Registry Models
         let registeredPrograms = {};
         let registeredSections = {};
@@ -48,47 +739,6 @@
             "Dean": 9, "Director": 9, "Head": 12, "Program Head": 12,
             "Coordinator / In-Charge": 15, "Without Designation": 18, "Lecturer": 18
         };
-
-        // Extracts Year Level weight (I/1 -> 1, II/2 -> 2, III/3 -> 3, IV/4 -> 4) and Section number
-        function parseSectionOrderMetrics(sectionStr) {
-            const str = String(sectionStr || '').trim();
-            const yearMap = {
-                'I': 1, '1': 1, '1ST': 1, 'FIRST': 1,
-                'II': 2, '2': 2, '2ND': 2, 'SECOND': 2,
-                'III': 3, '3': 3, '3RD': 3, 'THIRD': 3,
-                'IV': 4, '4': 4, '4TH': 4, 'FOURTH': 4,
-                'V': 5, '5': 5, '5TH': 5, 'FIFTH': 5
-            };
-
-            let yearWeight = 99;
-            let sectionNum = 0;
-
-            // Match patterns like "BSCpE III-1", "BSCpE 1-1", "BSIT 2A", "BSCS IV - 2"
-            const match = str.match(/(?:^|\s|-)(IV|III|II|I|1ST|2ND|3RD|4TH|5TH|[1-5])(?:\s*[-–]\s*([A-Z0-9]+)|\s*([A-Z0-9]+))?$/i);
-            if (match) {
-                const yrToken = match[1].toUpperCase();
-                if (yearMap[yrToken] !== undefined) {
-                    yearWeight = yearMap[yrToken];
-                }
-                const secToken = match[2] || match[3] || '';
-                const numPart = parseInt(secToken, 10);
-                sectionNum = isNaN(numPart) ? 0 : numPart;
-            }
-
-            return { yearWeight, sectionNum, raw: str };
-        }
-
-        function compareSectionsByYearLevel(a, b) {
-            const mA = parseSectionOrderMetrics(a);
-            const mB = parseSectionOrderMetrics(b);
-            if (mA.yearWeight !== mB.yearWeight) return mA.yearWeight - mB.yearWeight;
-            if (mA.sectionNum !== mB.sectionNum) return mA.sectionNum - mB.sectionNum;
-            return mA.raw.localeCompare(mB.raw, undefined, { numeric: true, sensitivity: 'base' });
-        }
-
-        function sortSectionsByYearLevel(sectionsArray) {
-            return [...(sectionsArray || [])].sort(compareSectionsByYearLevel);
-        }
 
         function getDesignationBadgeStyles(designation) {
             const des = String(designation || '').trim();
@@ -320,7 +970,7 @@
             el.innerHTML = '<option value="">Select Section</option>';
             if(prog && registeredSections[prog]) {
                 const fragment = document.createDocumentFragment();
-                sortSectionsByYearLevel(registeredSections[prog]).forEach(s => { 
+                [...registeredSections[prog]].sort().forEach(s => { 
                     const o = document.createElement("option"); 
                     o.value = s; o.textContent = s; 
                     fragment.appendChild(o); 
@@ -656,9 +1306,7 @@
             const container = document.getElementById("masterScheduleContainer"); if(!container) return;
             
             container.innerHTML = Object.keys(registeredPrograms).map(college => {
-                const recs = sharedSchedules
-                    .filter(s => s.college === college)
-                    .sort((a, b) => compareSectionsByYearLevel(a.classSection, b.classSection));
+                const recs = sharedSchedules.filter(s => s.college === college);
                 const activeColorClass = getCollegeColorClass(college);
                 
                 const tableRows = recs.length > 0 ? recs.map(r => `
@@ -688,9 +1336,7 @@
         }
 
         function exportCollegeCSV(collegeKey) {
-            const records = sharedSchedules
-                .filter(s => s.college === collegeKey)
-                .sort((a, b) => compareSectionsByYearLevel(a.classSection, b.classSection));
+            const records = sharedSchedules.filter(s => s.college === collegeKey);
             if (records.length === 0) { alert("No schedule records available to build a data package."); return; }
             const escapeStr = (str) => {
                 let cleaned = String(str || '').replace(/"/g, '""');
@@ -749,7 +1395,7 @@
             const sSelect = document.getElementById("modalSectionSelect"); if(!sSelect) return;
             const boundSections = registeredSections[selectedProg] || [];
             
-            sSelect.innerHTML = boundSections.length > 0 ? sortSectionsByYearLevel(boundSections).map(sectCode => 
+            sSelect.innerHTML = boundSections.length > 0 ? boundSections.sort().map(sectCode => 
                 `<option value="${sectCode}" ${preSelectedValue && sectCode === preSelectedValue ? 'selected' : ''}>${sectCode}</option>`
             ).join('') : '<option value="General Section">General Section</option>';
         }
@@ -776,10 +1422,9 @@
             
             let htmlOptions = '<option value="ALL">All Sections</option>';
             if(prog === "ALL") {
-                const allSections = Object.keys(registeredSections).flatMap(pK => registeredSections[pK]);
-                htmlOptions += sortSectionsByYearLevel(allSections).map(s => `<option value="${s}">${s}</option>`).join('');
+                htmlOptions += Object.keys(registeredSections).flatMap(pK => registeredSections[pK].map(s => `<option value="${s}">${s}</option>`)).join('');
             } else if(registeredSections[prog]) {
-                htmlOptions += sortSectionsByYearLevel(registeredSections[prog]).map(s => `<option value="${s}">${s}</option>`).join('');
+                htmlOptions += registeredSections[prog].sort().map(s => `<option value="${s}">${s}</option>`).join('');
             }
             sectSelect.innerHTML = htmlOptions;
             renderProgramScheduleReport();
@@ -811,16 +1456,7 @@
                 if(!grouped[key]) grouped[key] = []; grouped[key].push(s);
             });
 
-            // Sort section group headers by Program alphabetically, then Year Level (I -> II -> III -> IV)
-            const sortedKeys = Object.keys(grouped).sort((keyA, keyB) => {
-                const [progA, sectA] = keyA.split("::");
-                const [progB, sectB] = keyB.split("::");
-                const progCmp = progA.localeCompare(progB);
-                if (progCmp !== 0) return progCmp;
-                return compareSectionsByYearLevel(sectA, sectB);
-            });
-
-            container.innerHTML = sortedKeys.map(key => {
+            container.innerHTML = Object.keys(grouped).map(key => {
                 const [progName, sectCode, colKey] = key.split("::");
                 const data = fontFacultyClassesChronologically(grouped[key]);
                 const activeColorClass = getCollegeColorClass(colKey);
@@ -868,18 +1504,15 @@
             const sectTable = document.getElementById("regSectionsTableBody");
             if(sectTable) {
                 sectTable.innerHTML = Object.keys(registeredSections).sort().flatMap(progKey => 
-                    registeredSections[progKey]
-                        .map((sectCode, origIdx) => ({ sectCode, origIdx }))
-                        .sort((a, b) => compareSectionsByYearLevel(a.sectCode, b.sectCode))
-                        .map(({ sectCode, origIdx }) => `
-                            <tr class="text-xs border-b hover:bg-green-50/40">
-                                <td class="p-3 font-medium text-green-950">${progKey}</td><td class="p-3 font-mono font-bold">${sectCode}</td>
-                                <td class="p-3 text-right space-x-1">
-                                    <button onclick="openRegistryEditModal('section', '${progKey}', ${origIdx})" class="text-green-800 font-semibold text-[11px] px-2 py-0.5 bg-green-100 rounded cursor-pointer">Edit/Move</button>
-                                    <button onclick="deleteRegistryRow('section', '${progKey}', ${origIdx})" class="text-yellow-900 font-semibold text-[11px] px-2 py-0.5 bg-yellow-100 rounded cursor-pointer">Delete</button>
-                                </td>
-                            </tr>
-                        `)
+                    registeredSections[progKey].map((sectCode, idx) => `
+                        <tr class="text-xs border-b hover:bg-green-50/40">
+                            <td class="p-3 font-medium text-green-950">${progKey}</td><td class="p-3 font-mono font-bold">${sectCode}</td>
+                            <td class="p-3 text-right space-x-1">
+                                <button onclick="openRegistryEditModal('section', '${progKey}', ${idx})" class="text-green-800 font-semibold text-[11px] px-2 py-0.5 bg-green-100 rounded cursor-pointer">Edit/Move</button>
+                                <button onclick="deleteRegistryRow('section', '${progKey}', ${idx})" class="text-yellow-900 font-semibold text-[11px] px-2 py-0.5 bg-yellow-100 rounded cursor-pointer">Delete</button>
+                            </td>
+                        </tr>
+                    `)
                 ).join('');
             }
 
@@ -1023,7 +1656,6 @@
                     const prog = document.getElementById("regInputProgram").value;
                     if(!registeredSections[prog]) registeredSections[prog] = [];
                     if(!registeredSections[prog].includes(inputVal)) registeredSections[prog].push(inputVal);
-                    registeredSections[prog] = sortSectionsByYearLevel(registeredSections[prog]);
                 }
             } else if(action === "EDIT") {
                 const parentKey = document.getElementById("regOldKey").value;
@@ -1049,7 +1681,6 @@
                     registeredSections[parentKey].splice(index, 1);
                     if(!registeredSections[targetProgKey]) registeredSections[targetProgKey] = [];
                     registeredSections[targetProgKey].push(inputVal);
-                    registeredSections[targetProgKey] = sortSectionsByYearLevel(registeredSections[targetProgKey]);
 
                     sharedSchedules.forEach(s => { 
                         if(s.program === parentKey && s.classSection === oldSect) { s.classSection = inputVal; s.program = targetProgKey; }
@@ -1547,11 +2178,6 @@
                 }
                 if(s.roomNumber && !registeredRooms.includes(s.roomNumber)) registeredRooms.push(s.roomNumber);
             });
-
-            // Keep all section registries sorted by Year Level (I -> II -> III -> IV)
-            Object.keys(registeredSections).forEach(progKey => {
-                registeredSections[progKey] = sortSectionsByYearLevel(registeredSections[progKey]);
-            });
         }
 
         function executeRegistryDataSynchronization() {
@@ -1565,10 +2191,7 @@
         function exportMasterProgramPDF() {
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4'); let first = true;
             Object.keys(registeredPrograms).forEach(college => {
-                const recs = sharedSchedules
-                    .filter(s => s.college === college)
-                    .sort((a, b) => compareSectionsByYearLevel(a.classSection, b.classSection));
-                if (recs.length === 0) return;
+                const recs = sharedSchedules.filter(s => s.college === college); if (recs.length === 0) return;
                 if (!first) doc.addPage(); first = false;
                 doc.setFontSize(12); doc.text(`${college} MASTER MATRIX CLASS PROGRAM`, 14, 15);
                 docAutoTableShim(doc, { startY: 20, head: [['Section', 'Day/Time', 'Subject', 'Units', 'Instructor', 'Room']], body: recs.map(r => [r.classSection, `${r.dayAssignment}\n${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]), headStyles: { fillColor: getCollegeHexCode(college) } });
@@ -1586,14 +2209,8 @@
             const { jsPDF } = window.jspdf; const doc = new jsPDF('p', 'mm', 'a4');
             let filtered = getFilteredSchedules(); if(filtered.length === 0) return;
             let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}::${s.college}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
-            const sortedKeys = Object.keys(grouped).sort((keyA, keyB) => {
-                const [progA, sectA] = keyA.split("::");
-                const [progB, sectB] = keyB.split("::");
-                const progCmp = progA.localeCompare(progB);
-                return progCmp !== 0 ? progCmp : compareSectionsByYearLevel(sectA, sectB);
-            });
             let first = true;
-            sortedKeys.forEach(key => {
+            Object.keys(grouped).forEach(key => {
                 let [progName, sectCode, colKey] = key.split("::"); if(!first) doc.addPage(); first = false;
                 doc.setFontSize(12); doc.text(`CLASS SCHEDULE REPORT: ${progName} - ${sectCode}`, 14, 15);
                 let dataRows = fontFacultyClassesChronologically(grouped[key]).map(r => [r.dayAssignment, `${convert24To12Hour(r.startTime)} - ${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]);
@@ -1604,13 +2221,7 @@
         function exportProgramScheduleExcel() {
             let filtered = getFilteredSchedules(); if(filtered.length === 0) return; let wb = XLSX.utils.book_new();
             let grouped = {}; filtered.forEach(s => { let key = `${s.program}::${s.classSection}`; if(!grouped[key]) grouped[key] = []; grouped[key].push(s); });
-            const sortedKeys = Object.keys(grouped).sort((keyA, keyB) => {
-                const [progA, sectA] = keyA.split("::");
-                const [progB, sectB] = keyB.split("::");
-                const progCmp = progA.localeCompare(progB);
-                return progCmp !== 0 ? progCmp : compareSectionsByYearLevel(sectA, sectB);
-            });
-            sortedKeys.forEach(key => {
+            Object.keys(grouped).forEach(key => {
                 let [progName, sectCode] = key.split("::");
                 let sheetRows = [["CLASS INSTRUCTIONAL SCHEDULE REPORT"], [`Profile Blueprint: ${progName} - ${sectCode}`], [], ["Day Assignment", "Time Window", "Subject Description", "Unit/s", "Faculty Instructor", "Room Assignment"]];
                 fontFacultyClassesChronologically(grouped[key]).forEach(r => { sheetRows.push([r.dayAssignment, `${convert24To12Hour(r.startTime)}-${convert24To12Hour(r.endTime)}`, r.subjectTitle, r.unifiedUnits, r.instructorName, r.roomNumber]); });
@@ -1662,3 +2273,5 @@
 
         window.onload = function() { initializeSystemStateHydration(); executeRegistryDataSynchronization(); switchTab('dashboard-view'); };
     </script>
+</body>
+</html>
